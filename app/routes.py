@@ -1,5 +1,7 @@
 from flask import render_template
+from flask_login import login_user, logout_user, current_user, login_required
 from app import app
+from app.forms import LoginForm
 
 @app.route('/')
 @app.route('/index')
@@ -8,7 +10,8 @@ def index():
 
 @app.route('/login')
 def login():
-    return "login"
+    form = LoginForm()
+    return render_template('login.html', title='Log In', form=form)
 
 @app.route('/signup')
 def signup():
