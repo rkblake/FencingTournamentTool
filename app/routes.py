@@ -1,6 +1,6 @@
-from flask import render_template
+from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from app import app
+from app import app, db
 from app.forms import LoginForm, RegistrationForm
 
 @app.route('/')
@@ -58,6 +58,12 @@ def de(tournament_id, event_id):
 @app.route('/<int:tournament_id>/event/<int:event_id>/final')
 def final(tournament_id, event_id):
     return "final"
+
+@app.route('/<int:tournament_id>/edit')
+def editTournament(tournament_id):
+    '''create events and add TOs here'''
+    tournament = Tournament.query.filter_by(id=tournament_id).first()
+    return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/registration/edit')
 def editRegistration(tournament_id, event_id):
