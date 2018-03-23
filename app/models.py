@@ -1,29 +1,39 @@
-from app import db
+from app import db, app, login
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
 
-access_table = db.Table('association', Base.metadata,
+access_table = db.Table('access',
         db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
         db.Column('tournament_id', db.Integer, db.ForeignKey('tournament.id'))
 )
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    isOrganizer = db.Column(db.Boolean)
     tournaments = db.relationship(
             "Tournament",
             secondary=access_table,
-            back_populates="organizers"
-    )
+            backref='user_tournaments')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 class Tournament(db.Model):
     __tablename__ = 'tournament'
@@ -33,7 +43,7 @@ class Tournament(db.Model):
     organizers = db.relationship(
             "User",
             secondary=access_table,
-            back_populates='tournaments'
+            backref='tournament_organizers'
     )
     events = db.relationship('Event', backref='tournament', lazy='dynamic')
 
@@ -50,12 +60,12 @@ class Event(db.Model):
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    fencers = db.relationship('Fencer', backref='members', lazy='dynamic')
+    fencers = db.relationship('Fencer', backref='club_members')
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    fencers = db.relationship('Fencer', backref='members', lazy='dynamic')
+    fencers = db.relationship('Fencer', backref='team_members')
 
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)

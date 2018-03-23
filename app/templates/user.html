@@ -2,9 +2,9 @@
 
 {% block app_content %}
 	<p>
-		<a href="{{ url_for('create-tournament') }}">Create Tournament</a>
+		<a href="{{ url_for('createTournament') }}">Create Tournament</a>
 	</p>
-	{% for tournament tournaments %}
+	{#{% for tournament tournaments %}
 		{% include '_tournament.html' %}
-	{% endfor %}
+		{% endfor %}#}
 {% endblock %}
