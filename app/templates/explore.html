@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+	{% for tournament in tournaments %}
+		{% include '_tournament.html' %}
+	{% endfor %}
+{% endblock %}

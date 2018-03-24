@@ -21,6 +21,10 @@ class User(UserMixin, db.Model):
             "Tournament",
             secondary=access_table,
             backref='user_tournaments')
+    mainTOTournaments = db.relationship(
+            "Tournament",
+            backref='user_maintotournaments',
+            lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -40,6 +44,7 @@ class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    mainOrganizer = db.Column(db.Integer, db.ForeignKey('user.id'))
     organizers = db.relationship(
             "User",
             secondary=access_table,
