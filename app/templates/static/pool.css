@@ -1,0 +1,59 @@
+.results {
+  font-size: 16pt;
+  font-family: sans-serif;
+  border-collapse: collapse;
+  border: none;
+}
+.results.with-border {
+  border: 1px solid #cccccc;
+}
+.results.with-border td,
+.results.with-border th {
+  border: 1px solid #cccccc;
+}
+.results thead,
+.results th
+{
+  background-color: #eeeeee;
+  font-size: 10pt;
+  color: #333333;
+}
+
+.results .contestant {
+  padding: 2px 8px;
+}
+.results .name {
+  font-size: 12pt;
+}
+.results .location {
+  font-size: 10pt;
+  color: #666666;
+}
+
+.results tr:nth-child(2n) {
+  background-color: #eeeeee;
+}
+.results tbody th {
+  padding: 8px;
+}
+
+.results .match {
+  padding: 8px;
+  text-align: center;
+  background-color: #333333;
+  font-family: 'consolas', monospace;
+}
+.results .defeat {
+  background-color: #cc3333;
+  color: #ee8888;
+}
+.results .victory {
+  background-color: #66cc66;
+  color: #336633;
+}
+
+.results .stat {
+  text-align: center;
+  font-family: 'consolas', monospace;
+  padding: 8px;
+}
