@@ -8,7 +8,8 @@ Base = declarative_base()
 
 access_table = db.Table('access',
         db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-        db.Column('tournament_id', db.Integer, db.ForeignKey('tournament.id'))
+        db.Column('tournament_id', db.Integer, db.ForeignKey('tournament.id')),
+        db.Column('isMainTO', db.Boolean)
 )
 
 class User(UserMixin, db.Model):
@@ -20,10 +21,7 @@ class User(UserMixin, db.Model):
     tournaments = db.relationship(
             "Tournament",
             secondary=access_table,
-            backref='user_tournaments')
-    mainTOTournaments = db.relationship(
-            "Tournament",
-            backref='user_maintotournaments',
+            backref='user_tournaments',
             lazy='dynamic')
 
     def __repr__(self):
@@ -44,7 +42,6 @@ class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    mainOrganizer = db.Column(db.Integer, db.ForeignKey('user.id'))
     organizers = db.relationship(
             "User",
             secondary=access_table,

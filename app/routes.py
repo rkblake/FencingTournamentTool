@@ -51,7 +51,7 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    tournaments = user.mainTOTournaments.order_by(Tournament.date.desc())
+    tournaments = user.tournaments.order_by(Tournament.date.desc())
     return render_template('user.html', user=user, tournaments=tournaments)
 
 @app.route('/<int:tournament_id>')
@@ -71,8 +71,9 @@ def createTournament():
     if form.validate_on_submit():
         tournament = Tournament(
                 name=form.name.data,
-                date=datetime.strptime(form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'),
-                mainOrganizer=current_user)
+                date=datetime.strptime(form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'))
+        user.tournaments.append(tournament)
+        #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
         '''add TO'''
         db.session.commit()
