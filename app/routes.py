@@ -82,6 +82,14 @@ def createTournament():
         return redirect(url_for('editTournament', tournament_id=tournament.id))
     return render_template('create-tournament.html', title='Create Tournament', form=form)
 
+@app.route('/<int:tournament_id>/create-event', methods=['GET', 'POST'])
+@login_required
+def createEvent(tournament_id):
+    user = User.query.filter_by(username=current_user.username).first()
+    form = createEventForm()
+    if form.validate_on_submit():
+        event = Event(
+
 @app.route('/<int:tournament_id>/event/<int:event_id>/registration')
 def registration(tournament_id, event_id):
     return "registration"
