@@ -29,5 +29,10 @@ class RegistrationForm(FlaskForm):
 
 class CreateTournamentForm(FlaskForm):
     name = StringField('Tournament Name', validators=[DataRequired()])
-    date = DateField('Date', format='%Y-%m-%d')
+    #date = DateField('Date', format='%Y-%m-%d')
     submit = SubmitField('Create Tournament')
+
+class CreateEventForm(FlaskForm):
+    name = StringField('Event name', validators=[DataRequired()])
+    date = DateField('Date', format='%Y-%m-%d')
+    submit = SubmitField('Create Event')

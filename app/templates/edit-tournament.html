@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 
 {% block app_content %}
+	<h1>{{ tournament.name }}</h1>
 	<p>
-		<a href="{{ url_for('createEvent', tournament_id=tournament_id) }}">Add event</a>
+		<a href="{{ url_for('createEvent', tournament_id=tournament.id) }}">Add event</a>
 	</p>
 {% endblock %}

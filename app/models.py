@@ -41,7 +41,7 @@ class Tournament(db.Model):
     __tablename__ = 'tournament'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    #date = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     organizers = db.relationship(
             "User",
             secondary=access_table,
@@ -55,6 +55,7 @@ class Tournament(db.Model):
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
+    date = db.Column(db.DateTime, index=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
     des = db.relationship('DE', backref='event', lazy='dynamic')

@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, CreateTournamentForm
-from app.models import User, Tournament
+from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm
+from app.models import User, Tournament, Event
 from datetime import datetime
 
 @app.route('/')
@@ -51,7 +51,8 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    tournaments = user.tournaments.order_by(Tournament.date.desc())
+    #tournaments = user.tournaments.order_by(Tournament.date.desc())
+    tournaments = user.tournaments
     return render_template('user.html', user=user, tournaments=tournaments)
 
 @app.route('/<int:tournament_id>')
@@ -69,16 +70,12 @@ def createTournament():
     user = User.query.filter_by(username=current_user.username).first()
     form = CreateTournamentForm()
     if form.validate_on_submit():
-        tournament = Tournament(
-                name=form.name.data,
-                date=datetime.strptime(form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'))
+        tournament = Tournament(name=form.name.data)
         user.tournaments.append(tournament)
         #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
-        '''add TO'''
         db.session.commit()
         flash('Created new tournament')
-        '''redirect to tournament edit page'''
         return redirect(url_for('editTournament', tournament_id=tournament.id))
     return render_template('create-tournament.html', title='Create Tournament', form=form)
 
@@ -86,9 +83,19 @@ def createTournament():
 @login_required
 def createEvent(tournament_id):
     user = User.query.filter_by(username=current_user.username).first()
-    form = createEventForm()
+    tournament = Tournament.query.filter_by(id=tournament_id).first()
+    form = CreateEventForm()
     if form.validate_on_submit():
         event = Event(
+                name=form.name.data,
+                date=datetime.strptime(form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'),
+                tournament=tournament)
+        tournament.events.append(event)
+        db.session.add(event)
+        db.session.commit()
+        flash('Created new event')
+        return redirect(url_for('editTournament', tournament_id=tournament_id))
+    return render_template('create-event.html', tournament=tournament, form=form)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/registration')
 def registration(tournament_id, event_id):
