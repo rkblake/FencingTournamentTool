@@ -5,4 +5,7 @@
 	<p>
 		<a href="{{ url_for('createEvent', tournament_id=tournament.id) }}">Add event</a>
 	</p>
+	{% for event in events %}
+		{% include '_event.html' %}
+	{% endfor %}
 {% endblock %}

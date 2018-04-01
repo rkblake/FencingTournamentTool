@@ -61,7 +61,7 @@ def tournament(tournament_id):
 
 @app.route('/explore')
 def explore():
-    tournaments = Tournament.query.order_by(Tournament.date.desc())
+    tournaments = Tournament.query.all()
     return render_template('explore.html', tournaments=tournaments)
 
 @app.route('/create-tournament', methods=['GET', 'POST'])
@@ -118,7 +118,8 @@ def final(tournament_id, event_id):
 def editTournament(tournament_id):
     '''create events and add TOs here'''
     tournament = Tournament.query.filter_by(id=tournament_id).first()
-    return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament)
+    events = tournament.events
+    return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/registration/edit')
 @login_required
