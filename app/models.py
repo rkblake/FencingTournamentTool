@@ -59,6 +59,7 @@ class Event(db.Model):
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
     des = db.relationship('DE', backref='event', lazy='dynamic')
+    fencers = db.relationship('Fencer', backref='event', lazy='dynamic')
 
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -105,3 +106,4 @@ class Fencer(db.Model):
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     club_id = db.Column(db.Integer, db.ForeignKey('club.id'))
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'))

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from wtforms.fields.html5 import DateField
 from app.models import User
 
@@ -36,3 +36,8 @@ class CreateEventForm(FlaskForm):
     name = StringField('Event name', validators=[DataRequired()])
     date = DateField('Date', format='%Y-%m-%d')
     submit = SubmitField('Create Event')
+
+class AddFencerForm(FlaskForm):
+    name = StringField('Fencer name', validators=[DataRequired()])
+    rating = StringField('Rating', validators=[DataRequired(), Length(min=3,max=3)])
+    submit = SubmitField('Add Fencer')

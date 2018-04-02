@@ -1,9 +1,13 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm
+from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm
 from app.models import User, Tournament, Event
 from datetime import datetime
+
+def isTOofTourney(user, tournament):
+    #TODO: check if user has access to tournament
+    return True
 
 @app.route('/')
 @app.route('/index')
@@ -121,10 +125,15 @@ def editTournament(tournament_id):
     events = tournament.events
     return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events)
 
-@app.route('/<int:tournament_id>/event/<int:event_id>/registration/edit')
+@app.route('/<int:tournament_id>/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
 @login_required
 def editRegistration(tournament_id, event_id):
-    return render_template('edit-registration.html')
+    tournament = Tournament.query.filter_by(id=tournament_id).first()
+    event = Event.query.filter_by(id=event_id).first()
+    form = AddFencerForm()
+    if form.validate_on_submit():
+        return "added fencer"
+    return render_template('edit-registration.html', form=form)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool/<int:pool_id>/edit')
 @login_required
@@ -135,3 +144,9 @@ def editPool(tournament_id, event_id, pool_id):
 @login_required
 def editDE(tournament_id, event_id):
     return render_template('edit-de.html')
+
+@app.route('/<int:tournament_id>/<int:event_id>/<int:fencer_id>/check-in')
+@login_required
+def checkInFencer(tournament_id, event_id, fencer_id):
+    #TODO
+    return
