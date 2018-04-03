@@ -13,6 +13,14 @@
 			<th>Status</th>
 			<th>Last Name</th>
 			<th>First Name</th>
+			<th>Rating</th>
 		</tr>
+		{% for fencer in fencers %}
+		<tr>
+			<td>status placeholder</td>
+			<td>fencer.lastName</td>
+			<td>fencer.firstName</td>
+			<td>fencer.rating</td>
+		{% endfor %}
 	</table>
 {% endblock %}

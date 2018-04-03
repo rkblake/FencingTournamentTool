@@ -96,7 +96,8 @@ class Result(db.Model):
 
 class Fencer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True)
+    firstName = db.Column(db.String(64), index=True)
+    lastName = db.Column(db.String(63), index=True)
     isCheckedIn = db.Column(db.Boolean)
     rating = db.Column(db.String(3))
     victories = db.Column(db.Integer)

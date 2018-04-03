@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm
-from app.models import User, Tournament, Event
+from app.models import User, Tournament, Event, Fencer
 from datetime import datetime
 
 def isTOofTourney(user, tournament):
@@ -130,10 +130,19 @@ def editTournament(tournament_id):
 def editRegistration(tournament_id, event_id):
     tournament = Tournament.query.filter_by(id=tournament_id).first()
     event = Event.query.filter_by(id=event_id).first()
+    fencers = event.fencers
     form = AddFencerForm()
     if form.validate_on_submit():
-        return "added fencer"
-    return render_template('edit-registration.html', form=form)
+        fencer = Fencer(
+                firstName=form.firstName.data,
+                lastName=form.lastName.data,
+                rating=form.rating.data,
+                isCheckedIn=form.checked_in.data)
+        event.fencers.append(fencer)
+        db.session.add(fencer)
+        db.session.commit()
+        flash('Added fencer')
+    return render_template('edit-registration.html', form=form, fencers=fencers)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool/<int:pool_id>/edit')
 @login_required

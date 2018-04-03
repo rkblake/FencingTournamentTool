@@ -38,6 +38,8 @@ class CreateEventForm(FlaskForm):
     submit = SubmitField('Create Event')
 
 class AddFencerForm(FlaskForm):
-    name = StringField('Fencer name', validators=[DataRequired()])
+    lastName = StringField('Fencer last name', validators=[DataRequired()])
+    firstName = StringField('Fencer first name', validators=[DataRequired()])
     rating = StringField('Rating', validators=[DataRequired(), Length(min=3,max=3)])
+    checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Fencer')
