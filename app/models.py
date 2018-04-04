@@ -57,6 +57,7 @@ class Event(db.Model):
     name = db.Column(db.String(64))
     date = db.Column(db.DateTime, index=True)
     stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
+    numFencers = db.Column(db.Integer, default=0)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
     des = db.relationship('DE', backref='event', lazy='dynamic')

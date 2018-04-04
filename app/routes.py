@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm
+from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm, CreatePoolForm
 from app.models import User, Tournament, Event, Fencer
 from datetime import datetime
 
@@ -34,8 +34,8 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    lougout_user()
-    return redirect(url_for('main.index'))
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -139,6 +139,7 @@ def editRegistration(event_id):
                 rating=form.rating.data.upper(),
                 isCheckedIn=form.checked_in.data)
         event.fencers.append(fencer)
+        event.numFencers += 1
         db.session.add(fencer)
         db.session.commit()
         flash('Added fencer')
@@ -185,3 +186,14 @@ def closeRegistration(event_id):
     event.stage = 2
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
+
+@app.route('/<int:event_id>/create-pools', methods=['GET', 'POST'])
+@login_required
+def createPools(event_id):
+    form = CreatePoolForm()
+    event = Event.query.filter_by(id=event_id).first()
+    form.numFencers.data = event.numFencers
+    if form.validate_on_submit():
+        #TODO: create pools
+        return "pool created"
+    return render_template('create-pools.html', form=form, event=event)

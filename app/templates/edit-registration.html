@@ -9,16 +9,14 @@
 		</div>
 	</div>
 	{% endif %}
+
 	{% if event.stage != 1 %}
 	<a class="btn btn-primary" href="{{ url_for('openRegistration', event_id=event.id) }}" role="button">Open Registration</a>
+	<a class="btn btn-danger disabled" role="button" aria-disabled="true">Close Registration</a><br>
+	<a href="{{ url_for('createPools', event_id=event.id) }}">Create Pools</a>
 	{% else %}
 	<a class="btn btn-primary disabled" role="button" aria-disabled="true">Open Registration</a>
-	{% endif %}
-
-	{% if event.stage == 1 %}
 	<a class="btn btn-danger" href="{{ url_for('closeRegistration', event_id=event.id) }}" role="button">Close Registration</a>
-	{% else %}
-	<a class="btn btn-danger disabled" role="button" aria-disabled="true">Close Registration</a>
 	{% endif %}
 
 	<hr>

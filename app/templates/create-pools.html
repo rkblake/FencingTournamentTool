@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+	<h1>Create Pools</h1>
+	<form action="" method="post">
+		{{ form.hidden_tag() }}
+		<p>
+			{{ form.numPools1(size=3) }} pools of {{ form.numFencers1(size=3) }} fencers and {{ form.numPools2(size=3) }} of {{ form.numFencers2(size=3) }}
+			{% for field, error in form.errors.items() %}
+			<span style="color:red;">{{ error }}</span>
+			{% endfor %}
+		</p>
+		{{ form.submit() }}
+	</form>
+{% endblock %}
