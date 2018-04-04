@@ -12,5 +12,6 @@ login = LoginManager(app)
 login.login_view = 'login'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+#app.jinja_env.cache = {}
 
 from app import routes, models

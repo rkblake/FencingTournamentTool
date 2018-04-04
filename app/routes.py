@@ -125,24 +125,24 @@ def editTournament(tournament_id):
     events = tournament.events
     return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events)
 
-@app.route('/<int:tournament_id>/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
+@app.route('/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
 @login_required
-def editRegistration(tournament_id, event_id):
-    tournament = Tournament.query.filter_by(id=tournament_id).first()
+def editRegistration(event_id):
+    #tournament = Tournament.query.filter_by(id=tournament_id).first()
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers
     form = AddFencerForm()
     if form.validate_on_submit():
         fencer = Fencer(
-                firstName=form.firstName.data,
-                lastName=form.lastName.data,
-                rating=form.rating.data,
+                firstName=form.firstName.data.title(),
+                lastName=form.lastName.data.title(),
+                rating=form.rating.data.upper(),
                 isCheckedIn=form.checked_in.data)
         event.fencers.append(fencer)
         db.session.add(fencer)
         db.session.commit()
         flash('Added fencer')
-    return render_template('edit-registration.html', form=form, fencers=fencers)
+    return render_template('edit-registration.html', form=form, fencers=fencers, event=event)
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool/<int:pool_id>/edit')
 @login_required
@@ -154,8 +154,34 @@ def editPool(tournament_id, event_id, pool_id):
 def editDE(tournament_id, event_id):
     return render_template('edit-de.html')
 
-@app.route('/<int:tournament_id>/<int:event_id>/<int:fencer_id>/check-in')
+@app.route('/<int:event_id>/check-in/<int:fencer_id>')
 @login_required
-def checkInFencer(tournament_id, event_id, fencer_id):
-    #TODO
-    return
+def checkInFencer(event_id, fencer_id):
+    fencer = Fencer.query.filter_by(id=fencer_id).first()
+    fencer.isCheckedIn = True
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
+
+@app.route('/<int:event_id>/absent/<int:fencer_id>')
+@login_required
+def makeAbsent(event_id, fencer_id):
+    fencer = Fencer.query.filter_by(id=fencer_id).first()
+    fencer.isCheckedIn = False
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
+
+@app.route('/open-registration/<int:event_id>')
+@login_required
+def openRegistration(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    event.stage = 1
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
+
+@app.route('/close-registration/<int:event_id>')
+@login_required
+def closeRegistration(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    event.stage = 2
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
