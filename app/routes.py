@@ -140,6 +140,8 @@ def editRegistration(event_id):
                 isCheckedIn=form.checked_in.data)
         event.fencers.append(fencer)
         event.numFencers += 1
+        if fencer.isCheckedIn:
+            event.numFencersCheckedIn += 1
         db.session.add(fencer)
         db.session.commit()
         flash('Added fencer')
@@ -160,6 +162,7 @@ def editDE(tournament_id, event_id):
 def checkInFencer(event_id, fencer_id):
     fencer = Fencer.query.filter_by(id=fencer_id).first()
     fencer.isCheckedIn = True
+    event.numFencersCheckedIn += 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
@@ -168,6 +171,7 @@ def checkInFencer(event_id, fencer_id):
 def makeAbsent(event_id, fencer_id):
     fencer = Fencer.query.filter_by(id=fencer_id).first()
     fencer.isCheckedIn = False
+    event.numFencersCheckedIn -= 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
