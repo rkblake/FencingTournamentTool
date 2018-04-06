@@ -51,8 +51,8 @@ class CreatePoolForm(FlaskForm):
     numFencers = HiddenField()
     numPools1 = IntegerField(validators=[DataRequired()])
     numFencers1 = IntegerField(validators=[DataRequired()])
-    numPools2 = IntegerField(validators=[DataRequired()])
-    numFencers2 = IntegerField(validators=[DataRequired()])
+    numPools2 = IntegerField(validators=[Optional()], default=0)
+    numFencers2 = IntegerField(validators=[Optional()], default=0)
     submit = SubmitField('Create Pool')
 
     def validate(self):

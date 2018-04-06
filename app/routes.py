@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm, CreatePoolForm
-from app.models import User, Tournament, Event, Fencer, Team
+from app.models import User, Tournament, Event, Fencer, Team, Pool
 from datetime import datetime
 
 def isTOofTourney(user, tournament):
@@ -133,7 +133,9 @@ def editRegistration(event_id):
     fencers = event.fencers
     form = AddFencerForm()
     if form.validate_on_submit():
-        if form.team.data is not None and Team.query.filter_by(name=form.team.data).first() is None:
+        team = None
+        team = Team.query.filter_by(name=form.team.data).first()
+        if form.team.data is not None and team is None:
             team = Team(name=form.team.data)
         fencer = Fencer(
                 firstName=form.firstName.data.title(),
@@ -141,16 +143,23 @@ def editRegistration(event_id):
                 team_id=team,
                 rating=form.rating.data.upper(),
                 isCheckedIn=form.checked_in.data)
-        if form.team.data is not None and Team.query.filter_by(name=form.team.data).first() is None:
+        if team is not None:
             team.fencers.append(fencer)
         event.fencers.append(fencer)
         event.numFencers += 1
         if fencer.isCheckedIn:
-            event.numFencersCheckedIn += 1
+            event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
         db.session.add(fencer)
         db.session.commit()
         flash('Added fencer')
     return render_template('edit-registration.html', form=form, fencers=fencers, event=event)
+
+@app.route('/event/<int:event_id>/edit')
+@login_required
+def editEvent(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    pools = event.pools
+    return "edit event"
 
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool/<int:pool_id>/edit')
 @login_required
@@ -201,21 +210,22 @@ def closeRegistration(event_id):
 def createPools(event_id):
     form = CreatePoolForm()
     event = Event.query.filter_by(id=event_id).first()
-    fencers = event.fencers
+    #TODO: only select checked in fencers
+    fencers = event.fencers.order_by(Fencer.team_id.desc())
     form.numFencers.data = event.numFencers
     if form.validate_on_submit():
         pools = []
         for _ in range(0, form.numPools1.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers1.data)
-            pools.append(pool.id)
+            pools.append(pool)
             db.session.add(pool)
         for _ in range(0, form.numPools2.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers2.data)
-            pools.append(pool.id)
+            pools.append(pool)
             db.session.add(pool)
-        for fencer in fencers:
-            #TODO: assign fencers to pools 
-            pass
+        for i, fencer in enumerate(fencers):
+            pools[i % len(pools)].fencers.append(fencer)
+            fencer.pool = pools[i % len(pools)]
         db.session.commit()
-        return "pool created"
+        return redirect(url_for('editEvent', event_id=event_id))
     return render_template('create-pools.html', form=form, event=event)
