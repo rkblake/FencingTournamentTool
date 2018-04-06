@@ -5,7 +5,7 @@
 	<form action="" method="post">
 		{{ form.hidden_tag() }}
 		<p>
-			{{ form.numPools1(size=2) }} pool(s) of {{ form.numFencers1(size=2) }} fencers and {{ form.numPools2(size=2) }} of {{ form.numFencers2(size=2) }} fencers.
+			{{ form.numPools1(size=2) }} pool(s) of {{ form.numFencers1(size=2) }} fencers and {{ form.numPools2(size=2) }} pool(s) of {{ form.numFencers2(size=2) }} fencers.
 			{% for field, error in form.errors.items() %}
 			<span style="color:red;">{{ error }}</span>
 			{% endfor %}

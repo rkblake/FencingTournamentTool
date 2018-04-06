@@ -41,6 +41,7 @@ class Tournament(db.Model):
     __tablename__ = 'tournament'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
+    format = db.Column(db.String())
     organizers = db.relationship(
             "User",
             secondary=access_table,
@@ -76,6 +77,7 @@ class Team(db.Model):
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+    numFencers = db.Column(db.Integer)
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
 

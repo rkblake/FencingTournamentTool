@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField, SelectField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional
 from wtforms.fields.html5 import DateField
 from app.models import User, Event
 
@@ -30,6 +30,8 @@ class RegistrationForm(FlaskForm):
 class CreateTournamentForm(FlaskForm):
     name = StringField('Tournament Name', validators=[DataRequired()])
     #date = DateField('Date', format='%Y-%m-%d')
+    choices = [("USFA Individual", "USFA Individual"), ("USFA Team", "USFA Team"), ("SWIFA", "SWIFA")]
+    format = SelectField('Format', choices=choices)
     submit = SubmitField('Create Tournament')
 
 class CreateEventForm(FlaskForm):
@@ -40,6 +42,7 @@ class CreateEventForm(FlaskForm):
 class AddFencerForm(FlaskForm):
     firstName = StringField('Fencer first name', validators=[DataRequired()])
     lastName = StringField('Fencer last name', validators=[DataRequired()])
+    team = StringField('Team', validators=[Optional()], filters=[lambda x : x or None])
     rating = StringField('Rating', validators=[DataRequired(), Length(min=3,max=3)])
     checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Fencer')

@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm, CreatePoolForm
-from app.models import User, Tournament, Event, Fencer
+from app.models import User, Tournament, Event, Fencer, Team
 from datetime import datetime
 
 def isTOofTourney(user, tournament):
@@ -74,7 +74,7 @@ def createTournament():
     user = User.query.filter_by(username=current_user.username).first()
     form = CreateTournamentForm()
     if form.validate_on_submit():
-        tournament = Tournament(name=form.name.data)
+        tournament = Tournament(name=form.name.data, format=form.format.data)
         user.tournaments.append(tournament)
         #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
@@ -133,11 +133,16 @@ def editRegistration(event_id):
     fencers = event.fencers
     form = AddFencerForm()
     if form.validate_on_submit():
+        if form.team.data is not None and Team.query.filter_by(name=form.team.data).first() is None:
+            team = Team(name=form.team.data)
         fencer = Fencer(
                 firstName=form.firstName.data.title(),
                 lastName=form.lastName.data.title(),
+                team_id=team,
                 rating=form.rating.data.upper(),
                 isCheckedIn=form.checked_in.data)
+        if form.team.data is not None and Team.query.filter_by(name=form.team.data).first() is None:
+            team.fencers.append(fencer)
         event.fencers.append(fencer)
         event.numFencers += 1
         if fencer.isCheckedIn:
@@ -196,8 +201,21 @@ def closeRegistration(event_id):
 def createPools(event_id):
     form = CreatePoolForm()
     event = Event.query.filter_by(id=event_id).first()
+    fencers = event.fencers
     form.numFencers.data = event.numFencers
     if form.validate_on_submit():
-        #TODO: create pools
+        pools = []
+        for _ in range(0, form.numPools1.data):
+            pool = Pool(event_id = event.id, numFencers = form.numFencers1.data)
+            pools.append(pool.id)
+            db.session.add(pool)
+        for _ in range(0, form.numPools2.data):
+            pool = Pool(event_id = event.id, numFencers = form.numFencers2.data)
+            pools.append(pool.id)
+            db.session.add(pool)
+        for fencer in fencers:
+            #TODO: assign fencers to pools 
+            pass
+        db.session.commit()
         return "pool created"
     return render_template('create-pools.html', form=form, event=event)
