@@ -1,8 +1,8 @@
-<div class="pool">
+<div class="pool-container">
 	<div class="pool-text">
 		<p class="pool-text">
-			<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">{{ event.name }}</a> on {{ event.date }}<br>
-			<a href="">Registration</a> | <a href="">Pools</a> | <a href="">DEs</a>
+			<b>{{ event.name }}</b> on <b>{{ event.date }}</b><br>
+			<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> | <a href="{{ url_for('editPools', event_id=event.id) }}">Pools</a> | <a href="">DEs</a>
 		</p>
 	</div>
 </div>

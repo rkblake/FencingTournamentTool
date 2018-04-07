@@ -2,7 +2,7 @@
 
 {% block app_content %}
 	<p>
-		<a href="{{ url_for('createTournament') }}">Create Tournament</a>
+		<a class="btn btn-success padded" role="button" href="{{ url_for('createTournament') }}">Create Tournament</a>
 	</p>
 	{% for tournament in tournaments %}
 		{% include '_tournament.html' %}

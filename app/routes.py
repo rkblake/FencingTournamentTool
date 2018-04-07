@@ -74,7 +74,7 @@ def createTournament():
     user = User.query.filter_by(username=current_user.username).first()
     form = CreateTournamentForm()
     if form.validate_on_submit():
-        tournament = Tournament(name=form.name.data, format=form.format.data)
+        tournament = Tournament(name=form.name.data.title(), format=form.format.data)
         user.tournaments.append(tournament)
         #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
@@ -91,7 +91,7 @@ def createEvent(tournament_id):
     form = CreateEventForm()
     if form.validate_on_submit():
         event = Event(
-                name=form.name.data,
+                name=form.name.data.title(),
                 date=datetime.strptime(form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'),
                 tournament=tournament)
         tournament.events.append(event)
@@ -154,19 +154,24 @@ def editRegistration(event_id):
         flash('Added fencer')
     return render_template('edit-registration.html', form=form, fencers=fencers, event=event)
 
-@app.route('/event/<int:event_id>/edit')
+@app.route('/event/<int:event_id>/edit-pools')
 @login_required
-def editEvent(event_id):
+def editPools(event_id):
     event = Event.query.filter_by(id=event_id).first()
     pools = event.pools
-    return "edit event"
+    return render_template('edit-pools.html', event=event, pools=pools)
 
-@app.route('/<int:tournament_id>/event/<int:event_id>/pool/<int:pool_id>/edit')
+@app.route('/event/<int:event_id>/pool/<int:pool_id>/edit')
 @login_required
-def editPool(tournament_id, event_id, pool_id):
-    return render_template('edit-pool.html')
+def editPool(event_id, pool_id):
+    #if request.method == "POST":
 
-@app.route('/<int:tournament_id>/event/<int:event_id>/de/edit')
+    event = Event.query.filter_by(id=event_id).first()
+    pool = Pool.query.filter_by(id=pool_id).first()
+    fencers = pool.fencers
+    return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
+
+@app.route('/event/<int:event_id>/de/edit')
 @login_required
 def editDE(tournament_id, event_id):
     return render_template('edit-de.html')
@@ -215,17 +220,23 @@ def createPools(event_id):
     form.numFencers.data = event.numFencers
     if form.validate_on_submit():
         pools = []
+        poolNum = 1
         for _ in range(0, form.numPools1.data):
-            pool = Pool(event_id = event.id, numFencers = form.numFencers1.data)
+            pool = Pool(event_id = event.id, numFencers = form.numFencers1.data, poolNum = poolNum)
+            poolNum += 1
             pools.append(pool)
             db.session.add(pool)
         for _ in range(0, form.numPools2.data):
-            pool = Pool(event_id = event.id, numFencers = form.numFencers2.data)
+            pool = Pool(event_id = event.id, numFencers = form.numFencers2.data, poolNum = poolNum)
+            poolNum += 1
             pools.append(pool)
             db.session.add(pool)
         for i, fencer in enumerate(fencers):
             pools[i % len(pools)].fencers.append(fencer)
             fencer.pool = pools[i % len(pools)]
+        for pool in pools:
+            for i, fencer in enumerate(pool.fencers):
+                fencer.numInPool = i
         db.session.commit()
-        return redirect(url_for('editEvent', event_id=event_id))
+        return redirect(url_for('editPools', event_id=event_id))
     return render_template('create-pools.html', form=form, event=event)

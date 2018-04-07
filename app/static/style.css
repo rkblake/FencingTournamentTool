@@ -2,17 +2,23 @@
     padding:10px;
 }
 
-.pool {
+.pool-container {
+  margin: 5px;
   border: 2px solid #4588ee;
   border-radius: 10px;
   background-color: #bad4ff;
-  width: 400px;
+  width: 40%;
   height: 75px;
 }
 
 .pool-text {
+  marign: 10px auto;
   padding-left: 20px;
   display: inline-block;
   vertical-align: middle;
   line-height: normal;
+}
+
+black-pool {
+    background-color: black;
 }

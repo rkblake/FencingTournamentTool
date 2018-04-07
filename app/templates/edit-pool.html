@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>Pool {{ pool.poolNum }} for {{ event.name }}</h1>
+    <hr>
+    <div>
+        <form action="post">
+        <table>
+            <tr>
+                <th>Name</th>
+                <th width="8px">#</th>
+                {% for i  in range(0, pool.numFencers) %}
+                    <th width="20px">{{ i + 1 }}</th>
+                {% endfor %}
+            </tr>
+            {% for fencer in fencers %}
+                <tr>
+                    <td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>
+                    <td>{{ fencer.numInPool + 1 }}</td>
+                    {% for j in range(0, pool.numFencers) %}
+                        {% if fencer.numInPool == j %}
+                            <td style="background-color:black"></td>
+                        {% else %}
+                            <td><input name="result{{ i }}{{ j }}"></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+        <input type="submit">
+        </form>
+    </div>
+{% endblock %}

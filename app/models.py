@@ -55,7 +55,7 @@ class Tournament(db.Model):
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    date = db.Column(db.DateTime, index=True)
+    date = db.Column(db.Date, index=True)
     stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
     numFencers = db.Column(db.Integer, default=0)
     numFencersCheckedIn = db.Column(db.Integer, default=0)
@@ -76,6 +76,7 @@ class Team(db.Model):
 
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    poolNum = db.Column(db.Integer)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     numFencers = db.Column(db.Integer)
     results = db.relationship('Result', backref='results', lazy='dynamic')
@@ -103,6 +104,7 @@ class Fencer(db.Model):
     firstName = db.Column(db.String(64), index=True)
     lastName = db.Column(db.String(63), index=True)
     isCheckedIn = db.Column(db.Boolean)
+    numInPool = db.Column(db.Integer)
     rating = db.Column(db.String(3))
     victories = db.Column(db.Integer)
     defeats = db.Column(db.Integer)
