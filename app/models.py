@@ -79,6 +79,7 @@ class Pool(db.Model):
     poolNum = db.Column(db.Integer)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     numFencers = db.Column(db.Integer)
+    state = db.Column(db.Integer, default=0) #0 = pools not finished, 1 = pools finished
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
 

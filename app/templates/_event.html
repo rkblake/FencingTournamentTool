@@ -2,7 +2,32 @@
 	<div class="pool-text">
 		<p class="pool-text">
 			<b>{{ event.name }}</b> on <b>{{ event.date }}</b><br>
-			<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> | <a href="{{ url_for('editPools', event_id=event.id) }}">Pools</a> | <a href="">DEs</a>
+			<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> |&nbsp
+			{% if event.stage >= 3 %}
+				<a href="{{ url_for('editPools', event_id=event.id) }}">Pools</a> |
+			{% else %}
+				Pools |
+			{% endif %}
+			{% if event.stage >= 5 %}
+				<a href="">DEs</a><br>
+			{% else %}
+				DEs<br>
+			{% endif %}
+			{% if event.stage >= 2 %}
+				<a href="{{ url_for('initialSeeding', event_id=event.id) }}">Initial Seeding</a> |
+			{% else %}
+				Initial Seeding |
+			{% endif %}
+			{% if event.stage >= 4 %}
+				<a href="{{ url_for('poolResults', event_id=event.id) }}">Pool Results</a> |
+			{% else %}
+				Pool Results |
+			{% endif %}
+			{% if event.stage >= 6 %}
+				<a href="{{ url_for('finalResults', event_id=event.id) }}">Final Results</a>
+			{% else %}
+				Final Results
+			{% endif %}
 		</p>
 	</div>
 </div>

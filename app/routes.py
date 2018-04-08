@@ -76,6 +76,7 @@ def createTournament():
     if form.validate_on_submit():
         tournament = Tournament(name=form.name.data.title(), format=form.format.data)
         user.tournaments.append(tournament)
+        #TODO: add user as TO of tourney
         #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
         db.session.commit()
@@ -88,6 +89,8 @@ def createTournament():
 def createEvent(tournament_id):
     user = User.query.filter_by(username=current_user.username).first()
     tournament = Tournament.query.filter_by(id=tournament_id).first()
+    if isTOofTourney(user, tournament) is False:
+        return redirect(url_for('index'))
     form = CreateEventForm()
     if form.validate_on_submit():
         event = Event(
@@ -101,18 +104,22 @@ def createEvent(tournament_id):
         return redirect(url_for('editTournament', tournament_id=tournament_id))
     return render_template('create-event.html', tournament=tournament, form=form)
 
+#TODO: live registration view for public
 @app.route('/<int:tournament_id>/event/<int:event_id>/registration')
 def registration(tournament_id, event_id):
     return "registration"
 
+#TODO: live pools for public
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool')
 def pool(tournament_id, event_id):
     return "pool"
 
+#TODO: live des for public
 @app.route('/<int:tournament_id>/event/<int:event_id>/de')
 def de(tournament_id, event_id):
     return "de"
 
+#TODO: final results for public
 @app.route('/<int:tournament_id>/event/<int:event_id>/final')
 def final(tournament_id, event_id):
     return "final"
@@ -161,15 +168,31 @@ def editPools(event_id):
     pools = event.pools
     return render_template('edit-pools.html', event=event, pools=pools)
 
-@app.route('/event/<int:event_id>/pool/<int:pool_id>/edit')
+#TODO: sanitize and check input; rewrite using wtform
+@app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
 @login_required
 def editPool(event_id, pool_id):
-    #if request.method == "POST":
-
-    event = Event.query.filter_by(id=event_id).first()
     pool = Pool.query.filter_by(id=pool_id).first()
     fencers = pool.fencers
-    return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
+    seen = dict()
+    if request.method == "POST":
+        for key, value in request.form.items():
+            key = key.strip('result')
+            if key.reverse() in seen:
+                result = Result.query.filter_by(id=seen[key.reverse()]).first()
+                result.fencer2Score=result[1]
+            fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
+            fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
+            result = Result(pool_id=pool.id, fencer1=fencer1, fencer2=fencer2, fencer1Score=int(result[1]))
+            result.fencer1Win = True if result[0].lower is 'v' else False
+            seen[key] = result.id
+            db.session.add(result)
+        pool.state = 1
+        db.session.commit()
+        return redirect(url_for('edit-pools.html', event_id=event_id))
+    elif request.method == "GET":
+        event = Event.query.filter_by(id=event_id).first()
+        return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
 
 @app.route('/event/<int:event_id>/de/edit')
 @login_required
