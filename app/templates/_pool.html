@@ -116,3 +116,45 @@
     </tr>
   </tbody>
 </table>
+
+
+<table class="results">
+    <thead>
+        <tr>
+            <th></th>
+            <th>#</th>
+            {% for i in range(1, pool.numFencers+1) %}
+            <th>{{ i }}</th>
+            {% endfor %}
+            <th></th>
+            <th>V</th>
+            <th>V/M</th>
+            <th>TS</th>
+            <th>TR</th>
+            <th>Ind</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for fencer in pool.fencers %}
+            <tr>
+                <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div></td>
+                <th>{{ fencer.numInPool }}</th>
+                {% for i in range(1, pool.numFencers) %}
+                    {% for j in range(1, pool.numFencers) %}
+                        {% if i == j %}
+                            <td class="match"></td>
+                        {% else %}
+
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                <th></th>
+                <td class="stat">{{ fencer.victories }}</td>
+                <td class="stat">{{ fencer.victories / pool.numInPool - 1 }}</td>
+                <td class="stat">{{ fencer.touchesScored }}</td>
+                <td class="stat">{{ fencer.touchesRecieved }}</td>
+                <td class="stat">{{ fencer.touchesScored - fencer.touchesRecieved }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

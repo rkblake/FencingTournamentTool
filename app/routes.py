@@ -168,7 +168,7 @@ def editPools(event_id):
     pools = event.pools
     return render_template('edit-pools.html', event=event, pools=pools)
 
-#TODO: sanitize and check input; rewrite using wtform
+#TODO: sanitize and check input; rewrite using wtform; handle changes to pool results
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
 @login_required
 def editPool(event_id, pool_id):
