@@ -47,6 +47,14 @@ class AddFencerForm(FlaskForm):
     checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Fencer')
 
+    def validate_rating(self, rating):
+        if rating.data.upper() == 'U':
+            return True
+        if rating.data[0].upper() not in ['A', 'B', 'C', 'D', 'E']:
+            raise ValidationError('Not a valid rating')
+        if int(rating.data[1:]) < 14 or int(rating.data[1:]) > 18:
+            raise ValidationError('Not a valid rating')
+
 class CreatePoolForm(FlaskForm):
     numFencers = HiddenField()
     numPools1 = IntegerField(validators=[DataRequired()])

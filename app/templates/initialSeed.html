@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>Initial Seed for {{ event.name }}</h1>
+    <hr>
+    <table class="table table-striped">
+		<tr>
+			<th>Seed</th>
+			<th>Last Name</th>
+			<th>First Name</th>
+			<th>Club</th>
+			<th>Team</th>
+			<th>Rating</th>
+		</tr>
+		{% for fencer in fencers %}
+		<tr>
+            <td></td>
+			<td>{{ fencer.lastName }}</td>
+			<td>{{ fencer.firstName }}</td>
+			<td></td>
+			<td>{{ fencer.team.name }} ({{ fencer.team_id }})</td>
+			<td>{{ fencer.rating }}</td>
+		{% endfor %}
+	</table>
+{% endblock %}

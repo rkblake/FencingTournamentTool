@@ -39,7 +39,17 @@
 		</tr>
 		{% for fencer in fencers %}
 		<tr>
-			<td>{{ fencer.isCheckedIn }}</td>
+			<td>
+				{% if fencer.isCheckedIn %}
+					<a class="btn btn-success btn-sm disabled padded" role="button" aria-disabled="true">&#10004;</a>
+					<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('makeAbsent', event_id=event.id, fencer_id=fencer.id) }}">&#128683;</a>
+					<span style="color: green;">Checked In</span>
+				{% else %}
+					<a class="btn btn-success btn-sm padded" role="button" href="{{ url_for('checkInFencer', event_id=event.id, fencer_id=fencer.id) }}">&#10004;</a>
+					<a class="btn btn-danger btn-sm disabled padded" role="button" aria-disabled="true">&#128683;</a>
+					<span style="color: red;">Absent</span>
+				{% endif %}
+			</td>
 			<td>{{ fencer.lastName }}</td>
 			<td>{{ fencer.firstName }}</td>
 			<td></td>

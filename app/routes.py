@@ -109,6 +109,12 @@ def createEvent(tournament_id):
 def registration(tournament_id, event_id):
     return "registration"
 
+@app.route('/event/<int:event_id>/initialseed')
+def initialSeeding(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    fencers = event.fencers
+    return render_template('initialSeed.html', event=event, fencers=fencers)
+
 #TODO: live pools for public
 @app.route('/<int:tournament_id>/event/<int:event_id>/pool')
 def pool(tournament_id, event_id):
@@ -188,6 +194,7 @@ def editPool(event_id, pool_id):
             seen[key] = result.id
             db.session.add(result)
         pool.state = 1
+        #TODO: check if all pools finished
         db.session.commit()
         return redirect(url_for('edit-pools.html', event_id=event_id))
     elif request.method == "GET":
@@ -202,18 +209,20 @@ def editDE(tournament_id, event_id):
 @app.route('/<int:event_id>/check-in/<int:fencer_id>')
 @login_required
 def checkInFencer(event_id, fencer_id):
+    event = Event.query.filter_by(id=event_id).first()
     fencer = Fencer.query.filter_by(id=fencer_id).first()
     fencer.isCheckedIn = True
-    event.numFencersCheckedIn += 1
+    event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
 @app.route('/<int:event_id>/absent/<int:fencer_id>')
 @login_required
 def makeAbsent(event_id, fencer_id):
+    event = Event.query.filter_by(id=event_id).first()
     fencer = Fencer.query.filter_by(id=fencer_id).first()
     fencer.isCheckedIn = False
-    event.numFencersCheckedIn -= 1
+    event.numFencersCheckedIn = Event.numFencersCheckedIn - 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
@@ -229,6 +238,7 @@ def openRegistration(event_id):
 @login_required
 def closeRegistration(event_id):
     event = Event.query.filter_by(id=event_id).first()
+    fencers = event.fencers.order_by()
     event.stage = 2
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
@@ -260,6 +270,7 @@ def createPools(event_id):
         for pool in pools:
             for i, fencer in enumerate(pool.fencers):
                 fencer.numInPool = i
+        event.stage = 3
         db.session.commit()
         return redirect(url_for('editPools', event_id=event_id))
     return render_template('create-pools.html', form=form, event=event)
