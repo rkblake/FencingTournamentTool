@@ -6,11 +6,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
 
-access_table = db.Table('access',
-        db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-        db.Column('tournament_id', db.Integer, db.ForeignKey('tournament.id')),
-        db.Column('isMainTO', db.Boolean)
-)
+class AccessTable(db.Model):
+    __tablename__ = 'access_table'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'), primary_key=True)
+    mainTO = db.Column(db.Boolean, default=False)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -18,11 +18,12 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    tournaments = db.relationship(
+    '''tournaments = db.relationship(
             "Tournament",
-            secondary=access_table,
+            secondary=AccessTable,
             backref='user_tournaments',
-            lazy='dynamic')
+            lazy='dynamic')'''
+    tournaments = db.relationship('AccessTable', backref='user')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -42,11 +43,7 @@ class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     format = db.Column(db.String())
-    organizers = db.relationship(
-            "User",
-            secondary=access_table,
-            backref='tournament_organizers'
-    )
+    organizers = db.relationship('AccessTable', backref='tournament')
     events = db.relationship('Event', backref='tournament', lazy='dynamic')
 
     def __repr__(self):
@@ -60,6 +57,7 @@ class Event(db.Model):
     numFencers = db.Column(db.Integer, default=0)
     numFencersCheckedIn = db.Column(db.Integer, default=0)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
+    #tournament = db.relationship('Tournament', backref='event', lazy='dynamic')
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
     des = db.relationship('DE', backref='event', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='event', lazy='dynamic')
