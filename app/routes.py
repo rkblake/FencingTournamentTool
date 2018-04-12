@@ -1,9 +1,10 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, CreateEventForm, AddFencerForm, CreatePoolForm
-from app.models import User, Tournament, Event, Fencer, Team, Pool, AccessTable
+from app.forms import *
+from app.models import *
 from datetime import datetime
+import copy
 
 def isTOofTourney(user, tournament):
     access = AccessTable.query.filter_by(user_id=user.id, tournament_id=tournament.id).first()
@@ -58,9 +59,8 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    #tournaments = user.tournaments.order_by(Tournament.date.desc())
-    tournaments = user.tournaments
-    return render_template('user.html', user=user, tournaments=tournaments)
+    q = db.session.query(User, AccessTable, Tournament).filter(User.id == AccessTable.user_id).filter(Tournament.id == AccessTable.tournament_id).all()
+    return render_template('user.html', user=user, tournaments=[i for _,_,i in q])
 
 @app.route('/<int:tournament_id>')
 def tournament(tournament_id):
@@ -81,8 +81,6 @@ def createTournament():
         access = AccessTable(user_id=user.id, tournament_id=tournament.id, mainTO=True)
         user.tournaments.append(access)
         tournament.organizers.append(access)
-        #TODO: add user as TO of tourney
-        #query_access = User.query.join(access_table).join('Access').filter(access_table.c.isMainTO
         db.session.add(tournament)
         db.session.commit()
         flash('Created new tournament')
@@ -136,15 +134,26 @@ def final(tournament_id, event_id):
     return "final"
 
 #TODO: allow adding other TOs
-@app.route('/<int:tournament_id>/edit')
+@app.route('/<int:tournament_id>/edit', methods=['GET', 'POST'])
 @login_required
 def editTournament(tournament_id):
     user = User.query.filter_by(username=current_user.username).first()
     tournament = Tournament.query.filter_by(id=tournament_id).first()
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
+    form = AddTOForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None:
+            #TODO: send user email to register
+            return
+        access = AccessTable(user_id=user.id, tournament_id=tournament.id, mainTO=False)
+        user.tournaments.append(access)
+        tournament.organizers.append(access)
+        db.session.add(access)
+        db.session.commit()
     events = tournament.events
-    return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events)
+    return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events, form=form)
 
 @app.route('/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
 @login_required
@@ -194,6 +203,7 @@ def editPools(event_id):
 @login_required
 def editPool(event_id, pool_id):
     pool = Pool.query.filter_by(id=pool_id).first()
+    event = pool.event
     tournament = Tournament.query.filter_by(id=event.tournament_id).first()
     user = User.query.filter_by(username=current_user.username).first()
     if not isTOofTourney(user, tournament):
@@ -203,23 +213,56 @@ def editPool(event_id, pool_id):
     if request.method == "POST":
         for key, value in request.form.items():
             key = key.strip('result')
-            if key.reverse() in seen:
-                result = Result.query.filter_by(id=seen[key.reverse()]).first()
-                result.fencer2Score=result[1]
-            fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
-            fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
-            result = Result(pool_id=pool.id, fencer1=fencer1, fencer2=fencer2, fencer1Score=int(result[1]))
-            result.fencer1Win = True if result[0].lower is 'v' else False
-            seen[key] = result.id
-            db.session.add(result)
+            if key[0] == key[1]:
+                continue
+            if key[::-1] not in seen:
+                fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
+                fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
+                result = Result(pool_id=pool.id, fencer1=fencer1.id, fencer2=fencer2.id, fencer1Score=int(value[1]))
+                result.fencer1Win = value[0].upper() == 'V'
+                seen[key] = copy.deepcopy(result)
+                db.session.add(copy.deepcopy(result))
+            if key[::-1] in seen:
+                seen[key[::-1]].fencer2Score=value[1]
         pool.state = 1
         #TODO: check if all pools finished
         db.session.commit()
-        return redirect(url_for('edit-pools.html', event_id=event_id))
+        return redirect(url_for('handleData'))
     elif request.method == "GET":
-        event = Event.query.filter_by(id=event_id).first()
+        #event = Event.query.filter_by(id=event_id).first()
         return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
-
+'''
+@app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
+@login_required
+def editPool(event_id, pool_id):
+    pool = Pool.query.filter_by(id=pool_id).first()
+    event = pool.event
+    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
+    user = User.query.filter_by(username=current_user.username).first()
+    if not isTOofTourney(user, tournament):
+        return redirect(url_for('index'))
+    fencers = pool.fencers
+    form = EditPoolForm(numFencers = pool.numFencers)
+    #form.numFencers.data = pool.numFencers
+    seen = [['' for _ in range(pool.numFencers)] for _ in range(pool.numFencers)]
+    if form.validate_on_submit():
+        for i in range(0, pool.numFencers):
+            for j in range(0, pool.numFencers):
+                if i == j:
+                    continue
+                if seen[j][i] is not '':
+                    result.fencer2Score=int(field[i][j].data[1])
+                fencer1 = Fencer.query.filter_by(pool_id=pool.id, numInPool=i+1).first()
+                fencer2 = Fencer.query.filter_by(pool_id=pool.id, numInPool=j+1).first()
+                result = Result(pool_id=pool.id, fencer1=fencer1, fencer2=fencer2, fencer1Score=int(field[i][j].data[1]))
+                result.fencer1Win = field[i][j].data[0].upper() == 'V'
+                seen[i][j] = result
+                db.session.add(result)
+        pool.state = 1
+        db.session.commit()
+        return redirect(url_for('editPools', event_id=event_id))
+    return render_template('edit-pool.html', event=event, pool=pool, form=form)
+'''
 @app.route('/event/<int:event_id>/de/edit')
 @login_required
 def editDE(tournament_id, event_id):
@@ -287,22 +330,22 @@ def createPools(event_id):
     user = User.query.filter_by(username=current_user.username).first()
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
-    #TODO: only select checked in fencers
     fencers = event.fencers.order_by(Fencer.team_id.desc())
-    form.numFencers.data = event.numFencers
+    fencers = fencers.filter_by(isCheckedIn=True)
+    form.numFencers.data = event.numFencersCheckedIn
     if form.validate_on_submit():
         pools = []
         poolNum = 1
         for _ in range(0, form.numPools1.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers1.data, poolNum = poolNum)
             poolNum += 1
-            pools.append(pool)
-            db.session.add(pool)
+            pools.append(copy.deepcopy(pool))
+            db.session.add(copy.deepcopy(pool))
         for _ in range(0, form.numPools2.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers2.data, poolNum = poolNum)
             poolNum += 1
-            pools.append(pool)
-            db.session.add(pool)
+            pools.append(copy.deepcopy(pool))
+            db.session.add(copy.deepcopy(pool))
         for i, fencer in enumerate(fencers):
             pools[i % len(pools)].fencers.append(fencer)
             fencer.pool = pools[i % len(pools)]

@@ -4,12 +4,12 @@
     <h1>Pool {{ pool.poolNum }} for {{ event.name }}</h1>
     <hr>
     <div>
-        <form action="post">
+        <form action="" method="post">
         <table>
             <tr>
                 <th>Name</th>
                 <th width="8px">#</th>
-                {% for i  in range(0, pool.numFencers) %}
+                {% for i  in range(pool.numFencers) %}
                     <th width="20px">{{ i + 1 }}</th>
                 {% endfor %}
             </tr>
@@ -17,17 +17,17 @@
                 <tr>
                     <td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>
                     <td>{{ fencer.numInPool + 1 }}</td>
-                    {% for j in range(0, pool.numFencers) %}
+                    {% for j in range(pool.numFencers) %}
                         {% if fencer.numInPool == j %}
                             <td style="background-color:black"></td>
                         {% else %}
-                            <td><input name="result{{ i }}{{ j }}"></td>
+                            <td><input name="result{{ fencer.numInPool }}{{ j + 1 }}"></td>
                         {% endif %}
                     {% endfor %}
                 </tr>
             {% endfor %}
         </table>
-        <input type="submit">
+        <input type="submit" value="submit">
         </form>
     </div>
 {% endblock %}

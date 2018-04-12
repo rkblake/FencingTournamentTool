@@ -71,3 +71,28 @@ class CreatePoolForm(FlaskForm):
         else:
             return False
             #raise ValidationError('Pools and fencers must add up to total fencers in event.')
+
+class AddTOForm(FlaskForm):
+    TOEmail = StringField('Organizers Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Add TO')
+
+class EditPoolForm(FlaskForm):
+    def __init__(self, numFencers):
+        super().__init__()
+        self.numFencers = numFencers
+        self.field = [['' for _ in range(numFencers)] for _ in range(numFencers)]
+        for i in range(0, numFencers):
+            for j in range(0, numFencers):
+                if i == j:
+                    continue
+                self.field[i][j] = StringField(validators=[DataRequired()])
+        self.submit = SubmitField('Submit pool results')
+
+    def validate(self):
+        for i in range(0, int(self.numFencers.data)):
+            for j in range(0, int(self.numFencers.data)):
+                if i == j:
+                    continue
+                if not (field[i][j].data[0].upper() is 'V' and field[i][j].data[0].upper() is 'D' or field[j][i].data[0].upper() is 'V' and field[j][i].data[0].upper() is 'D'):
+                    return False
+        return True
