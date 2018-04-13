@@ -107,10 +107,10 @@ def createEvent(tournament_id):
         return redirect(url_for('editTournament', tournament_id=tournament_id))
     return render_template('create-event.html', tournament=tournament, form=form)
 
-#TODO: live registration view for public
 @app.route('/event/<int:event_id>/registration')
 def registration(event_id):
-    return "registration"
+    event = Event.query.filter_by(id=event_id).first()
+    return render_template('registration.html', event=event)
 
 @app.route('/event/<int:event_id>/initialseed')
 def initialSeeding(event_id):
@@ -119,17 +119,24 @@ def initialSeeding(event_id):
     return render_template('initialSeed.html', event=event, fencers=fencers)
 
 #TODO: live pools for public
-@app.route('/<int:tournament_id>/event/<int:event_id>/pool')
-def pool(tournament_id, event_id):
-    return "pool"
+@app.route('/event/<int:event_id>/pools')
+def pools(tournament_id, event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    pools = event.pools
+    results = dict()
+    for pool in pools:
+        results[pool.poolNum] = dict()
+        for result in pool.results:
+            results[pool.poolNum][str(result.fencer1)+str(result.fencer2)] = result
+    return render_template('pools.html', event=event, pools=pools, results=results)
 
 #TODO: live des for public
-@app.route('/<int:tournament_id>/event/<int:event_id>/de')
+@app.route('/event/<int:event_id>/de')
 def de(tournament_id, event_id):
     return "de"
 
 #TODO: final results for public
-@app.route('/<int:tournament_id>/event/<int:event_id>/final')
+@app.route('/event/<int:event_id>/final')
 def final(tournament_id, event_id):
     return "final"
 
@@ -219,15 +226,21 @@ def editPool(event_id, pool_id):
                 fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
                 fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
                 result = Result(pool_id=pool.id, fencer1=fencer1.id, fencer2=fencer2.id, fencer1Score=int(value[1]))
+                pool.results.append(result)
                 result.fencer1Win = value[0].upper() == 'V'
                 seen[key] = copy.deepcopy(result)
-                db.session.add(copy.deepcopy(result))
+                db.session.add(result)
+                db.session.commit()
             if key[::-1] in seen:
-                seen[key[::-1]].fencer2Score=value[1]
+                fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
+                fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
+                result = Result.query.filter_by(pool_id=pool.id, fencer1=fencer2.id, fencer2=fencer1.id).first()
+                result.fencer2Score=int(value[1])
+        db.session.commit()
         pool.state = 1
         #TODO: check if all pools finished
         db.session.commit()
-        return redirect(url_for('handleData'))
+        return redirect(url_for('editPools', event_id=event_id))
     elif request.method == "GET":
         #event = Event.query.filter_by(id=event_id).first()
         return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
@@ -339,19 +352,29 @@ def createPools(event_id):
         for _ in range(0, form.numPools1.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers1.data, poolNum = poolNum)
             poolNum += 1
-            pools.append(copy.deepcopy(pool))
-            db.session.add(copy.deepcopy(pool))
+            pools.append(pool)
+            db.session.add(pool)
         for _ in range(0, form.numPools2.data):
             pool = Pool(event_id = event.id, numFencers = form.numFencers2.data, poolNum = poolNum)
             poolNum += 1
-            pools.append(copy.deepcopy(pool))
-            db.session.add(copy.deepcopy(pool))
+            pools.append(pool)
+            db.session.add(pool)
+
+        j = 0
+        for pool in pools:
+            for i in range(pool.numFencers):
+                pool.fencers.append(fencers[j])
+                fencers[j].numInPool = i + 1
+                fencers[j].pool = pool
+                j += 1
+        '''
         for i, fencer in enumerate(fencers):
             pools[i % len(pools)].fencers.append(fencer)
             fencer.pool = pools[i % len(pools)]
         for pool in pools:
             for i, fencer in enumerate(pool.fencers):
                 fencer.numInPool = i
+        '''
         event.stage = 3
         db.session.commit()
         return redirect(url_for('editPools', event_id=event_id))

@@ -16,9 +16,9 @@
             {% for fencer in fencers %}
                 <tr>
                     <td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>
-                    <td>{{ fencer.numInPool + 1 }}</td>
+                    <td>{{ fencer.numInPool }}</td>
                     {% for j in range(pool.numFencers) %}
-                        {% if fencer.numInPool == j %}
+                        {% if fencer.numInPool == j + 1 %}
                             <td style="background-color:black"></td>
                         {% else %}
                             <td><input name="result{{ fencer.numInPool }}{{ j + 1 }}"></td>

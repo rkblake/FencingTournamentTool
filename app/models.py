@@ -62,15 +62,24 @@ class Event(db.Model):
     des = db.relationship('DE', backref='event', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='event', lazy='dynamic')
 
+    def __repr__(self):
+        return '<Event {}>'.format(self.name)
+
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     fencers = db.relationship('Fencer', backref='club_members')
 
+    def __repr__(self):
+        return '<Event {}>'.format(self.name)
+
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     fencers = db.relationship('Fencer', backref='team_members')
+
+    def __repr__(self):
+        return '<Event {}>'.format(self.name)
 
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,6 +89,9 @@ class Pool(db.Model):
     state = db.Column(db.Integer, default=0) #0 = pools not finished, 1 = pools finished
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Pool {}, {} fencers>'.format(self.poolNum, self.numFencers)
 
 class DE(db.Model):
     __tablename__ = 'de'
@@ -115,3 +127,6 @@ class Fencer(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team = db.relationship('Team', backref='team')
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+
+    def __repr__(self):
+        return '<Fencer {}, {} Num {}>'.format(self.lastName, self.firstName, self.numInPool)

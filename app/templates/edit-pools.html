@@ -2,15 +2,8 @@
 
 {% block app_content %}
     {% for pool in pools %}
-        {% if pool.state == 0 %}
         <p>
             <a href="{{ url_for('editPool', event_id=event.id, pool_id=pool.id) }}">Pool {{ pool.poolNum }}</a>
         </p>
-        {% else %}
-        <p>
-            {% include '_pool.html' %}<br>
-            <a href="{{ url_for('editPool', event_id=event.id, pool_id=pol.id) }}">Pool {{ pool.poolNum }}</a>
-        </p>
-        {% endif %}
     {% endfor %}
 {% endblock %}

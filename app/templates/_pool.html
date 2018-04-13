@@ -144,7 +144,13 @@
                         {% if i == j %}
                             <td class="match"></td>
                         {% else %}
-
+                            {% if results[fencer.pool.poolNum][str(i)+str(j)].fencer1Win %}
+                            <td class="match victory">V
+                            {% else %}
+                            <td class="match defeat">D
+                            {% endif %}
+                            results[fencer.pool.poolNum][str(i)+str(j)].fencer1Win
+                            </td>
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
