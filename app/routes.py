@@ -127,7 +127,7 @@ def pools(tournament_id, event_id):
     for pool in pools:
         results[pool.poolNum] = dict()
         for result in pool.results:
-            results[pool.poolNum][str(result.fencer1)+str(result.fencer2)] = result
+            results[pool.poolNum][str(result.fencer)+str(result.opponent)] = result
     return render_template('pools.html', event=event, pools=pools, results=results)
 
 #TODO: live des for public
@@ -204,7 +204,7 @@ def editPools(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     return render_template('edit-pools.html', event=event, pools=pools)
-
+'''
 #TODO: sanitize and check input; rewrite using wtform; handle changes to pool results
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -254,28 +254,21 @@ def editPool(event_id, pool_id):
     user = User.query.filter_by(username=current_user.username).first()
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
-    fencers = pool.fencers
-    form = EditPoolForm(numFencers = pool.numFencers)
-    #form.numFencers.data = pool.numFencers
-    seen = [['' for _ in range(pool.numFencers)] for _ in range(pool.numFencers)]
-    if form.validate_on_submit():
-        for i in range(0, pool.numFencers):
-            for j in range(0, pool.numFencers):
-                if i == j:
-                    continue
-                if seen[j][i] is not '':
-                    result.fencer2Score=int(field[i][j].data[1])
-                fencer1 = Fencer.query.filter_by(pool_id=pool.id, numInPool=i+1).first()
-                fencer2 = Fencer.query.filter_by(pool_id=pool.id, numInPool=j+1).first()
-                result = Result(pool_id=pool.id, fencer1=fencer1, fencer2=fencer2, fencer1Score=int(field[i][j].data[1]))
-                result.fencer1Win = field[i][j].data[0].upper() == 'V'
-                seen[i][j] = result
-                db.session.add(result)
+    if request.method == "POST":
+        for key, value in request.form.items():
+            key = key.strip('result')
+            fencer = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
+            opponent = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
+            result = Result(pool_id=pool.id, fencer=fencer.id, fencerScore=value[1], opponent=opponent.id, fencerWin=(value[0].upper() == 'V'))
+            pool.results.append(result)
+            db.session.add(result)
         pool.state = 1
         db.session.commit()
         return redirect(url_for('editPools', event_id=event_id))
-    return render_template('edit-pool.html', event=event, pool=pool, form=form)
-'''
+    elif request.method == "GET":
+        fencers = pool.fencers
+        return render_template('edit-pool.html', event=event, pool=pool)
+
 @app.route('/event/<int:event_id>/de/edit')
 @login_required
 def editDE(tournament_id, event_id):

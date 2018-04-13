@@ -104,11 +104,10 @@ class Result(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     de_id = db.Column(db.Integer, db.ForeignKey('de.id'))
-    fencer1 = db.Column(db.Integer, db.ForeignKey('fencer.id'))
-    fencer2 = db.Column(db.Integer, db.ForeignKey('fencer.id'))
-    fencer1Score = db.Column(db.Integer)
-    fencer2Score = db.Column(db.Integer)
-    fencer1Win = db.Column(db.Boolean)
+    fencer = db.Column(db.Integer, db.ForeignKey('fencer.id'))
+    opponent = db.Column(db.Integer, db.ForeignKey('fencer.id'))
+    fencerScore = db.Column(db.Integer)
+    fencerWin = db.Column(db.Boolean)
 
 class Fencer(db.Model):
     id = db.Column(db.Integer, primary_key=True)

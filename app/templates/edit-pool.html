@@ -13,7 +13,7 @@
                     <th width="20px">{{ i + 1 }}</th>
                 {% endfor %}
             </tr>
-            {% for fencer in fencers %}
+            {% for fencer in pool.fencers %}
                 <tr>
                     <td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>
                     <td>{{ fencer.numInPool }}</td>
