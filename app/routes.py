@@ -120,15 +120,18 @@ def initialSeeding(event_id):
 
 #TODO: live pools for public
 @app.route('/event/<int:event_id>/pools')
-def pools(tournament_id, event_id):
+def pools(event_id):
     event = Event.query.filter_by(id=event_id).first()
     pools = event.pools
     results = dict()
     for pool in pools:
         results[pool.poolNum] = dict()
         for result in pool.results:
-            results[pool.poolNum][str(result.fencer)+str(result.opponent)] = result
-    return render_template('pools.html', event=event, pools=pools, results=results)
+            fencer = Fencer.query.filter_by(id=result.fencer).first()
+            opponent = Fencer.query.filter_by(id=result.opponent).first()
+            results[pool.poolNum][str(fencer.numInPool)+str(opponent.numInPool)] = result
+    fencers = event.fencers.order_by(Fencer.numInPool.asc())
+    return render_template('pools.html', event=event, pools=pools, results=results, fencers=fencers)
 
 #TODO: live des for public
 @app.route('/event/<int:event_id>/de')
@@ -203,6 +206,13 @@ def editPools(event_id):
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
     pools = event.pools
+    allPoolsDone = True
+    for pool in pools:
+        if pool.state is 0:
+            allPoolsDone = False
+    if allPoolsDone:
+        event.stage = 4
+        db.session.commit()
     return render_template('edit-pools.html', event=event, pools=pools)
 '''
 #TODO: sanitize and check input; rewrite using wtform; handle changes to pool results
@@ -260,14 +270,18 @@ def editPool(event_id, pool_id):
             fencer = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
             opponent = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
             result = Result(pool_id=pool.id, fencer=fencer.id, fencerScore=value[1], opponent=opponent.id, fencerWin=(value[0].upper() == 'V'))
+            fencer.victories = Fencer.victories + (1 if result.fencerWin else 0)
+            #print(fencer.victories)
+            fencer.touchesScored = Fencer.touchesScored + result.fencerScore
+            opponent.touchesRecieved = Fencer.touchesRecieved + result.fencerScore
             pool.results.append(result)
             db.session.add(result)
         pool.state = 1
         db.session.commit()
         return redirect(url_for('editPools', event_id=event_id))
     elif request.method == "GET":
-        fencers = pool.fencers
-        return render_template('edit-pool.html', event=event, pool=pool)
+        fencers = pool.fencers.order_by(Fencer.numInPool.asc())
+        return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
 
 @app.route('/event/<int:event_id>/de/edit')
 @login_required

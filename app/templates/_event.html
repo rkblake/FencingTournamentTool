@@ -19,7 +19,7 @@
 				Initial Seeding |
 			{% endif %}
 			{% if event.stage >= 4 %}
-				<a href="{{ url_for('poolResults', event_id=event.id) }}">Pool Results</a> |
+				<a href="{{ url_for('pools', event_id=event.id) }}">Pool Results</a> |
 			{% else %}
 				Pool Results |
 			{% endif %}

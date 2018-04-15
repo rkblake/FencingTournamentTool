@@ -1,25 +1,29 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}">
     <h1>Pool {{ pool.poolNum }} for {{ event.name }}</h1>
     <hr>
     <div>
         <form action="" method="post">
-        <table>
-            <tr>
-                <th>Name</th>
-                <th width="8px">#</th>
-                {% for i  in range(pool.numFencers) %}
-                    <th width="20px">{{ i + 1 }}</th>
-                {% endfor %}
-            </tr>
-            {% for fencer in pool.fencers %}
+        <table class="results">
+            <thead>
                 <tr>
-                    <td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>
-                    <td>{{ fencer.numInPool }}</td>
+                    <th width="60px">Name</th>
+                    <th width="8px">#</th>
+                    {% for i  in range(pool.numFencers) %}
+                        <th width="10px">{{ i + 1 }}</th>
+                    {% endfor %}
+                    <th></th>
+                </tr>
+            </thead>
+            {% for fencer in fencers %}
+                <tr>
+                    <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div></td>
+                    <th>{{ fencer.numInPool }}</th>
                     {% for j in range(pool.numFencers) %}
                         {% if fencer.numInPool == j + 1 %}
-                            <td style="background-color:black"></td>
+                            <td class="match"></td>
                         {% else %}
                             <td><input name="result{{ fencer.numInPool }}{{ j + 1 }}"></td>
                         {% endif %}
@@ -27,7 +31,7 @@
                 </tr>
             {% endfor %}
         </table>
-        <input type="submit" value="submit">
+        <button type="submit" class="btn btn-default">Submit Pool Results</submit>
         </form>
     </div>
 {% endblock %}

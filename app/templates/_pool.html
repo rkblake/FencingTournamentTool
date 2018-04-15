@@ -1,124 +1,4 @@
 <table class="results">
-  <thead>
-    <tr>
-      <th></th>
-      <th>#</th>
-      <th>1</th>
-      <th>2</th>
-      <th>3</th>
-      <th>4</th>
-      <th>5</th>
-      <th>6</th>
-      <th></th>
-      <th>V</th>
-      <th>V/M</th>
-      <th>TS</th>
-      <th>TR</th>
-      <th>Ind</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="contestant"><div class="name">Wood, Samantha</div><div class="location">SEACOAST / Northeast / <span class="country USA">USA</span></div></td>
-      <th>1</th>
-      <td class="match"></td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match defeat">D2</td>
-      <td class="match defeat highlight">D2</td>
-      <td class="match victory">V5</td>
-      <th></th>
-      <td class="stat">3</td>
-      <td class="stat">0.60</td>
-      <td class="stat">19</td>
-      <td class="stat">15</td>
-      <td class="stat">+4</td>
-    </tr>
-    <tr>
-      <td class="contestant"><div class="name">Errickson, Rebecca</div><div class="location">MEDEO F.C. / New Jersey / <span class="country USA">USA</span></div></td>
-      <th>2</th>
-      <td class="match defeat">D1</td>
-      <td class="match"></td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match defeat">D2</td>
-      <td class="match defeat">D4</td>
-      <th></th>
-      <td class="stat">2</td>
-      <td class="stat">0.40</td>
-      <td class="stat">17</td>
-      <td class="stat">20</td>
-      <td class="stat">-3</td>
-    </tr>
-    <tr>
-      <td class="contestant"><div class="name">Cole, Rachel</div><div class="location">H3 / Long Island / <span class="country USA">USA</span></div></td>
-      <th>3</th>
-      <td class="match defeat">D0</td>
-      <td class="match defeat">D2</td>
-      <td class="match"></td>
-      <td class="match defeat">D0</td>
-      <td class="match defeat">D1</td>
-      <td class="match defeat">D1</td>
-      <th></th>
-      <td class="stat">0</td>
-      <td class="stat">0.00</td>
-      <td class="stat">4</td>
-      <td class="stat">25</td>
-      <td class="stat">-21</td>
-    </tr>
-    <tr>
-      <td class="contestant"><div class="name">Dickstein, Lila</div><div class="location">MANHATTAN / Metro NYC / <span class="country USA">USA</span></div></td>
-      <th>4</th>
-      <td class="match victory">V5</td>
-      <td class="match defeat">D3</td>
-      <td class="match victory">V5</td>
-      <td class="match"></td>
-      <td class="match defeat">D1</td>
-      <td class="match defeat">D2</td>
-      <th></th>
-      <td class="stat">2</td>
-      <td class="stat">0.40</td>
-      <td class="stat">16</td>
-      <td class="stat">17</td>
-      <td class="stat">-1</td>
-    </tr>
-    <tr>
-      <td class="contestant"><div class="name">Ross, Megan</div><div class="location">RCHESTER / Western NY / <span class="country USA">USA</span></div></td>
-      <th>5</th>
-      <td class="match victory highlight">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match"></td>
-      <td class="match defeat">D4</td>
-      <th></th>
-      <td class="stat">4</td>
-      <td class="stat">0.80</td>
-      <td class="stat">24</td>
-      <td class="stat">11</td>
-      <td class="stat">+13</td>
-    </tr>
-    <tr>
-      <td class="contestant"><div class="name">Kopits, Hanna</div><div class="location">N.A.F.A.N. / West-Rock / <span class="country USA">USA</span></div></td>
-      <th>6</th>
-      <td class="match defeat">D4</td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match victory">V5</td>
-      <td class="match"></td>
-      <th></th>
-      <td class="stat">4</td>
-      <td class="stat">0.80</td>
-      <td class="stat">24</td>
-      <td class="stat">16</td>
-      <td class="stat">+8</td>
-    </tr>
-  </tbody>
-</table>
-
-
-<table class="results">
     <thead>
         <tr>
             <th></th>
@@ -135,28 +15,22 @@
         </tr>
     </thead>
     <tbody>
-        {% for fencer in pool.fencers %}
+        {% for fencer in fencers %}
             <tr>
                 <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div></td>
                 <th>{{ fencer.numInPool }}</th>
-                {% for i in range(1, pool.numFencers) %}
-                    {% for j in range(1, pool.numFencers) %}
-                        {% if i == j %}
-                            <td class="match"></td>
-                        {% else %}
-                            {% if results[fencer.pool.poolNum][str(i)+str(j)].fencer1Win %}
-                            <td class="match victory">V
-                            {% else %}
-                            <td class="match defeat">D
-                            {% endif %}
-                            results[fencer.pool.poolNum][str(i)+str(j)].fencerScore
-                            </td>
-                        {% endif %}
-                    {% endfor %}
+                {% for i in range(pool.numFencers) %}
+                    {% if i+1 == fencer.numInPool %}
+                        <td class="match"></td>
+                    {% else %}
+                        {% if results[fencer.pool.poolNum][fencer.numInPool|string + (i+1)|string].fencerWin %}
+                        <td class="match victory">V{% else %}<td class="match defeat">D{% endif %}{{ results[fencer.pool.poolNum][fencer.numInPool|string + (i+1)|string].fencerScore }}
+                        </td>
+                    {% endif %}
                 {% endfor %}
                 <th></th>
                 <td class="stat">{{ fencer.victories }}</td>
-                <td class="stat">{{ fencer.victories / pool.numInPool - 1 }}</td>
+                <td class="stat">{{ fencer.victories / (pool.numFencers - 1) }}</td>
                 <td class="stat">{{ fencer.touchesScored }}</td>
                 <td class="stat">{{ fencer.touchesRecieved }}</td>
                 <td class="stat">{{ fencer.touchesScored - fencer.touchesRecieved }}</td>
