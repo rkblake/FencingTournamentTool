@@ -3,6 +3,7 @@
   font-family: sans-serif;
   border-collapse: collapse;
   border: none;
+  table-layout: fixed;
 }
 .results.with-border {
   border: 1px solid #cccccc;
@@ -40,8 +41,6 @@
 }
 
 .results .match {
-    width: 1vw;
-    height: 1vw;
   padding: 8px;
   text-align: center;
   background-color: #333333;

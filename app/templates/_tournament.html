@@ -1,3 +1,7 @@
 <p>
+	{% if public %}
+	<a href="{{ url_for('tournament', tournament_id=tournament.id) }}">{{ tournament.name }}</a>
+	{% else %}
 	<a href="{{ url_for('editTournament', tournament_id=tournament.id) }}">{{ tournament.name }}</a>
+	{% endif %}
 </p>

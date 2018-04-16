@@ -43,7 +43,7 @@ class AddFencerForm(FlaskForm):
     firstName = StringField('Fencer first name', validators=[DataRequired()])
     lastName = StringField('Fencer last name', validators=[DataRequired()])
     team = StringField('Team', validators=[Optional()], filters=[lambda x : x or None])
-    rating = StringField('Rating', validators=[DataRequired(), Length(min=3,max=3)])
+    rating = StringField('Rating', validators=[DataRequired(), Length(min=1,max=3)])
     checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Fencer')
 

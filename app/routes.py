@@ -5,6 +5,7 @@ from app.forms import *
 from app.models import *
 from datetime import datetime
 import copy
+from urllib.parse import urlparse
 
 def isTOofTourney(user, tournament):
     access = AccessTable.query.filter_by(user_id=user.id, tournament_id=tournament.id).first()
@@ -30,7 +31,7 @@ def login():
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
+        if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('index')
         return redirect(next_page)
     return render_template('login.html', title='Log In', form=form)
@@ -59,17 +60,17 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    q = db.session.query(User, AccessTable, Tournament).filter(User.id == AccessTable.user_id).filter(Tournament.id == AccessTable.tournament_id).all()
-    return render_template('user.html', user=user, tournaments=[i for _,_,i in q])
+    q = db.session.query(User, AccessTable, Tournament).filter(AccessTable.user_id == user.id).filter(Tournament.id == AccessTable.tournament_id).distinct()
+    return render_template('user.html', user=user, tournaments=[i for _,_,i in q[::2]], public=False)
 
-@app.route('/<int:tournament_id>')
+@app.route('/tournament/<int:tournament_id>')
 def tournament(tournament_id):
     return "tournament"
 
 @app.route('/explore')
 def explore():
     tournaments = Tournament.query.all()
-    return render_template('explore.html', tournaments=tournaments)
+    return render_template('explore.html', tournaments=tournaments, public=True)
 
 @app.route('/create-tournament', methods=['GET', 'POST'])
 @login_required
@@ -135,8 +136,9 @@ def pools(event_id):
 
 #TODO: live des for public
 @app.route('/event/<int:event_id>/de')
-def de(tournament_id, event_id):
-    return "de"
+def de(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    return render_template('de.html', event=event)
 
 #TODO: final results for public
 @app.route('/event/<int:event_id>/final')
@@ -184,7 +186,8 @@ def editRegistration(event_id):
                 firstName=form.firstName.data.title(),
                 lastName=form.lastName.data.title(),
                 team_id=team,
-                rating=form.rating.data.upper(),
+                ratingClass=form.rating.data[0].upper(),
+                ratingYear=int(form.rating.data[1:]),
                 isCheckedIn=form.checked_in.data)
         if team is not None:
             team.fencers.append(fencer)

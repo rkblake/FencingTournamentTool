@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="tournament"></div>
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+
+<script>
+var minData =  {
+    "teams" : [
+        ["A","B"],
+        ["C","D"],
+        ["E","F"],
+        ["G","H"]
+    ],
+    "results" : [
+        [[2,3], [1,4], [3,2], [5,1]],
+        [[2,3], [3,2]],
+        [[1,2], [3,0]]
+    ]
+}
+
+$('.tournament').bracket({
+    init: minData
+});
+</script>
+
+{% endblock %}
