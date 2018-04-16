@@ -73,7 +73,7 @@ class CreatePoolForm(FlaskForm):
             #raise ValidationError('Pools and fencers must add up to total fencers in event.')
 
 class AddTOForm(FlaskForm):
-    TOEmail = StringField('Organizers Email', validators=[DataRequired(), Email()])
+    email = StringField('Organizers Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Add TO')
 
 class EditPoolForm(FlaskForm):

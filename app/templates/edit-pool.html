@@ -3,6 +3,9 @@
 {% block app_content %}
     <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}">
     <h1>Pool {{ pool.poolNum }} for {{ event.name }}</h1>
+    <p>
+        Pool results must have a V or D followed by the score. ex. V5, D2
+    </p>
     <hr>
     <div>
         <form action="" method="post">

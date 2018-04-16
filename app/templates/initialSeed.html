@@ -14,12 +14,12 @@
 		</tr>
 		{% for fencer in fencers %}
 		<tr>
-            <td></td>
+            <td>{{ loop.index }}</td>
 			<td>{{ fencer.lastName }}</td>
 			<td>{{ fencer.firstName }}</td>
 			<td></td>
 			<td>{{ fencer.team.name }} ({{ fencer.team_id }})</td>
-			<td>{{ fencer.rating }}</td>
+			<td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
 		{% endfor %}
 	</table>
 {% endblock %}

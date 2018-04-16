@@ -121,6 +121,7 @@ class Fencer(db.Model):
     #defeats = db.Column(db.Integer, )
     touchesScored = db.Column(db.Integer, default=0)
     touchesRecieved = db.Column(db.Integer, default=0)
+    indicator = db.Column(db.Integer, default=0)
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     pool = db.relationship('Pool', backref='pool')
     club_id = db.Column(db.Integer, db.ForeignKey('club.id'))

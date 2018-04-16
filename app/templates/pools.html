@@ -4,6 +4,9 @@
     <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}" />
     <h1>Pools for {{ event.name }}</h1>
     {% for pool in pools %}
+        <h2>Pool {{ pool.poolNum }}</h2>
         {% include '_pool.html' %}
     {% endfor %}
+    <hr>
+
 {% endblock %}
