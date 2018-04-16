@@ -6,6 +6,7 @@ from app.models import *
 from datetime import datetime
 import copy
 from urllib.parse import urlparse
+from operator import attrgetter
 
 def isTOofTourney(user, tournament):
     access = AccessTable.query.filter_by(user_id=user.id, tournament_id=tournament.id).first()
@@ -65,7 +66,9 @@ def user(username):
 
 @app.route('/tournament/<int:tournament_id>')
 def tournament(tournament_id):
-    return "tournament"
+    tournament = Tournament.query.filter_by(id=tournament_id).first()
+    events = tournament.events
+    return render_template('tournament.html', tournament=tournament, events=events, public=True)
 
 @app.route('/explore')
 def explore():
@@ -113,17 +116,18 @@ def registration(event_id):
     event = Event.query.filter_by(id=event_id).first()
     return render_template('registration.html', event=event)
 
-@app.route('/event/<int:event_id>/initialseed')
+@app.route('/event/<int:event_id>/initial-seeding')
 def initialSeeding(event_id):
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers.order_by(Fencer.ratingClass.desc(), Fencer.ratingYear.desc())
     return render_template('initialSeed.html', event=event, fencers=fencers)
 
-@app.route('/event/<int:event_id>/deseeding')
-def deSeeding(event_id):
+@app.route('/event/<int:event_id>/pool-results')
+def poolResults(event_id):
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
-    return render_template('deseed.html', event=event, fencers=fencers)
+    #return render_template('pool-results.html', event=event, fencers=fencers)
+    return "in progress"
 
 @app.route('/event/<int:event_id>/pools')
 def pools(event_id):
@@ -146,12 +150,13 @@ def pools(event_id):
 @app.route('/event/<int:event_id>/de')
 def de(event_id):
     event = Event.query.filter_by(id=event_id).first()
-    return render_template('de.html', event=event)
+    #return render_template('de.html', event=event)
+    return "in progress"
 
 #TODO: final results for public
 @app.route('/event/<int:event_id>/final')
 def final(tournament_id, event_id):
-    return "final"
+    return "in progress"
 
 @app.route('/<int:tournament_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -188,7 +193,7 @@ def editRegistration(event_id):
         team = None
         team = Team.query.filter_by(name=form.team.data).first()
         if form.team.data is not None and team is None:
-            team = Team(name=form.team.data)
+            team = Team(name=form.team.data.title())
         fencer = Fencer(
                 firstName=form.firstName.data.title(),
                 lastName=form.lastName.data.title(),
@@ -378,7 +383,8 @@ def createPools(event_id):
             poolNum += 1
             pools.append(pool)
             db.session.add(pool)
-
+        pools.sort(key=attrgetter('numFencers'), reverse=True)
+        '''
         j = 0
         for pool in pools:
             for i in range(pool.numFencers):
@@ -386,6 +392,14 @@ def createPools(event_id):
                 fencers[j].numInPool = i + 1
                 fencers[j].pool = pool
                 j += 1
+        '''
+        poolNum = [0 for _ in pools]
+        for i, fencer in enumerate(fencers.order_by(Fencer.lastName.desc())):
+            pools[i % len(pools)].fencers.append(fencer)
+            fencer.numInPool = poolNum[i % len(pools)] + 1
+            poolNum[i % len(pools)] += 1
+            fencer.pool = pools[i % len(pools)]
+
         '''
         for i, fencer in enumerate(fencers):
             pools[i % len(pools)].fencers.append(fencer)

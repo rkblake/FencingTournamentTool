@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-
-
-{% block app_content %}
+{% block head %}
 	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	{{ super() }}
+{% endblock %}
+
+{% block app_content %}
+
 
 
 	{% if event.stage == 1 %}
@@ -21,7 +24,7 @@
 	{% if event.stage != 1 %}
 		<a class="btn btn-primary padded" href="{{ url_for('openRegistration', event_id=event.id) }}" role="button">Open Registration</a>
 		<a class="btn btn-danger disabled padded" role="button" aria-disabled="true">Close Registration</a>
-		{% if event.stage != 0 %}
+		{% if event.stage == 2 %}
 			<a class="btn btn-success padded confirmation" role="button" href="{{ url_for('createPools', event_id=event.id) }}">Create Pools</a>
 			<script type="text/javascript">
 				var allCheckedIn = {% if allCheckedIn %}true{% else %}false{% endif %}
@@ -32,6 +35,8 @@
 					//}
 			    });
 			</script>
+		{% else %}
+			<a class="btn btn-success disabled padded" role="button" aria-disabled="true">Create Pools</a>
 		{% endif %}
 	{% else %}
 		<a class="btn btn-primary disabled padded" role="button" aria-disabled="true">Open Registration</a>

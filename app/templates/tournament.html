@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block head %}
+	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	{{ super() }}
+{% endblock %}
+
+{% block app_content %}
+    <h1>{{ tournament.name }}</h1>
+    {% for event in events %}
+        {% include '_event.html' %}
+    {% endfor %}
+{% endblock %}

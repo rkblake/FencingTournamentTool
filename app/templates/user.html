@@ -1,10 +1,30 @@
 {% extends "base.html" %}
 
+{% block head %}
+	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	<style>
+		.fill {
+			height: 200px;
+			margin: 0 auto;
+			text-align: center;
+			vertical-align: middle;
+			font-family: 'consolas', monospace;
+			font-size: 16pt;
+			color: #333333;
+		}
+	</style>
+	{{ super() }}
+{% endblock %}
+
 {% block app_content %}
 	<p>
 		<a class="btn btn-success padded" role="button" href="{{ url_for('createTournament') }}">Create Tournament</a>
 	</p>
-	{% for tournament in tournaments %}
-		{% include '_tournament.html' %}
-	{% endfor %}
+	{% if tournaments|length == 0 %}
+		<div class="fill">You don't have any tournaments.</div>
+	{% else %}
+		{% for tournament in tournaments %}
+			{% include '_tournament.html' %}
+		{% endfor %}
+	{% endif %}
 {% endblock %}
