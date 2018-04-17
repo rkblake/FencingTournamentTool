@@ -126,8 +126,7 @@ def initialSeeding(event_id):
 def poolResults(event_id):
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
-    #return render_template('pool-results.html', event=event, fencers=fencers)
-    return "in progress"
+    return render_template('pool-results.html', event=event, fencers=fencers)
 
 @app.route('/event/<int:event_id>/pools')
 def pools(event_id):
@@ -229,47 +228,7 @@ def editPools(event_id):
         event.stage = 4
         db.session.commit()
     return render_template('edit-pools.html', event=event, pools=pools)
-'''
-#TODO: sanitize and check input; rewrite using wtform; handle changes to pool results
-@app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
-@login_required
-def editPool(event_id, pool_id):
-    pool = Pool.query.filter_by(id=pool_id).first()
-    event = pool.event
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
-        return redirect(url_for('index'))
-    fencers = pool.fencers
-    seen = dict()
-    if request.method == "POST":
-        for key, value in request.form.items():
-            key = key.strip('result')
-            if key[0] == key[1]:
-                continue
-            if key[::-1] not in seen:
-                fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
-                fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
-                result = Result(pool_id=pool.id, fencer1=fencer1.id, fencer2=fencer2.id, fencer1Score=int(value[1]))
-                pool.results.append(result)
-                result.fencer1Win = value[0].upper() == 'V'
-                seen[key] = copy.deepcopy(result)
-                db.session.add(result)
-                db.session.commit()
-            if key[::-1] in seen:
-                fencer1 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
-                fencer2 = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
-                result = Result.query.filter_by(pool_id=pool.id, fencer1=fencer2.id, fencer2=fencer1.id).first()
-                result.fencer2Score=int(value[1])
-        db.session.commit()
-        pool.state = 1
-        #TODO: check if all pools finished
-        db.session.commit()
-        return redirect(url_for('editPools', event_id=event_id))
-    elif request.method == "GET":
-        #event = Event.query.filter_by(id=event_id).first()
-        return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
-'''
+
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
 @login_required
 def editPool(event_id, pool_id):
@@ -384,30 +343,14 @@ def createPools(event_id):
             pools.append(pool)
             db.session.add(pool)
         pools.sort(key=attrgetter('numFencers'), reverse=True)
-        '''
-        j = 0
-        for pool in pools:
-            for i in range(pool.numFencers):
-                pool.fencers.append(fencers[j])
-                fencers[j].numInPool = i + 1
-                fencers[j].pool = pool
-                j += 1
-        '''
+
         poolNum = [0 for _ in pools]
-        for i, fencer in enumerate(fencers.order_by(Fencer.lastName.desc())):
+        for i, fencer in enumerate(fencers.order_by(Fencer.lastName.asc())):
             pools[i % len(pools)].fencers.append(fencer)
             fencer.numInPool = poolNum[i % len(pools)] + 1
             poolNum[i % len(pools)] += 1
             fencer.pool = pools[i % len(pools)]
 
-        '''
-        for i, fencer in enumerate(fencers):
-            pools[i % len(pools)].fencers.append(fencer)
-            fencer.pool = pools[i % len(pools)]
-        for pool in pools:
-            for i, fencer in enumerate(pool.fencers):
-                fencer.numInPool = i
-        '''
         event.stage = 3
         db.session.commit()
         return redirect(url_for('editPools', event_id=event_id))

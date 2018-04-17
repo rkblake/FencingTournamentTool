@@ -1,20 +1,19 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-    <h1>Initial Seed for {{ event.name }}</h1>
+    <h1>Pool results for {{ event.name }}</h1>
     <hr>
     <table class="table table-striped">
-        <thead>
 		<tr>
-			<th>Seed</th>
+			<th>Place</th>
 			<th>Last Name</th>
 			<th>First Name</th>
 			<th>Club</th>
 			<th>Team</th>
 			<th>Rating</th>
+            <th>Victories</th>
+            <th>Indicator</th>
 		</tr>
-        </thead>
-        <tbody>
 		{% for fencer in fencers %}
 		<tr>
             <td>{{ loop.index }}</td>
@@ -23,8 +22,9 @@
 			<td></td>
 			<td>{{ fencer.team.name }}</td>
 			<td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
+            <td>{{ fencer.victories }}</td>
+            <td>{{ fencer.indicator }}</td>
         </tr>
 		{% endfor %}
-        </tbody>
 	</table>
 {% endblock %}

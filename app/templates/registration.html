@@ -23,8 +23,8 @@
         <td>{{ fencer.lastName }}</td>
         <td>{{ fencer.firstName }}</td>
         <td></td>
-        <td>{{ fencer.team.name }} ({{ fencer.team_id }})</td>
-        <td>{{ fencer.rating }}</td>
+        <td>{{ fencer.team.name }}</td>
+        <td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
     {% endfor %}
 </table>
 {% endblock %}
