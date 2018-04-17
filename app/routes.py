@@ -135,7 +135,7 @@ def pools(event_id):
     results = dict()
     fencers = dict()
     for pool in pools:
-        fencers[pool.poolNum] = pool.fencers
+        fencers[pool.poolNum] = pool.fencers.order_by(Fencer.numInPool.asc())
         results[pool.poolNum] = dict()
         for result in pool.results:
             fencer = Fencer.query.filter_by(pool=pool, id=result.fencer).first()

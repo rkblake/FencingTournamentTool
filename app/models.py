@@ -8,8 +8,9 @@ Base = declarative_base()
 
 class AccessTable(db.Model):
     __tablename__ = 'access_table'
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     mainTO = db.Column(db.Boolean, default=False)
 
 class User(UserMixin, db.Model):
