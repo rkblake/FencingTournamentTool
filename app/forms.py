@@ -48,7 +48,7 @@ class AddFencerForm(FlaskForm):
     submit = SubmitField('Add Fencer')
 
     def validate_rating(self, rating):
-        if rating.data.upper() == 'U':
+        if rating.data.upper() == 'U' or rating.data.upper() == 'U18':
             return True
         if rating.data[0].upper() not in ['A', 'B', 'C', 'D', 'E']:
             raise ValidationError('Not a valid rating')

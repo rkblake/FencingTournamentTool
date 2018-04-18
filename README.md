@@ -7,10 +7,10 @@ OS X & Linux:
 
 ```sh
 pip install -r requirements.txt
+export FLASK_APP=fencingtournamenttool.py
 flask db init
 flask db migrate
 flask db upgrade
-export FLASK_APP=fencingtournamenttool.py
 flask run
 ```
 
@@ -18,10 +18,10 @@ Windows:
 
 ```sh
 pip install -r requirements.txt
+set FLASK_APP=fencingtournamenttool.py
 flask db init
 flask db migrate
 flask db upgrade
-set FLASK_APP=fencingtournamenttool.py
 flask run
 ```
 

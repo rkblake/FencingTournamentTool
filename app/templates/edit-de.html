@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+    {{ super() }}
+{% endblock %}
+
+{% block app_content %}
+<div class="tournament"></div>
+
+<script>
+var bracketData =  JSON.parse('{{ directElims | tojson | safe }}');
+
+var resizeParams = {
+    teamWidth: 120,
+    scoreWidth: 40,
+    matchMargin: 40,
+    roundMargin: 50,
+    init: bracketData
+};
+
+$('.tournament').bracket(resizeParams);
+</script>
+
+{% endblock %}
