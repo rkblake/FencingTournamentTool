@@ -4,7 +4,15 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+
     {{ super() }}
+    <style>
+      .label {
+        color: black;
+        line-height: 1.42857143;
+        text-align: left;
+      }
+    </style>
 {% endblock %}
 
 {% block app_content %}
@@ -23,5 +31,7 @@ var resizeParams = {
 
 $('.tournament').bracket(resizeParams);
 </script>
+
+
 
 {% endblock %}

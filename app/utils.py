@@ -28,8 +28,9 @@ def flatten_list( matches ):
             teamlist += [team_or_match]
     return teamlist
 
-def generate_tournament( num, teamNames ):
-    num = nextPow2(num)
+def generate_tournament(fencers ):
+    fencers = [fencer for fencer in fencers]
+    num = nextPow2(len(fencers))
     teams = 1
     result = [1]
     while teams != num:
@@ -37,10 +38,10 @@ def generate_tournament( num, teamNames ):
         result = tournament_round( teams, result )
     result = flatten_list( result )
 
-    for _ in range(num - len(teamNames)):
-        teamNames.append(None)
+    for _ in range(num - len(fencers)):
+        fencers.append(None)
 
     for i, j in enumerate(result):
-        result[i] = teamNames[j-1]
+        result[i] = fencers[j-1]
     pairs = [list(i) for i in zip(*[iter(result)]*2)]
     return pairs

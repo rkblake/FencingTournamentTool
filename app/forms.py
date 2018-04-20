@@ -39,10 +39,11 @@ class CreateEventForm(FlaskForm):
     date = DateField('Date', format='%Y-%m-%d')
     submit = SubmitField('Create Event')
 
+#TODO: don't allow same name fencers, ask for nickname after firstname in paren
 class AddFencerForm(FlaskForm):
     firstName = StringField('Fencer first name', validators=[DataRequired()])
     lastName = StringField('Fencer last name', validators=[DataRequired()])
-    team = StringField('Team', validators=[Optional()], filters=[lambda x : x or None])
+    club = StringField('Club', validators=[Optional()], filters=[lambda x : x or None])
     rating = StringField('Rating', validators=[DataRequired(), Length(min=1,max=3)])
     checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Fencer')
@@ -76,6 +77,17 @@ class AddTOForm(FlaskForm):
     email = StringField('Organizers Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Add TO')
 
+class AddTeamForm(FlaskForm):
+    teamName = StringField('Team name', validators=[DataRequired()])
+    fencerA = StringField('Fencer A', validators=[DataRequired()])
+    fencerB = StringField('Fencer B', validators=[DataRequired()])
+    fencerC = StringField('Fencer C', validators=[Optional()])
+    fencerD = StringField('Fencer D (Alt)', validators=[Optional()])
+    club = StringField('Club/University', validators=[DataRequired()])
+    checked_in = BooleanField('Checked In')
+    submit = SubmitField('Add Fencer')
+
+'''
 class EditPoolForm(FlaskForm):
     def __init__(self, numFencers):
         super().__init__()
@@ -96,3 +108,4 @@ class EditPoolForm(FlaskForm):
                 if not (field[i][j].data[0].upper() is 'V' and field[i][j].data[0].upper() is 'D' or field[j][i].data[0].upper() is 'V' and field[j][i].data[0].upper() is 'D'):
                     return False
         return True
+'''

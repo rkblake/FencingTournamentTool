@@ -9,7 +9,6 @@
 			<th>Last Name</th>
 			<th>First Name</th>
 			<th>Club</th>
-			<th>Team</th>
 			<th>Rating</th>
             <th>Victories</th>
             <th>Indicator</th>
@@ -19,8 +18,7 @@
             <td>{{ loop.index }}</td>
 			<td>{{ fencer.lastName }}</td>
 			<td>{{ fencer.firstName }}</td>
-			<td></td>
-			<td>{{ fencer.team.name }}</td>
+			<td>{{ fencer.club.name }}</td>
 			<td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
             <td>{{ fencer.victories }}</td>
             <td>{{ fencer.indicator }}</td>

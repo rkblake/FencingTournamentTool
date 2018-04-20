@@ -11,12 +11,19 @@
   height: 75px;
 }
 
+@media only screen and (max-width: 600px) {
+    .pool-container {
+        width: 100%;
+    }
+}
+
 .pool-text {
   marign: 10px auto;
   padding-left: 20px;
   display: inline-block;
   vertical-align: middle;
   line-height: normal;
+  text-align: justify;
 }
 
 black-pool {

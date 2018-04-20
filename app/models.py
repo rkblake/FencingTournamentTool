@@ -1,6 +1,7 @@
 from app import db, app, login
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import column_property
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -58,10 +59,11 @@ class Event(db.Model):
     numFencers = db.Column(db.Integer, default=0)
     numFencersCheckedIn = db.Column(db.Integer, default=0)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
-    #tournament = db.relationship('Tournament', backref='event', lazy='dynamic')
+    #tournament = db.relationship('Tournament', foreign_keys=[tournament_id])
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
     des = db.relationship('DE', backref='event', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='event', lazy='dynamic')
+    teams = db.relationship('Team', backref='event', lazy='dynamic')
 
     def __repr__(self):
         return '<Event {}>'.format(self.name)
@@ -69,7 +71,8 @@ class Event(db.Model):
 class Club(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    fencers = db.relationship('Fencer', backref='club_members')
+    fencers = db.relationship('Fencer', backref='club')
+    teams = db.relationship('Team', backref='club', lazy='dynamic')
 
     def __repr__(self):
         return '<Event {}>'.format(self.name)
@@ -78,6 +81,21 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     fencers = db.relationship('Fencer', backref='team_members')
+    isCheckedIn = db.Column(db.Boolean)
+    event_id = db.Column('Event', db.ForeignKey('event.id'))
+    #event = db.relationship('Event', foreign_keys=[event_id])
+    club_id = db.Column('Club', db.ForeignKey('club.id'))
+    #club = db.relationship('Club', foreign_keys=[club_id])
+    '''
+    fencerA_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
+    fencerA = db.relationship('Fencer', foreign_keys=[fencerA_id])
+    fencerB_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
+    fencerB = db.relationship('Fencer', foreign_keys=[fencerB_id])
+    fencerC_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
+    fencerC = db.relationship('Fencer', foreign_keys=[fencerC_id])
+    fencerD_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
+    fencerD = db.relationship('Fencer', foreign_keys=[fencerD_id])
+    '''
 
     def __repr__(self):
         return '<Event {}>'.format(self.name)
@@ -99,6 +117,7 @@ class DE(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     result_id = db.Column(db.Integer, db.ForeignKey('result.id'))
+    result = db.relationship('Result', foreign_keys=[result_id])
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -126,8 +145,9 @@ class Fencer(db.Model):
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     pool = db.relationship('Pool', backref='pool')
     club_id = db.Column(db.Integer, db.ForeignKey('club.id'))
+    #club = db.relationship('Club', foreign_keys=[club_id])
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
-    team = db.relationship('Team', backref='team')
+    #team = db.relationship('Team', backref='team')
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
 
     def __repr__(self):

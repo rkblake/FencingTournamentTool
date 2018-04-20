@@ -10,7 +10,6 @@
 			<th>Last Name</th>
 			<th>First Name</th>
 			<th>Club</th>
-			<th>Team</th>
 			<th>Rating</th>
 		</tr>
         </thead>
@@ -20,8 +19,7 @@
             <td>{{ loop.index }}</td>
 			<td>{{ fencer.lastName }}</td>
 			<td>{{ fencer.firstName }}</td>
-			<td></td>
-			<td>{{ fencer.team.name }}</td>
+			<td>{{ fencer.club.name }}</td>
 			<td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
         </tr>
 		{% endfor %}

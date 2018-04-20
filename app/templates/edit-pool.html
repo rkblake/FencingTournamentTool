@@ -12,7 +12,7 @@
         <table class="results">
             <thead>
                 <tr>
-                    <th width="60px">Name</th>
+                    <th width="180px">Name</th>
                     <th width="8px">#</th>
                     {% for i  in range(pool.numFencers) %}
                         <th width="10px">{{ i + 1 }}</th>
@@ -22,7 +22,7 @@
             </thead>
             {% for fencer in fencers %}
                 <tr>
-                    <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div></td>
+                    <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div><div class="location">{{ fencer.club.name }}</div></td>
                     <th>{{ fencer.numInPool }}</th>
                     {% for j in range(pool.numFencers) %}
                         {% if fencer.numInPool == j + 1 %}

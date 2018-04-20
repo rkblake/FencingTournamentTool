@@ -27,7 +27,7 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(username=form.username.data.lower()).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password.')
             return redirect(url_for('login'))
@@ -50,7 +50,7 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
+        user = User(username=form.username.data.lower(), email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
@@ -62,13 +62,12 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    print(user)
-    print(current_user)
     if user != current_user:
         return redirect(url_for('index'))
     #TODO: remove duplicates
     q = db.session.query(User, AccessTable, Tournament).filter(AccessTable.user_id == user.id).filter(Tournament.id == AccessTable.tournament_id).distinct()
-    return render_template('user.html', user=user, tournaments=[i for _,_,i in q], public=False)
+    q = [i for _,_,i in q]
+    return render_template('user.html', user=user, tournaments=q, public=False)
 
 @app.route('/tournament/<int:tournament_id>')
 def tournament(tournament_id):
@@ -192,30 +191,69 @@ def editRegistration(event_id):
     tournament = Tournament.query.filter_by(id=event.tournament_id).first()
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
-    fencers = event.fencers
-    form = AddFencerForm()
-    if form.validate_on_submit():
-        team = None
-        team = Team.query.filter_by(name=form.team.data).first()
-        if form.team.data is not None and team is None:
-            team = Team(name=form.team.data.title())
-        fencer = Fencer(
-                firstName=form.firstName.data.title(),
-                lastName=form.lastName.data.title(),
-                team_id=team,
-                ratingClass=form.rating.data[0].upper(),
-                ratingYear=int(form.rating.data[1:] or 18),
-                isCheckedIn=form.checked_in.data)
-        if team is not None:
-            team.fencers.append(fencer)
-        event.fencers.append(fencer)
-        event.numFencers += 1
-        if fencer.isCheckedIn:
-            event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
-        db.session.add(fencer)
-        db.session.commit()
-        flash('Added fencer')
-    return render_template('edit-registration.html', form=form, fencers=fencers, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
+
+    if tournament.format == 'SWIFA':
+        teams = event.teams
+        form = AddTeamForm()
+        if form.validate_on_submit():
+            club = Club.query.filter_by(name=form.club.data.lower()).first()
+            if club is None:
+                club = Club(name=form.club.data.lower())
+            team = Team(name=form.teamName.data, )
+            fencerA = Fencer(
+                firstName=form.fencerA.data.split()[0].title(),
+                lastName=form.fencerA.data.split()[1].title())
+            team.fencerA = fencerA
+            fencerB = Fencer(
+                firstName=form.fencerB.data.split()[0].title(),
+                lastName=form.fencerB.data.split()[1].title())
+            team.fencerB = fencerB
+            if form.fencerC.data is not '':
+                fencerC = Fencer(
+                    firstName=form.fencerC.data.split()[0].title(),
+                    lastName=form.fencerC.data.split()[1].title())
+                team.fencerC = fencerC
+                db.session.add(fencerC)
+            if form.fencerD.data is not '':
+                fencerD = Fencer(
+                    firstName=form.fencerD.data.split()[0].title(),
+                    lastName=form.fencerD.data.split()[1].title())
+                team.fencerD = fencerD
+                db.session.add(fencerD)
+            club.teams.append(team)
+            event.teams.append(team)
+            if team.isCheckedIn:
+                event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
+            event.numFencers += 1
+            db.session.add_all([club, team, fencerA, fencerB])
+            db.session.commit()
+            flash('Added team')
+        return render_template('edit-registration-teams.html', form=form, teams=teams, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
+
+    elif tournament.format == 'USFA Individual':
+        fencers = event.fencers
+        form = AddFencerForm()
+        if form.validate_on_submit():
+            club = Club.query.filter_by(name=form.club.data).first()
+            if form.club.data is not None and club is None:
+                club = Club(name=form.club.data.title())
+            fencer = Fencer(
+                    firstName=form.firstName.data.title(),
+                    lastName=form.lastName.data.title(),
+                    club=club,
+                    ratingClass=form.rating.data[0].upper(),
+                    ratingYear=int(form.rating.data[1:] or 18),
+                    isCheckedIn=form.checked_in.data)
+            if club is not None:
+                club.fencers.append(fencer)
+            event.fencers.append(fencer)
+            event.numFencers += 1
+            if fencer.isCheckedIn:
+                event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
+            db.session.add(fencer)
+            db.session.commit()
+            flash('Added fencer')
+        return render_template('edit-registration.html', form=form, fencers=fencers, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
 
 @app.route('/event/<int:event_id>/edit-pools')
 @login_required
@@ -231,7 +269,7 @@ def editPools(event_id):
         if pool.state is 0:
             allPoolsDone = False
     if allPoolsDone:
-        event.stage = 4
+        event.stage = 5
         db.session.commit()
     return render_template('edit-pools.html', event=event, pools=pools)
 
@@ -247,7 +285,7 @@ def editPool(event_id, pool_id):
     if request.method == "POST":
         validInput = True
         for key, val in request.form.items():
-            #TODO: input validation
+            #TODO: input validation, replace single v with v5
             if val[0].upper() not in ['V', 'D']:
                 validInput = False
             if val[0].upper() is 'V' and request.form['result'+key[7]+key[6]][0] is not 'D':
@@ -276,14 +314,19 @@ def editPool(event_id, pool_id):
         fencers = pool.fencers.order_by(Fencer.numInPool.asc())
         return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
 
+#TODO: append seed to fencer names
 @app.route('/event/<int:event_id>/de/edit')
-@login_required
+#@login_required
 def editDE(event_id):
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
     directElims = dict()
+    #bracket = generate_tournament(fencers)
+
     fencers = [(fencer.lastName + ", " + fencer.firstName) for fencer in fencers]
-    directElims["teams"] = generate_tournament(len(fencers), fencers)
+
+    directElims["teams"] = generate_tournament(fencers)
+
     return render_template('edit-de.html', event=event, directElims=directElims)
 
 @app.route('/<int:event_id>/check-in/<int:fencer_id>')

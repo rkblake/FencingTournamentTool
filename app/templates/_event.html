@@ -18,7 +18,7 @@
 				{% endif %}
 			{% endif %}
 			{% if event.stage >= 5 %}
-				<a href="">DEs</a><br>
+				<a href="{{ url_for('editDE', event_id=event.id)}}">DEs</a><br>
 			{% else %}
 				DEs<br>
 			{% endif %}
