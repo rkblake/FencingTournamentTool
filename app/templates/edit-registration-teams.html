@@ -47,24 +47,25 @@
 	<table class="table table-striped">
 		<thead>
 		<tr>
-			<th width="220px">Status</th>
+			<th>Club/University</th>
 			<th>Fencer A</th>
 			<th>Fencer B</th>
 			<th>Fencer C</th>
 			<th>Alternate</th>
-			<th>Club/University</th>
 		</tr>
 		</thead>
 		<tbody>
 		{% for team in teams %}
 		<tr>
-			<td>
-			</td>
-			<td>{{ team.fencerA.lastName }}, {{ team.fencerA.firstName }}</td>
-			<td>{{ team.fencerB.lastName }}, {{ team.fencerB.firstName }}</td>
-			<td>{{ team.fencerC.lastName }}, {{ team.fencerC.firstName }}</td>
-			<td>{{ team.fencerD.lastName }}, {{ team.fencerD.firstName }}</td>
 			<td>{{ team.club.name }}</td>
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPos == 'A' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.teamPos == 'B' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.teamPos == 'C' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.teamPos == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+		</tr>
+
 		{% endfor %}
 		</tbody>
 	</table>

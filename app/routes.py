@@ -199,31 +199,34 @@ def editRegistration(event_id):
             club = Club.query.filter_by(name=form.club.data.lower()).first()
             if club is None:
                 club = Club(name=form.club.data.lower())
-            team = Team(name=form.teamName.data, )
+            team = Team(name=form.teamName.data)
             fencerA = Fencer(
                 firstName=form.fencerA.data.split()[0].title(),
-                lastName=form.fencerA.data.split()[1].title())
-            team.fencerA = fencerA
+                lastName=form.fencerA.data.split()[1].title(),
+                teamPosition='A')
+            team.fencers.append(fencerA)
             fencerB = Fencer(
                 firstName=form.fencerB.data.split()[0].title(),
-                lastName=form.fencerB.data.split()[1].title())
-            team.fencerB = fencerB
+                lastName=form.fencerB.data.split()[1].title(),
+                teamPosition='B')
+            team.fencers.append(fencerB)
             if form.fencerC.data is not '':
                 fencerC = Fencer(
                     firstName=form.fencerC.data.split()[0].title(),
-                    lastName=form.fencerC.data.split()[1].title())
-                team.fencerC = fencerC
+                    lastName=form.fencerC.data.split()[1].title(),
+                    teamPosition='C')
+                team.fencers.append(fencerC)
                 db.session.add(fencerC)
             if form.fencerD.data is not '':
                 fencerD = Fencer(
                     firstName=form.fencerD.data.split()[0].title(),
-                    lastName=form.fencerD.data.split()[1].title())
-                team.fencerD = fencerD
+                    lastName=form.fencerD.data.split()[1].title(),
+                    teamPosition='D')
+                team.fencers.append(fencerD)
                 db.session.add(fencerD)
             club.teams.append(team)
             event.teams.append(team)
-            if team.isCheckedIn:
-                event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
+            event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
             event.numFencers += 1
             db.session.add_all([club, team, fencerA, fencerB])
             db.session.commit()

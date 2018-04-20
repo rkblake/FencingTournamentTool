@@ -84,8 +84,8 @@ class AddTeamForm(FlaskForm):
     fencerC = StringField('Fencer C', validators=[Optional()])
     fencerD = StringField('Fencer D (Alt)', validators=[Optional()])
     club = StringField('Club/University', validators=[DataRequired()])
-    checked_in = BooleanField('Checked In')
-    submit = SubmitField('Add Fencer')
+    #checked_in = BooleanField('Checked In')
+    submit = SubmitField('Add Team')
 
 '''
 class EditPoolForm(FlaskForm):

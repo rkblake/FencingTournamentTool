@@ -149,6 +149,7 @@ class Fencer(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     #team = db.relationship('Team', backref='team')
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+    teamPosition = db.Column(db.String(1))
 
     def __repr__(self):
         return '<Fencer {}, {} Num {}>'.format(self.lastName, self.firstName, self.numInPool)
