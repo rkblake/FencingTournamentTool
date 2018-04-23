@@ -11,7 +11,9 @@
 				{% endif %}
 			{% else %}
 				<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> |
-				{% if event.stage >= 3 %}
+				{% if event.stage == 2 %}
+					<a href="">Pool Assignments</a>
+				{% elif event.stage >= 3 %}
 					<a href="{{ url_for('editPools', event_id=event.id) }}">Pools</a> |
 				{% else %}
 					Pools |

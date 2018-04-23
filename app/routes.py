@@ -8,6 +8,7 @@ from datetime import datetime
 import copy
 from urllib.parse import urlparse
 from operator import attrgetter
+from sqlalchemy import func
 
 def isTOofTourney(user, tournament):
     access = AccessTable.query.filter_by(user_id=user.id, tournament_id=tournament.id).first()
@@ -130,7 +131,10 @@ def initialSeeding(event_id):
 @app.route('/event/<int:event_id>/pool-results')
 def poolResults(event_id):
     event = Event.query.filter_by(id=event_id).first()
-    fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
+    #fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
+    q = db.session.query(Fencer, Pool).filter(Fencer.event == event).filter(Fencer.pool_id == Pool.id).order_by(func.div(Fencer.victories, Pool.numFencers).desc(), Fencer.indicator.desc())
+    (fencers, _) = q
+    #fencers = event.fencers.order_by(func.div(Fencer.victories, Fencer.pool.numFencers).desc(), Fencer.indicator.desc())
     return render_template('pool-results.html', event=event, fencers=fencers)
 
 @app.route('/event/<int:event_id>/pools')
@@ -149,6 +153,13 @@ def pools(event_id):
 
     #fencers = event.fencers.order_by(Fencer.numInPool.asc())
     return render_template('pools.html', event=event, pools=pools, results=results, fencers=fencers)
+
+@app.route('/event/<int:event_id>/pool-assignment')
+def poolAssignment(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    pools = event.pools
+    fencers = event.fencers
+    return render_template('pool-assignments.html', event=event, pools=pools, fencers=fencers)
 
 #TODO: live des for public
 @app.route('/event/<int:event_id>/de')
@@ -302,7 +313,7 @@ def editPool(event_id, pool_id):
             key = key.strip('result')
             fencer = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
             opponent = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
-            result = Result(pool_id=pool.id, fencer=fencer.id, fencerScore=value[1], opponent=opponent.id, fencerWin=(value[0].upper() == 'V'))
+            result = Result(pool_id=pool.id, fencer=fencer.id, fencerScore=value[1:], opponent=opponent.id, fencerWin=(value[0].upper() == 'V'))
             fencer.victories = Fencer.victories + (1 if result.fencerWin else 0)
             fencer.touchesScored = Fencer.touchesScored + result.fencerScore
             fencer.indicator = Fencer.indicator + result.fencerScore

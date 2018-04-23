@@ -75,7 +75,7 @@ class Club(db.Model):
     teams = db.relationship('Team', backref='club', lazy='dynamic')
 
     def __repr__(self):
-        return '<Event {}>'.format(self.name)
+        return '<Club {}>'.format(self.name)
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
