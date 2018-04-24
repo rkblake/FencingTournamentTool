@@ -43,6 +43,7 @@
 		<a class="btn btn-danger padded" href="{{ url_for('closeRegistration', event_id=event.id) }}" role="button">Close Registration</a>
 		<a class="btn btn-success disabled padded" role="button" aria-disabled="true">Create Pools</a>
 	{% endif %}
+	<br><br>{{ event.numFencersCheckedIn }} Checked In / {{ event.numFencers }} Registered
 
 	<hr>
 

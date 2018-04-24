@@ -1,14 +1,17 @@
-from flask import render_template, flash, redirect, url_for, request, jsonify
-from flask_login import login_user, logout_user, current_user, login_required
-from app import app, db
-from app.forms import *
-from app.models import *
-from app.utils import generate_tournament
 from datetime import datetime
 import copy
 from urllib.parse import urlparse
 from operator import attrgetter
 from sqlalchemy import func
+
+from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask_login import login_user, logout_user, current_user, login_required
+from app import app, db
+
+from app.forms import *
+from app.models import *
+from app.utils import generate_tournament
+
 
 def isTOofTourney(user, tournament):
     access = AccessTable.query.filter_by(user_id=user.id, tournament_id=tournament.id).first()
@@ -17,10 +20,12 @@ def isTOofTourney(user, tournament):
     else:
         return False
 
+
 @app.route('/')
 @app.route('/index')
 def index():
     return render_template('index.html', title='Home')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -39,11 +44,13 @@ def login():
         return redirect(next_page)
     return render_template('login.html', title='Log In', form=form)
 
+
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -59,6 +66,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
+
 @app.route('/user/<username>')
 @login_required
 def user(username):
@@ -70,16 +78,19 @@ def user(username):
     q = [i for _,_,i in q]
     return render_template('user.html', user=user, tournaments=q, public=False)
 
+
 @app.route('/tournament/<int:tournament_id>')
 def tournament(tournament_id):
     tournament = Tournament.query.filter_by(id=tournament_id).first()
     events = tournament.events
     return render_template('tournament.html', tournament=tournament, events=events, public=True)
 
+
 @app.route('/explore')
 def explore():
     tournaments = Tournament.query.all()
     return render_template('explore.html', tournaments=tournaments, public=True)
+
 
 @app.route('/create-tournament', methods=['GET', 'POST'])
 @login_required
@@ -96,6 +107,7 @@ def createTournament():
         flash('Created new tournament')
         return redirect(url_for('editTournament', tournament_id=tournament.id))
     return render_template('create-tournament.html', title='Create Tournament', form=form)
+
 
 @app.route('/<int:tournament_id>/create-event', methods=['GET', 'POST'])
 @login_required
@@ -117,10 +129,12 @@ def createEvent(tournament_id):
         return redirect(url_for('editTournament', tournament_id=tournament_id))
     return render_template('create-event.html', tournament=tournament, form=form)
 
+
 @app.route('/event/<int:event_id>/registration')
 def registration(event_id):
     event = Event.query.filter_by(id=event_id).first()
     return render_template('registration.html', event=event)
+
 
 @app.route('/event/<int:event_id>/initial-seeding')
 def initialSeeding(event_id):
@@ -128,14 +142,17 @@ def initialSeeding(event_id):
     fencers = event.fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
     return render_template('initialSeed.html', event=event, fencers=fencers)
 
+
 @app.route('/event/<int:event_id>/pool-results')
 def poolResults(event_id):
     event = Event.query.filter_by(id=event_id).first()
-    #fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
-    q = db.session.query(Fencer, Pool).filter(Fencer.event == event).filter(Fencer.pool_id == Pool.id).order_by(func.div(Fencer.victories, Pool.numFencers).desc(), Fencer.indicator.desc())
-    (fencers, _) = q
-    #fencers = event.fencers.order_by(func.div(Fencer.victories, Fencer.pool.numFencers).desc(), Fencer.indicator.desc())
+    #q = db.session.query(Fencer, Pool).filter(Fencer.event == event).filter(Fencer.pool_id == Pool.id).order_by(func.div(Fencer.victories, Pool.numFencers).desc(), Fencer.indicator.desc())
+    #(fencers, _) = q
+    #TODO: convert to sqlalchemy statement, needs more tie checking
+    fencers = db.engine.execute('SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
+    fencers = [(Fencer.query.get(i), j) for (i, j) in fencers]
     return render_template('pool-results.html', event=event, fencers=fencers)
+
 
 @app.route('/event/<int:event_id>/pools')
 def pools(event_id):
@@ -152,14 +169,17 @@ def pools(event_id):
             results[pool.poolNum][str(fencer.numInPool)+str(opponent.numInPool)] = result
 
     #fencers = event.fencers.order_by(Fencer.numInPool.asc())
-    return render_template('pools.html', event=event, pools=pools, results=results, fencers=fencers)
+    return render_template('pools.html', title='Pools', event=event, pools=pools, results=results, fencers=fencers)
 
+
+#TODO: pool assignments
 @app.route('/event/<int:event_id>/pool-assignment')
 def poolAssignment(event_id):
     event = Event.query.filter_by(id=event_id).first()
     pools = event.pools
     fencers = event.fencers
-    return render_template('pool-assignments.html', event=event, pools=pools, fencers=fencers)
+    return render_template('pool-assignments.html', title='Pool Assignments' event=event, pools=pools, fencers=fencers)
+
 
 #TODO: live des for public
 @app.route('/event/<int:event_id>/de')
@@ -168,10 +188,12 @@ def de(event_id):
     #return render_template('de.html', event=event)
     return "in progress"
 
+
 #TODO: final results for public
 @app.route('/event/<int:event_id>/final')
 def final(tournament_id, event_id):
     return "in progress"
+
 
 @app.route('/<int:tournament_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -193,6 +215,7 @@ def editTournament(tournament_id):
         db.session.commit()
     events = tournament.events
     return render_template('edit-tournament.html', title='Edit Tournament', tournament=tournament, events=events, form=form)
+
 
 @app.route('/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
 @login_required
@@ -269,6 +292,7 @@ def editRegistration(event_id):
             flash('Added fencer')
         return render_template('edit-registration.html', form=form, fencers=fencers, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
 
+
 @app.route('/event/<int:event_id>/edit-pools')
 @login_required
 def editPools(event_id):
@@ -286,6 +310,7 @@ def editPools(event_id):
         event.stage = 5
         db.session.commit()
     return render_template('edit-pools.html', event=event, pools=pools)
+
 
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -328,9 +353,22 @@ def editPool(event_id, pool_id):
         fencers = pool.fencers.order_by(Fencer.numInPool.asc())
         return render_template('edit-pool.html', event=event, pool=pool, fencers=fencers)
 
+
+@app.route('/event/<int:event_id>/generate-bracket')
+@login_required
+def generateBracket(event_id):
+    event = Event.query.get(event_id)
+    if not isTOofTourney(current_user, event):
+        return redirect(url_for('index'))
+    fencers = db.engine.execute('SET @row_num = 0; SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent, @row_num := @row_num + 1 as row_index, FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
+    fencers = [(Fencer.query.get(i), j) for (i, _, j) in fencers]
+    fencers = [(fencer[0].lastName + ", " + fencer[0].firstName, + " (" + fencer[1] + ")") for fencer in fencers]
+    bracket = generate_tournament(fencers)
+
+
 #TODO: append seed to fencer names
 @app.route('/event/<int:event_id>/de/edit')
-#@login_required
+@login_required
 def editDE(event_id):
     event = Event.query.filter_by(id=event_id).first()
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
@@ -343,7 +381,8 @@ def editDE(event_id):
 
     return render_template('edit-de.html', event=event, directElims=directElims)
 
-@app.route('/<int:event_id>/check-in/<int:fencer_id>')
+
+@app.route('/event/<int:event_id>/check-in/<int:fencer_id>')
 @login_required
 def checkInFencer(event_id, fencer_id):
     event = Event.query.filter_by(id=event_id).first()
@@ -357,7 +396,8 @@ def checkInFencer(event_id, fencer_id):
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
-@app.route('/<int:event_id>/absent/<int:fencer_id>')
+
+@app.route('/event/<int:event_id>/absent/<int:fencer_id>')
 @login_required
 def makeAbsent(event_id, fencer_id):
     event = Event.query.filter_by(id=event_id).first()
@@ -371,6 +411,7 @@ def makeAbsent(event_id, fencer_id):
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
+
 @app.route('/open-registration/<int:event_id>')
 @login_required
 def openRegistration(event_id):
@@ -382,6 +423,7 @@ def openRegistration(event_id):
     event.stage = 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
+
 
 @app.route('/close-registration/<int:event_id>')
 @login_required
@@ -395,6 +437,7 @@ def closeRegistration(event_id):
     event.stage = 2
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
+
 
 @app.route('/<int:event_id>/create-pools', methods=['GET', 'POST'])
 @login_required

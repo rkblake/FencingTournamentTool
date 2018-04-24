@@ -10,18 +10,20 @@
 			<th>First Name</th>
 			<th>Club</th>
 			<th>Rating</th>
+            <th>V/M</th>
             <th>Victories</th>
             <th>Indicator</th>
 		</tr>
 		{% for fencer in fencers %}
 		<tr>
             <td>{{ loop.index }}</td>
-			<td>{{ fencer.lastName }}</td>
-			<td>{{ fencer.firstName }}</td>
-			<td>{{ fencer.club.name }}</td>
-			<td>{{ fencer.ratingClass }}{{ fencer.ratingYear }}</td>
-            <td>{{ fencer.victories }}</td>
-            <td>{{ fencer.indicator }}</td>
+			<td>{{ fencer[0].lastName }}</td>
+			<td>{{ fencer[0].firstName }}</td>
+			<td>{{ fencer[0].club.name }}</td>
+			<td>{{ fencer[0].ratingClass }}{{ fencer[0].ratingYear }}</td>
+            <td>{{ "%.2f"|format(fencer[1]) }}</td>
+            <td>{{ fencer[0].victories }}</td>
+            <td>{{ fencer[0].indicator }}</td>
         </tr>
 		{% endfor %}
 	</table>
