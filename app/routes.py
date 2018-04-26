@@ -2,8 +2,9 @@ from datetime import datetime
 import copy
 from urllib.parse import urlparse
 from operator import attrgetter
-from sqlalchemy import func
+import json
 
+from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
@@ -73,15 +74,14 @@ def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     if user != current_user:
         return redirect(url_for('index'))
-    #TODO: remove duplicates
     q = db.session.query(User, AccessTable, Tournament).filter(AccessTable.user_id == user.id).filter(Tournament.id == AccessTable.tournament_id).distinct()
     q = [i for _,_,i in q]
-    return render_template('user.html', user=user, tournaments=q, public=False)
+    return render_template('user.html', title=user.username, user=user, tournaments=q, public=False)
 
 
 @app.route('/tournament/<int:tournament_id>')
 def tournament(tournament_id):
-    tournament = Tournament.query.filter_by(id=tournament_id).first()
+    tournament = Tournament.query.get_or_404(tournament_id)
     events = tournament.events
     return render_template('tournament.html', tournament=tournament, events=events, public=True)
 
@@ -89,7 +89,7 @@ def tournament(tournament_id):
 @app.route('/explore')
 def explore():
     tournaments = Tournament.query.all()
-    return render_template('explore.html', tournaments=tournaments, public=True)
+    return render_template('explore.html', title='Explore', tournaments=tournaments, public=True)
 
 
 @app.route('/create-tournament', methods=['GET', 'POST'])
@@ -109,12 +109,11 @@ def createTournament():
     return render_template('create-tournament.html', title='Create Tournament', form=form)
 
 
-@app.route('/<int:tournament_id>/create-event', methods=['GET', 'POST'])
+@app.route('/tournament/<int:tournament_id>/create-event', methods=['GET', 'POST'])
 @login_required
 def createEvent(tournament_id):
-    user = User.query.filter_by(username=current_user.username).first()
-    tournament = Tournament.query.filter_by(id=tournament_id).first()
-    if isTOofTourney(user, tournament) is False:
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if isTOofTourney(current_user, tournament) is False:
         return redirect(url_for('index'))
     form = CreateEventForm()
     if form.validate_on_submit():
@@ -132,20 +131,20 @@ def createEvent(tournament_id):
 
 @app.route('/event/<int:event_id>/registration')
 def registration(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     return render_template('registration.html', event=event)
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
 def initialSeeding(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     fencers = event.fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
     return render_template('initialSeed.html', event=event, fencers=fencers)
 
 
 @app.route('/event/<int:event_id>/pool-results')
 def poolResults(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     #q = db.session.query(Fencer, Pool).filter(Fencer.event == event).filter(Fencer.pool_id == Pool.id).order_by(func.div(Fencer.victories, Pool.numFencers).desc(), Fencer.indicator.desc())
     #(fencers, _) = q
     #TODO: convert to sqlalchemy statement, needs more tie checking
@@ -156,7 +155,7 @@ def poolResults(event_id):
 
 @app.route('/event/<int:event_id>/pools')
 def pools(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     pools = event.pools
     results = dict()
     fencers = dict()
@@ -175,16 +174,16 @@ def pools(event_id):
 #TODO: pool assignments
 @app.route('/event/<int:event_id>/pool-assignment')
 def poolAssignment(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     pools = event.pools
     fencers = event.fencers
-    return render_template('pool-assignments.html', title='Pool Assignments' event=event, pools=pools, fencers=fencers)
+    return render_template('pool-assignments.html', title='Pool Assignments', event=event, pools=pools, fencers=fencers)
 
 
 #TODO: live des for public
 @app.route('/event/<int:event_id>/de')
 def de(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     #return render_template('de.html', event=event)
     return "in progress"
 
@@ -195,12 +194,11 @@ def final(tournament_id, event_id):
     return "in progress"
 
 
-@app.route('/<int:tournament_id>/edit', methods=['GET', 'POST'])
+@app.route('/tournament/<int:tournament_id>/edit', methods=['GET', 'POST'])
 @login_required
 def editTournament(tournament_id):
-    user = User.query.filter_by(username=current_user.username).first()
     tournament = Tournament.query.filter_by(id=tournament_id).first()
-    if not isTOofTourney(user, tournament):
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     form = AddTOForm()
     if form.validate_on_submit():
@@ -220,10 +218,9 @@ def editTournament(tournament_id):
 @app.route('/event/<int:event_id>/registration/edit', methods=['GET', 'POST'])
 @login_required
 def editRegistration(event_id):
-    user = User.query.filter_by(username=current_user.username).first()
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
 
     if tournament.format == 'SWIFA':
@@ -296,10 +293,9 @@ def editRegistration(event_id):
 @app.route('/event/<int:event_id>/edit-pools')
 @login_required
 def editPools(event_id):
-    user = User.query.filter_by(username=current_user.username).first()
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    if not isTOofTourney(user, tournament):
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     pools = event.pools
     allPoolsDone = True
@@ -317,7 +313,7 @@ def editPools(event_id):
 def editPool(event_id, pool_id):
     pool = Pool.query.filter_by(id=pool_id).first()
     event = pool.event
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
+    tournament = event.tournament
     user = User.query.filter_by(username=current_user.username).first()
     if not isTOofTourney(user, tournament):
         return redirect(url_for('index'))
@@ -327,9 +323,9 @@ def editPool(event_id, pool_id):
             #TODO: input validation, replace single v with v5
             if val[0].upper() not in ['V', 'D']:
                 validInput = False
-            if val[0].upper() is 'V' and request.form['result'+key[7]+key[6]][0] is not 'D':
+            elif val[0].upper() is 'V' and request.form['result'+key[7]+key[6]][0] is not 'D':
                 validInput = False
-            if val[0].upper() is 'D' and request.form['result'+key[7]+key[6]][0] is not 'V':
+            elif val[0].upper() is 'D' and request.form['result'+key[7]+key[6]][0] is not 'V':
                 validInput = False
         if not validInput:
             flash('Invalid score')
@@ -357,40 +353,50 @@ def editPool(event_id, pool_id):
 @app.route('/event/<int:event_id>/generate-bracket')
 @login_required
 def generateBracket(event_id):
-    event = Event.query.get(event_id)
-    if not isTOofTourney(current_user, event):
+    event = Event.query.get_or_404(event_id)
+    if not isTOofTourney(current_user, event.tournament):
         return redirect(url_for('index'))
-    fencers = db.engine.execute('SET @row_num = 0; SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent, @row_num := @row_num + 1 as row_index, FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
-    fencers = [(Fencer.query.get(i), j) for (i, _, j) in fencers]
-    fencers = [(fencer[0].lastName + ", " + fencer[0].firstName, + " (" + fencer[1] + ")") for fencer in fencers]
+    q = db.engine.execute('SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
+    fencers = [Fencer.query.get(id) for (id, _) in q]
+    fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
+    for fencer1, fencer2 in bracket:
+        de = DE(fencer1=(fencer1.id if fencer1 is not None else None), fencer2=(fencer2.id if fencer2 is not None else None))
+        db.session.add(de)
+        event.des.append(de)
+    tableau = dict()
+    tableau["teams"] = generate_tournament(fencerNames)
+    event.tableauJson = json.dumps(tableau)
+    db.session.commit()
+    return redirect(url_for('editDE', event_id=event_id))
 
 
-#TODO: append seed to fencer names
+@app.route('/de/<int:de_id>/submit')
+@login_required
+def submitDE(de_id):
+    de = DE.query.get(de_id)
+
+    return redirect(url_for('editDE', event_id=de.id))
+
+
 @app.route('/event/<int:event_id>/de/edit')
 @login_required
 def editDE(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+    event = Event.query.get_or_404(event_id)
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
-    directElims = dict()
-    #bracket = generate_tournament(fencers)
+    des = event.des
 
-    fencers = [(fencer.lastName + ", " + fencer.firstName) for fencer in fencers]
-
-    directElims["teams"] = generate_tournament(fencers)
-
-    return render_template('edit-de.html', event=event, directElims=directElims)
+    return render_template('edit-de.html', event=event, directElims=json.loads(event.tableauJson), des=des)
 
 
 @app.route('/event/<int:event_id>/check-in/<int:fencer_id>')
 @login_required
 def checkInFencer(event_id, fencer_id):
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
-    fencer = Fencer.query.filter_by(id=fencer_id).first()
+    fencer = Fencer.query.get(fencer_id)
     fencer.isCheckedIn = True
     event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
     db.session.commit()
@@ -400,38 +406,35 @@ def checkInFencer(event_id, fencer_id):
 @app.route('/event/<int:event_id>/absent/<int:fencer_id>')
 @login_required
 def makeAbsent(event_id, fencer_id):
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
-    fencer = Fencer.query.filter_by(id=fencer_id).first()
+    fencer = Fencer.query.get(fencer_id)
     fencer.isCheckedIn = False
     event.numFencersCheckedIn = Event.numFencersCheckedIn - 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
 
-@app.route('/open-registration/<int:event_id>')
+@app.route('/event/<int:event_id>/open-registration')
 @login_required
 def openRegistration(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     event.stage = 1
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
 
-@app.route('/close-registration/<int:event_id>')
+@app.route('/event/<int:event_id>/close-registration')
 @login_required
 def closeRegistration(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     fencers = event.fencers.order_by()
     event.stage = 2
@@ -439,13 +442,12 @@ def closeRegistration(event_id):
     return redirect(url_for('editRegistration', event_id=event_id))
 
 
-@app.route('/<int:event_id>/create-pools', methods=['GET', 'POST'])
+@app.route('/event/<int:event_id>/create-pools', methods=['GET', 'POST'])
 @login_required
 def createPools(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    user = User.query.filter_by(username=current_user.username).first()
-    if not isTOofTourney(user, tournament):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     form = CreatePoolForm()
     fencers = event.fencers.order_by(Fencer.team_id.desc())

@@ -58,6 +58,7 @@ class Event(db.Model):
     stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
     numFencers = db.Column(db.Integer, default=0)
     numFencersCheckedIn = db.Column(db.Integer, default=0)
+    tableauJson = db.Column(db.String)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     #tournament = db.relationship('Tournament', foreign_keys=[tournament_id])
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
@@ -86,19 +87,9 @@ class Team(db.Model):
     #event = db.relationship('Event', foreign_keys=[event_id])
     club_id = db.Column('Club', db.ForeignKey('club.id'))
     #club = db.relationship('Club', foreign_keys=[club_id])
-    '''
-    fencerA_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    fencerA = db.relationship('Fencer', foreign_keys=[fencerA_id])
-    fencerB_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    fencerB = db.relationship('Fencer', foreign_keys=[fencerB_id])
-    fencerC_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    fencerC = db.relationship('Fencer', foreign_keys=[fencerC_id])
-    fencerD_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    fencerD = db.relationship('Fencer', foreign_keys=[fencerD_id])
-    '''
 
     def __repr__(self):
-        return '<Event {}>'.format(self.name)
+        return '<Team {}>'.format(self.name)
 
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -115,15 +106,19 @@ class Pool(db.Model):
 class DE(db.Model):
     __tablename__ = 'de'
     id = db.Column(db.Integer, primary_key=True)
+    fencer1 = db.Column(db.Integer, db.ForeignKey('fencer.id'))
+    fencer2 = db.Column(db.Integer, db.ForeignKey('fencer.id'))
+    fencer1Score = db.Column(db.Integer)
+    fencer2Score = db.Column(db.Integer)
+    fencer1Win = db.Column(db.Boolean)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
-    result_id = db.Column(db.Integer, db.ForeignKey('result.id'))
-    result = db.relationship('Result', foreign_keys=[result_id])
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     de_id = db.Column(db.Integer, db.ForeignKey('de.id'))
+    de = db.relationship('DE', foreign_keys=[de_id])
     fencer = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     opponent = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencerScore = db.Column(db.Integer)

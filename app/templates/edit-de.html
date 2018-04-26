@@ -31,7 +31,9 @@ var resizeParams = {
 
 $('.tournament').bracket(resizeParams);
 </script>
-
-
+<hr>
+{% for de in des %}
+    {% include '_de.html' %}
+{% endfor %}
 
 {% endblock %}

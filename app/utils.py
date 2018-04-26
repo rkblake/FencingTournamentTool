@@ -28,7 +28,7 @@ def flatten_list( matches ):
             teamlist += [team_or_match]
     return teamlist
 
-def generate_tournament(fencers ):
+def generate_tournament(fencers):
     fencers = [fencer for fencer in fencers]
     num = nextPow2(len(fencers))
     teams = 1

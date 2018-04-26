@@ -20,7 +20,7 @@
 	</div>
 	<hr>
 	<p>
-		<a class="btn btn-success padded" role="button" href="{{ url_for('createEvent', tournament_id=tournament.id) }}">Create Event</a>
+		<a class="btn btn-success" role="button" href="{{ url_for('createEvent', tournament_id=tournament.id) }}">Create Event</a>
 	</p>
 	{% for event in events %}
 		{% include '_event.html' %}

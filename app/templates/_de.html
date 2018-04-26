@@ -1,7 +1,8 @@
-<div>
-    {{ de.result.fencer.lastName }}, {{ de.result.fencer.firstName }} vs {{ de.result.opponent.lastName }}, {{ de.result.opponent.firstName }}<br>
-    <form method="post">
-        Fencer 1 Score: <input type="text" name="result1"> Fencer 2 Score: <input type="text" name="result2"><br>
-        <button type="submit" class="btn btn-default">Submit</submit>
-    </form>
+<div class="de pool-container">
+        <form action="" method="post">
+            <p>
+                {{ fencer1.lastName }}, {{ fencer2.firstName }} <input type="text" name="fencer1" style="width: 30px;"/> vs {{ fencer2.lastName }}, {{ fencer2.firstName }} <input type="text" name="fencer2" style="width: 30px;"/>
+            </p>
+            <input type="submit" name="submit" value="Submit results"/>
+        </form>
 </div>
