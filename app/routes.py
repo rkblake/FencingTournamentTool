@@ -360,6 +360,7 @@ def generateBracket(event_id):
     fencers = [Fencer.query.get(id) for (id, _) in q]
     fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
+    #TODO: dont create de for matches with byes, or create and give fencer the win
     for fencer1, fencer2 in bracket:
         de = DE(fencer1=(fencer1.id if fencer1 is not None else None), fencer2=(fencer2.id if fencer2 is not None else None))
         db.session.add(de)
@@ -375,8 +376,14 @@ def generateBracket(event_id):
 @login_required
 def submitDE(de_id):
     de = DE.query.get(de_id)
-
-    return redirect(url_for('editDE', event_id=de.id))
+    de.fencer1Score = int(request.form['fencer1'])
+    de.fencer2Score = int(request.form['fencer2'])
+    if de.fencer1Score is de.fencer2Score:
+        de.fencer1Win = request.form['fencer1Win']
+    else:
+        de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
+    db.session.commit()
+    return redirect(url_for('editDE', event_id=de.event.id))
 
 
 @app.route('/event/<int:event_id>/de/edit')
@@ -385,7 +392,6 @@ def editDE(event_id):
     event = Event.query.get_or_404(event_id)
     fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
     des = event.des
-
     return render_template('edit-de.html', event=event, directElims=json.loads(event.tableauJson), des=des)
 
 

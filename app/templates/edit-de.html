@@ -4,6 +4,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     {{ super() }}
     <style>
@@ -32,8 +33,9 @@ var resizeParams = {
 $('.tournament').bracket(resizeParams);
 </script>
 <hr>
+<div>
 {% for de in des %}
     {% include '_de.html' %}
 {% endfor %}
-
+</div>
 {% endblock %}
