@@ -17,6 +17,10 @@
 {% endblock %}
 
 {% block app_content %}
+{% for de in des %}
+    {% include '_de.html' %}
+{% endfor %}
+<hr>
 <div class="tournament"></div>
 
 <script>
@@ -32,10 +36,5 @@ var resizeParams = {
 
 $('.tournament').bracket(resizeParams);
 </script>
-<hr>
-<div>
-{% for de in des %}
-    {% include '_de.html' %}
-{% endfor %}
-</div>
+
 {% endblock %}

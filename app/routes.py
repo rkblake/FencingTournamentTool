@@ -138,7 +138,8 @@ def registration(event_id):
 @app.route('/event/<int:event_id>/initial-seeding')
 def initialSeeding(event_id):
     event = Event.query.get_or_404(event_id)
-    fencers = event.fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
+    fencers = event.fencers.filter_by(isCheckedIn=True)
+    fencers = fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
     return render_template('initialSeed.html', event=event, fencers=fencers)
 
 
@@ -360,9 +361,9 @@ def generateBracket(event_id):
     fencers = [Fencer.query.get(id) for (id, _) in q]
     fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
-    #TODO: dont create de for matches with byes, or create and give fencer the win
+    #TODO: dont create de for matches with byes, or create and give fencer1 the win
     for fencer1, fencer2 in bracket:
-        de = DE(fencer1=(fencer1.id if fencer1 is not None else None), fencer2=(fencer2.id if fencer2 is not None else None))
+        de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None))
         db.session.add(de)
         event.des.append(de)
     tableau = dict()
@@ -372,7 +373,7 @@ def generateBracket(event_id):
     return redirect(url_for('editDE', event_id=event_id))
 
 
-@app.route('/de/<int:de_id>/submit')
+@app.route('/de/<int:de_id>/submit', methods=['POST'])
 @login_required
 def submitDE(de_id):
     de = DE.query.get(de_id)
