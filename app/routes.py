@@ -361,9 +361,10 @@ def generateBracket(event_id):
     fencers = [Fencer.query.get(id) for (id, _) in q]
     fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
-    #TODO: dont create de for matches with byes, or create and give fencer1 the win
     for fencer1, fencer2 in bracket:
-        de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None))
+        if fencer2 is None:
+            de = DE(fencer1_id=fencer1.id, state=3)
+        de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
         db.session.add(de)
         event.des.append(de)
     tableau = dict()
@@ -383,6 +384,7 @@ def submitDE(de_id):
         de.fencer1Win = request.form['fencer1Win']
     else:
         de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
+    de.state = 2
     db.session.commit()
     return redirect(url_for('editDE', event_id=de.event.id))
 

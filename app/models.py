@@ -106,6 +106,7 @@ class Pool(db.Model):
 class DE(db.Model):
     __tablename__ = 'de'
     id = db.Column(db.Integer, primary_key=True)
+    state = db.Column(db.Integer) #0 = not started, 1 = in progress, 2 = finished, 3 = bye
     fencer1_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencer1 = db.relationship('Fencer', foreign_keys=[fencer1_id])
     fencer2_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))

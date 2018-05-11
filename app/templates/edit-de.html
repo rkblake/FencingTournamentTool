@@ -13,12 +13,19 @@
         line-height: 1.42857143;
         text-align: left;
       }
+
+      .pool-container {
+          height: 100px;
+          padding-top: 8px;
+      }
     </style>
 {% endblock %}
 
 {% block app_content %}
 {% for de in des %}
-    {% include '_de.html' %}
+    {% if de.state < 2 %}
+        {% include '_de.html' %}
+    {% endif %}
 {% endfor %}
 <hr>
 <div class="tournament"></div>
