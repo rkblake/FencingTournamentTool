@@ -3,6 +3,7 @@ import copy
 from urllib.parse import urlparse
 from operator import attrgetter
 import json
+import math
 
 from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request, jsonify
@@ -364,7 +365,12 @@ def generateBracket(event_id):
     for fencer1, fencer2 in bracket:
         if fencer2 is None:
             de = DE(fencer1_id=fencer1.id, state=3)
-        de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
+        else:
+            de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
+        db.session.add(de)
+        event.des.append(de)
+    for _ in range(int((1 - 2 ** math.log(num, 2))/(1 - 2))):
+        de = DE(state = 4)
         db.session.add(de)
         event.des.append(de)
     tableau = dict()
@@ -385,6 +391,10 @@ def submitDE(de_id):
     else:
         de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
     de.state = 2
+    tableau = json.loads(de.event)
+    tableau['results'].append([de.fencer1Score, de.fencer2Score])
+    des = de.event.des.order_by(DE.id.asc()).all()
+    #if()
     db.session.commit()
     return redirect(url_for('editDE', event_id=de.event.id))
 
