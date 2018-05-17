@@ -362,19 +362,26 @@ def generateBracket(event_id):
     fencers = [Fencer.query.get(id) for (id, _) in q]
     fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
+    for _ in range(int((1 - 2 ** math.log(len(bracket), 2))/(1 - 2))):
+        de = DE(state = 4)
+        db.session.add(de)
+        event.des.append(de)
     for fencer1, fencer2 in bracket:
         if fencer2 is None:
             de = DE(fencer1_id=fencer1.id, state=3)
+            des = de.event.des.order_by(DE.id.asc()).all()
+            nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
+            if (des.index(de)) % 2 is 0:
+                nextDE.fencer1 = de.fencer1
+            else:
+                nextDE.fencer2 = de.fencer1
         else:
             de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
         db.session.add(de)
         event.des.append(de)
-    for _ in range(int((1 - 2 ** math.log(num, 2))/(1 - 2))):
-        de = DE(state = 4)
-        db.session.add(de)
-        event.des.append(de)
     tableau = dict()
-    tableau["teams"] = generate_tournament(fencerNames)
+    tableau['teams'] = generate_tournament(fencerNames)
+    tableau['results'] = []
     event.tableauJson = json.dumps(tableau)
     db.session.commit()
     return redirect(url_for('editDE', event_id=event_id))
@@ -391,10 +398,18 @@ def submitDE(de_id):
     else:
         de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
     de.state = 2
-    tableau = json.loads(de.event)
+    tableau = json.loads(de.event.tableauJson)
+    #TODO: append dummy results first or wait until round is done
     tableau['results'].append([de.fencer1Score, de.fencer2Score])
     des = de.event.des.order_by(DE.id.asc()).all()
-    #if()
+    offset = des[0].id - 1
+    nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
+    if (des.index(de)) % 2 is 0:
+        nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
+    else:
+        nextDE.fencer2 = de.fencer1 if de.fencer1Win else de.fencer2
+    if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
+        nextDE.state = 0
     db.session.commit()
     return redirect(url_for('editDE', event_id=de.event.id))
 
