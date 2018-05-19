@@ -272,7 +272,7 @@ def editRegistration(event_id):
         if form.validate_on_submit():
             club = Club.query.filter_by(name=form.club.data).first()
             if form.club.data is not None and club is None:
-                club = Club(name=form.club.data.title())
+                club = Club(name=form.club.data.upper())
             fencer = Fencer(
                     firstName=form.firstName.data.title(),
                     lastName=form.lastName.data.title(),
@@ -369,6 +369,7 @@ def generateBracket(event_id):
     for fencer1, fencer2 in bracket:
         if fencer2 is None:
             de = DE(fencer1_id=fencer1.id, state=3)
+            event.des.append(de)
             des = de.event.des.order_by(DE.id.asc()).all()
             nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
             if (des.index(de)) % 2 is 0:
@@ -377,11 +378,19 @@ def generateBracket(event_id):
                 nextDE.fencer2 = de.fencer1
         else:
             de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
+            event.des.append(de)
         db.session.add(de)
-        event.des.append(de)
+
     tableau = dict()
     tableau['teams'] = generate_tournament(fencerNames)
-    tableau['results'] = []
+    tableau['results'] = [[] for _ in range(int(math.log(len(tableau['teams'])*2,2)))]
+    i = 1
+    #print(math.log(len(tableau['teams'])*2, 2))
+    for round in range(int(math.log(len(tableau['teams'])*2,2))):
+        tableau['results'][round] = [[] for _ in range(2 ** round)]
+        for match in range(2 ** round):
+            tableau['results'][round][match] = [None, None, 'match' + str(i)]
+            i += 1
     event.tableauJson = json.dumps(tableau)
     db.session.commit()
     return redirect(url_for('editDE', event_id=event_id))
@@ -399,10 +408,14 @@ def submitDE(de_id):
         de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
     de.state = 2
     tableau = json.loads(de.event.tableauJson)
-    #TODO: append dummy results first or wait until round is done
-    tableau['results'].append([de.fencer1Score, de.fencer2Score])
+    #tableau['results'].append([de.fencer1Score, de.fencer2Score])
+
     des = de.event.des.order_by(DE.id.asc()).all()
-    offset = des[0].id - 1
+    match = int(math.log(des.index(de), 2))
+    #print(tableau)
+    round = tableau['results'][match].index([None, None, 'match' + str(des.index(de)+1)])
+    tableau['results'][match][round] = [de.fencer1Score, de.fencer2Score]
+    de.event.tableauJson = json.dumps(tableau)
     nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
     if (des.index(de)) % 2 is 0:
         nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
