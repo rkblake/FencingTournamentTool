@@ -41,13 +41,15 @@
 		<a class="btn btn-danger padded" href="{{ url_for('closeRegistration', event_id=event.id) }}" role="button">Close Registration</a>
 		<a class="btn btn-success disabled padded" role="button" aria-disabled="true">Create Pools</a>
 	{% endif %}
+	<br><br>{{ event.numFencersCheckedIn }} Checked In / {{ event.numFencers }} Registered
 
 	<hr>
 
 	<table class="table table-striped">
 		<thead>
 		<tr>
-			<th>Club/University</th>
+			<th>Status</th>
+			<th>Team</th>
 			<th>Fencer A</th>
 			<th>Fencer B</th>
 			<th>Fencer C</th>
@@ -57,13 +59,34 @@
 		<tbody>
 		{% for team in teams %}
 		<tr>
-			<td>{{ team.club.name }}</td>
+			<td>
+				<a class="btn btn-warning btn-sm padded" role="button" href="{{ url_for('editEntrantInfo', event_id=event.id, entrant=team) }}">&#9998;</a>
+				<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('deleteEntrant', event_id=event.id, entrant=team) }}">&#21024;</a>
+				{% if team.isCheckedIn %}
+					<a class="btn btn-success btn-sm disabled padded" role="button" aria-disabled="true">&#10004;</a>
+					<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('makeAbsentTeam', event_id=event.id, team_id=team.id) }}">&#128683;</a>
+					<span style="color: green;">Checked In</span>
+				{% else %}
+					<a class="btn btn-success btn-sm padded" role="button" href="{{ url_for('checkInTeam', event_id=event.id, team_id=team.id) }}">&#10004;</a>
+					<a class="btn btn-danger btn-sm disabled padded" role="button" aria-disabled="true">&#128683;</a>
+					<span style="color: red;">Absent</span>
+				{% endif %}
+			</td>
+			<td>{{ team.name }}</td>
 			{% for fencer in team.fencers %}
-			{% if fencer.teamPos == 'A' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
-			{% if fencer.teamPos == 'B' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
-			{% if fencer.teamPos == 'C' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
-			{% if fencer.teamPos == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.teamPosition == 'A' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
 			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'B' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'C' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% if team.fencers|length == 3 %}<td></td>{% endif %}
+			{% if team.fencers|length == 2 %}<td></td><td></td>{% endif %}
 		</tr>
 
 		{% endfor %}

@@ -139,9 +139,12 @@ def registration(event_id):
 @app.route('/event/<int:event_id>/initial-seeding')
 def initialSeeding(event_id):
     event = Event.query.get_or_404(event_id)
-    fencers = event.fencers.filter_by(isCheckedIn=True)
-    fencers = fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
-    return render_template('initialSeed.html', event=event, fencers=fencers)
+    if event.tournament.format == 'SWIFA':
+        teams = event.teams.filter_by(isCheckedIn=True)
+    elif event.tournament.format == 'USFA Individual':
+        fencers = event.fencers.filter_by(isCheckedIn=True)
+        fencers = fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
+        return render_template('initialSeed.html', event=event, fencers=fencers)
 
 
 @app.route('/event/<int:event_id>/pool-results')
@@ -232,23 +235,26 @@ def editRegistration(event_id):
             club = Club.query.filter_by(name=form.club.data.lower()).first()
             if club is None:
                 club = Club(name=form.club.data.lower())
-            team = Team(name=form.teamName.data)
+            team = Team(name=form.teamName.data, isCheckedIn=True)
             fencerA = Fencer(
                 firstName=form.fencerA.data.split()[0].title(),
                 lastName=form.fencerA.data.split()[1].title(),
                 teamPosition='A')
             team.fencers.append(fencerA)
+            #team.fencerA_id = fencerA.id
             fencerB = Fencer(
                 firstName=form.fencerB.data.split()[0].title(),
                 lastName=form.fencerB.data.split()[1].title(),
                 teamPosition='B')
             team.fencers.append(fencerB)
+            #team.fencerB_id = fencerB.id
             if form.fencerC.data is not '':
                 fencerC = Fencer(
                     firstName=form.fencerC.data.split()[0].title(),
                     lastName=form.fencerC.data.split()[1].title(),
                     teamPosition='C')
                 team.fencers.append(fencerC)
+                #team.fencerC_id = fencerC.id
                 db.session.add(fencerC)
             if form.fencerD.data is not '':
                 fencerD = Fencer(
@@ -256,6 +262,7 @@ def editRegistration(event_id):
                     lastName=form.fencerD.data.split()[1].title(),
                     teamPosition='D')
                 team.fencers.append(fencerD)
+                #team.fencerD_id = fencerD.id
                 db.session.add(fencerD)
             club.teams.append(team)
             event.teams.append(team)
@@ -371,11 +378,15 @@ def generateBracket(event_id):
             de = DE(fencer1_id=fencer1.id, state=3)
             event.des.append(de)
             des = de.event.des.order_by(DE.id.asc()).all()
-            nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
+            print(de)
+            nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)]
+            print(nextDE)
             if (des.index(de)) % 2 is 0:
                 nextDE.fencer1 = de.fencer1
             else:
-                nextDE.fencer2 = de.fencer1
+                nextDE.fencer2 = de.fencer2
+            if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
+                nextDE.state = 0
         else:
             de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
             event.des.append(de)
@@ -391,6 +402,7 @@ def generateBracket(event_id):
         for match in range(2 ** round):
             tableau['results'][round][match] = [None, None, 'match' + str(i)]
             i += 1
+    tableau['results'] = tableau['results'][::-1]
     event.tableauJson = json.dumps(tableau)
     db.session.commit()
     return redirect(url_for('editDE', event_id=event_id))
@@ -411,12 +423,14 @@ def submitDE(de_id):
     #tableau['results'].append([de.fencer1Score, de.fencer2Score])
 
     des = de.event.des.order_by(DE.id.asc()).all()
-    match = int(math.log(des.index(de), 2))
+    #print(des)
+    match = len(tableau['teams']) - int(math.log(des.index(de), 2))
+    print(len(tableau['teams']), int(math.log(des.index(de) + 1, 2)))
     #print(tableau)
     round = tableau['results'][match].index([None, None, 'match' + str(des.index(de)+1)])
     tableau['results'][match][round] = [de.fencer1Score, de.fencer2Score]
     de.event.tableauJson = json.dumps(tableau)
-    nextDE = des[int((des.index(de) & ~(1 << 0))/2)]
+    nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)]
     if (des.index(de)) % 2 is 0:
         nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
     else:
@@ -449,6 +463,18 @@ def checkInFencer(event_id, fencer_id):
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
+@app.route('/event/<int:event_id>/check-in-team/<int:team_id>')
+@login_required
+def checkInTeam(event_id, team_id):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user. tournament):
+        return redirect(url_for('index'))
+    team = Team.query.get(team_id)
+    team.isCheckedIn = True
+    event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
 
 @app.route('/event/<int:event_id>/absent/<int:fencer_id>')
 @login_required
@@ -497,8 +523,11 @@ def createPools(event_id):
     if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     form = CreatePoolForm()
-    fencers = event.fencers.order_by(Fencer.team_id.desc())
-    fencers = fencers.filter_by(isCheckedIn=True)
+    if tournament.format == 'SWIFA':
+        teams = event.teams.filter_by(isCheckedIn=True).order_by(Team.club_id.asc())
+    elif tournament.format == 'USFA Individual':
+        fencers = event.fencers.order_by(Fencer.team_id.desc())
+        fencers = fencers.filter_by(isCheckedIn=True)
     form.numFencers.data = event.numFencersCheckedIn
     if form.validate_on_submit():
         pools = []
