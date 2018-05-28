@@ -256,6 +256,14 @@ def editRegistration(event_id):
                 team.fencers.append(fencerC)
                 #team.fencerC_id = fencerC.id
                 db.session.add(fencerC)
+            else: #create dummy fencer to fill c slot
+                fencerC = Fencer(
+                    firstName='',
+                    lastName='No C',
+                    teamPosition='C'
+                )
+                team.fencers.append(fencerC)
+                db.session.add(fencerC)
             if form.fencerD.data is not '':
                 fencerD = Fencer(
                     firstName=form.fencerD.data.split()[0].title(),
@@ -533,23 +541,52 @@ def createPools(event_id):
         pools = []
         poolNum = 1
         for _ in range(0, form.numPools1.data):
-            pool = Pool(event_id = event.id, numFencers = form.numFencers1.data, poolNum = poolNum)
+            if tournament.format == 'SWIFA':
+                poolA = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='A')
+                poolB = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='B')
+                poolC = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='C')
+                poolOverall = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='O')
+                pools.append([poolA, poolB, poolC, poolOverall])
+                db.session.add_all([poolA, poolB, poolC, poolOverall])
+            elif tournament.format == 'USFA Individual':
+                pool = Pool(event_id=event.id, numFencers=form.numFencers1.data, poolNum=poolNum)
+                pools.append(pool)
+                db.session.add(pool)
             poolNum += 1
-            pools.append(pool)
-            db.session.add(pool)
         for _ in range(0, form.numPools2.data):
-            pool = Pool(event_id = event.id, numFencers = form.numFencers2.data, poolNum = poolNum)
+            if tournament.format == 'SWIFA':
+                poolA = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='A')
+                poolB = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='B')
+                poolC = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='C')
+                poolOverall = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='O')
+                pools.extend([poolA, poolB, poolC, poolOverall])
+                db.session.add_all([poolA, poolB, poolC, poolOverall])
+            elif tournament.format == 'USFA Individual':
+                pool = Pool(event_id=event.id, numFencers=form.numFencers2.data, poolNum=poolNum)
+                pools.append(pool)
+                db.session.add(pool)
             poolNum += 1
-            pools.append(pool)
-            db.session.add(pool)
         pools.sort(key=attrgetter('numFencers'), reverse=True)
 
         poolNum = [0 for _ in pools]
-        for i, fencer in enumerate(fencers.order_by(Fencer.lastName.asc())):
-            pools[i % len(pools)].fencers.append(fencer)
-            fencer.numInPool = poolNum[i % len(pools)] + 1
-            poolNum[i % len(pools)] += 1
-            fencer.pool = pools[i % len(pools)]
+        if tournament.format == 'SWIFA':
+            for i, team in enumerate(teams):
+                pools[i % len(pools)][3].teams.append(team)
+                team.numInPool = poolNum[i % len(pools)] + 1
+                team.pool = pools[i % len(pools)]
+                fencers = team.fencers.order_by(Fencer.teamPosition.asc())
+                for j in range(2):
+                    pools[i % len(pools)][j].fencers.append(fencers[j])
+                    fencers[j].numInPool = poolNum[i % len(pools)] + 1
+                    fencer[j].pool = pools[i % len(pools)][j]
+                poolNum[i % len(pools)] += 1
+                
+        elif tournament.format == 'USFA Individual':
+            for i, fencer in enumerate(fencers.order_by(Fencer.lastName.asc())):
+                pools[i % len(pools)].fencers.append(fencer)
+                fencer.numInPool = poolNum[i % len(pools)] + 1
+                poolNum[i % len(pools)] += 1
+                fencer.pool = pools[i % len(pools)]
 
         event.stage = 3
         db.session.commit()

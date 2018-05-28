@@ -83,8 +83,14 @@ class Team(db.Model):
     name = db.Column(db.String(120))
     fencers = db.relationship('Fencer', backref='team_members')
     isCheckedIn = db.Column(db.Boolean)
+    numInPool = db.Column(db.Integer)
+    victories = db.Column(db.Integer, default=0)
+    touchesScored = db.Column(db.Integer, default=0)
+    touchesRecieved = db.Column(db.Integer, default=0)
+    indicator = db.Column(db.Integer, default=0)
     event_id = db.Column('Event', db.ForeignKey('event.id'))
     #event = db.relationship('Event', foreign_keys=[event_id])
+    pool_id = db.Column('Pool', db.ForeignKey('event.id'))
     club_id = db.Column('Club', db.ForeignKey('club.id'))
     #club = db.relationship('Club', foreign_keys=[club_id])
     #fencerA_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
@@ -104,6 +110,7 @@ class Pool(db.Model):
     poolLetter = db.Column(db.String(1))
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
+    teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):
         return '<Pool {}, {} fencers>'.format(self.poolNum, self.numFencers)
