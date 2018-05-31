@@ -322,7 +322,10 @@ def editPools(event_id):
     if allPoolsDone:
         event.stage = 5
         db.session.commit()
-    return render_template('edit-pools.html', event=event, pools=pools)
+    if event.tournament.format == 'SWIFA':
+        return render_template('edit-pools-teams.html', event=event, pools=pools)
+    elif event.tournament.format == 'USFA Individual':
+        return render_template('edit-pools.html', event=event, pools=pools)
 
 
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
@@ -498,6 +501,44 @@ def makeAbsent(event_id, fencer_id):
     return redirect(url_for('editRegistration', event_id=event_id))
 
 
+@app.route('/event/<int:event_id>/edit-team/<int:team_id>')
+@login_required
+def editTeamInfo(event_id, team_id):
+    event = Event.query.get(event_id)
+    team = Team.query.get(team_id)
+    form = AddTeamForm()
+    form.teamName = team.name
+    form.fencerA.data = Fencer.query.filter_by(team_id=team.id, teamPosition='A').first()
+    form.fencerB.data = Fencer.query.filter_by(team_id=team.id, teamPosition='B').first()
+    form.fencerC.data = Fencer.query.filter_by(team_id=team.id, teamPosition='C').first()
+    form.fencerD.data = Fencer.query.filter_by(team_id=team.id, teamPosition='D').first()
+    form.club.data = Club.query.get(team.club_id).first().name
+    if form.validate_on_submit:
+        team.name = form.teamName.data
+        fencerA = Fencer.query.filter_by(team_id=team.id, teamPosition='A').first()
+        if form.fencerA.data is not (fencerA.firstName + ' ' + fencerA.lastName):
+            db.session.delete(fencerA)
+            newFencerA = Fencer(
+                firstName=form.fencerA.data.split()[0].title(),
+                lastName=form.fencerA.data.split()[1].title(),
+                teamPosition='A')
+            team.fencers.append(newFencerA)
+        fencerB = Fencer.query.filter_by(team_id=team.id, teamPosition='B').first()
+        if form.fencerB.data is not (fencerB.firstName + ' ' + fencerB.lastName):
+            db.session.delete(fencerB)
+            newFencerA = Fencer(
+                firstName=form.fencerB.data.split()[0].title(),
+                lastName=form.fencerB.data.split()[1].title(),
+                teamPosition='B')
+            team.fencers.append(newFencerA)
+
+
+@app.route('/event/<int:event_id>/delete-team/<int:team_id>')
+@login_required
+def deleteTeam(event_id, team_id):
+    pass
+
+
 @app.route('/event/<int:event_id>/open-registration')
 @login_required
 def openRegistration(event_id):
@@ -542,10 +583,10 @@ def createPools(event_id):
         poolNum = 1
         for _ in range(0, form.numPools1.data):
             if tournament.format == 'SWIFA':
-                poolA = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='A')
-                poolB = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='B')
-                poolC = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='C')
-                poolOverall = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='O')
+                poolA = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='A')
+                poolB = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='B')
+                poolC = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='C')
+                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='O')
                 pools.append([poolA, poolB, poolC, poolOverall])
                 db.session.add_all([poolA, poolB, poolC, poolOverall])
             elif tournament.format == 'USFA Individual':
@@ -555,10 +596,10 @@ def createPools(event_id):
             poolNum += 1
         for _ in range(0, form.numPools2.data):
             if tournament.format == 'SWIFA':
-                poolA = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='A')
-                poolB = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='B')
-                poolC = Pool(event_id = event.id, form.numFencers2.data, poolNum=poolNum, poolLetter='C')
-                poolOverall = Pool(event_id = event.id, form.numFencers1.data, poolNum=poolNum, poolLetter='O')
+                poolA = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='A')
+                poolB = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='B')
+                poolC = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='C')
+                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='O')
                 pools.extend([poolA, poolB, poolC, poolOverall])
                 db.session.add_all([poolA, poolB, poolC, poolOverall])
             elif tournament.format == 'USFA Individual':
@@ -580,7 +621,7 @@ def createPools(event_id):
                     fencers[j].numInPool = poolNum[i % len(pools)] + 1
                     fencer[j].pool = pools[i % len(pools)][j]
                 poolNum[i % len(pools)] += 1
-                
+
         elif tournament.format == 'USFA Individual':
             for i, fencer in enumerate(fencers.order_by(Fencer.lastName.asc())):
                 pools[i % len(pools)].fencers.append(fencer)
