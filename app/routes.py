@@ -259,7 +259,7 @@ def editRegistration(event_id):
             else: #create dummy fencer to fill c slot
                 fencerC = Fencer(
                     firstName='',
-                    lastName='No C',
+                    lastName='',
                     teamPosition='C'
                 )
                 team.fencers.append(fencerC)
@@ -271,6 +271,14 @@ def editRegistration(event_id):
                     teamPosition='D')
                 team.fencers.append(fencerD)
                 #team.fencerD_id = fencerD.id
+                db.session.add(fencerD)
+            else: #create dummy fencer to fill d slot
+                fencerD = Fencer(
+                    firstName='',
+                    lastName='',
+                    teamPosition='D'
+                )
+                team.fencers.append(fencerD)
                 db.session.add(fencerD)
             club.teams.append(team)
             event.teams.append(team)
@@ -479,7 +487,7 @@ def checkInFencer(event_id, fencer_id):
 def checkInTeam(event_id, team_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
-    if not isTOofTourney(current_user. tournament):
+    if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     team = Team.query.get(team_id)
     team.isCheckedIn = True
@@ -501,36 +509,59 @@ def makeAbsent(event_id, fencer_id):
     return redirect(url_for('editRegistration', event_id=event_id))
 
 
-@app.route('/event/<int:event_id>/edit-team/<int:team_id>')
+@app.route('/event/<int:event_id>/absent-team/<int:team_id>')
+@login_required
+def makeAbsentTeam(event_id, team_id):
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
+        return redirect(url_for('index'))
+    team = Team.query.get(team_id)
+    team.isCheckedIn = False
+    event.numFencersCheckedIn = Event.numFencersCheckedIn - 1
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
+
+
+@app.route('/event/<int:event_id>/edit-team/<int:team_id>', methods=['POST', 'GET'])
 @login_required
 def editTeamInfo(event_id, team_id):
-    event = Event.query.get(event_id)
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
+        return redirect(url_for('index'))
     team = Team.query.get(team_id)
+    fencerA = Fencer.query.filter_by(team_id=team.id, teamPosition='A').first()
+    fencerB = Fencer.query.filter_by(team_id=team.id, teamPosition='B').first()
+    fencerC = Fencer.query.filter_by(team_id=team.id, teamPosition='C').first()
+    fencerD = Fencer.query.filter_by(team_id=team.id, teamPosition='D').first()
     form = AddTeamForm()
-    form.teamName = team.name
-    form.fencerA.data = Fencer.query.filter_by(team_id=team.id, teamPosition='A').first()
-    form.fencerB.data = Fencer.query.filter_by(team_id=team.id, teamPosition='B').first()
-    form.fencerC.data = Fencer.query.filter_by(team_id=team.id, teamPosition='C').first()
-    form.fencerD.data = Fencer.query.filter_by(team_id=team.id, teamPosition='D').first()
-    form.club.data = Club.query.get(team.club_id).first().name
-    if form.validate_on_submit:
+    if form.validate_on_submit():
         team.name = form.teamName.data
-        fencerA = Fencer.query.filter_by(team_id=team.id, teamPosition='A').first()
         if form.fencerA.data is not (fencerA.firstName + ' ' + fencerA.lastName):
-            db.session.delete(fencerA)
-            newFencerA = Fencer(
-                firstName=form.fencerA.data.split()[0].title(),
-                lastName=form.fencerA.data.split()[1].title(),
-                teamPosition='A')
-            team.fencers.append(newFencerA)
-        fencerB = Fencer.query.filter_by(team_id=team.id, teamPosition='B').first()
+            fencerA.firstName = form.fencerA.data.split()[0]
+            fencerA.lastName = form.fencerA.data.split()[1]
         if form.fencerB.data is not (fencerB.firstName + ' ' + fencerB.lastName):
-            db.session.delete(fencerB)
-            newFencerA = Fencer(
-                firstName=form.fencerB.data.split()[0].title(),
-                lastName=form.fencerB.data.split()[1].title(),
-                teamPosition='B')
-            team.fencers.append(newFencerA)
+            fencerB.firstName = form.fencerB.data.split()[0]
+            fencerB.lastName = form.fencerB.data.split()[1]
+        if form.fencerC.data is not (fencerC.firstName + ' ' + fencerC.lastName):
+            fencerC.firstName = form.fencerC.data.split()[0] or None
+            fencerC.lastName = form.fencerC.data.split()[1] or None
+        if form.fencerD.data is not (fencerD.firstName + ' ' + fencerD.lastName):
+            fencerD.firstName = form.fencerD.data.split()[0] or None
+            fencerD.lastName = form.fencerD.data.split()[1] or None
+        flash('Edited team')
+        db.session.commit()
+        return redirect(url_for('editRegistration', event_id=event_id))
+    elif request.method == 'GET':
+        form.submit.label.text = "Edit Team"
+        form.teamName.data = team.name
+        form.fencerA.data = fencerA.firstName + ' ' + fencerA.lastName
+        form.fencerB.data = fencerB.firstName + ' ' + fencerB.lastName
+        form.fencerC.data = fencerC.firstName + ' ' + fencerC.lastName
+        form.fencerD.data = fencerD.firstName + ' ' + fencerD.lastName
+        form.club.data = Club.query.get(team.club_id).name
+        return render_template('edit-team.html', form=form)
 
 
 @app.route('/event/<int:event_id>/delete-team/<int:team_id>')
