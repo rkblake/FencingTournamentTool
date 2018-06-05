@@ -85,8 +85,8 @@
 			{% for fencer in team.fencers %}
 			{% if fencer.teamPosition == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
 			{% endfor %}
-			{% if team.fencers|length == 3 %}<td></td>{% endif %}
-			{% if team.fencers|length == 2 %}<td></td><td></td>{% endif %}
+			{% if team.fencers.count() == 3 %}<td></td>{% endif %}
+			{% if team.fencers.count() == 2 %}<td></td><td></td>{% endif %}
 		</tr>
 
 		{% endfor %}

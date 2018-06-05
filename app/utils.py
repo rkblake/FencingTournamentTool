@@ -45,3 +45,13 @@ def generate_tournament(fencers):
         result[i] = fencers[j-1]
     pairs = [list(i) for i in zip(*[iter(result)]*2)]
     return pairs
+
+
+def quicksort(x):
+    if len(x) < 2:
+        return x
+    else:
+        pivot = x[0]
+        less = [i for i in x[1:] if i[0].numFencers <= pivot[0].numFencers]
+        greater = [i for i in x[1:] if i[0].numFencers > pivot[0].numFencers]
+        return quicksort(less) + [pivot] + quicksort(greater)

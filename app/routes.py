@@ -12,7 +12,7 @@ from app import app, db
 
 from app.forms import *
 from app.models import *
-from app.utils import generate_tournament
+from app.utils import generate_tournament, quicksort
 
 
 def isTOofTourney(user, tournament):
@@ -229,7 +229,7 @@ def editRegistration(event_id):
         return redirect(url_for('index'))
 
     if tournament.format == 'SWIFA':
-        teams = event.teams
+        teams = event.teams.all()
         form = AddTeamForm()
         if form.validate_on_submit():
             club = Club.query.filter_by(name=form.club.data.lower()).first()
@@ -287,6 +287,7 @@ def editRegistration(event_id):
             db.session.add_all([club, team, fencerA, fencerB])
             db.session.commit()
             flash('Added team')
+            return redirect(url_for('editRegistration', event_id=event_id))
         return render_template('edit-registration-teams.html', form=form, teams=teams, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
 
     elif tournament.format == 'USFA Individual':
@@ -630,27 +631,31 @@ def createPools(event_id):
                 poolA = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='A')
                 poolB = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='B')
                 poolC = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='C')
-                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='O')
-                pools.extend([poolA, poolB, poolC, poolOverall])
+                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='O')
+                pools.append([poolA, poolB, poolC, poolOverall])
                 db.session.add_all([poolA, poolB, poolC, poolOverall])
             elif tournament.format == 'USFA Individual':
                 pool = Pool(event_id=event.id, numFencers=form.numFencers2.data, poolNum=poolNum)
                 pools.append(pool)
                 db.session.add(pool)
             poolNum += 1
-        pools.sort(key=attrgetter('numFencers'), reverse=True)
+
+        if event.tournament.format == 'SWIFA':
+            pools = quicksort(pools)
+        elif event.tournament.format == 'USFA Individual':
+            pools.sort(key=attrgetter('numFencers'), reverse=True)
 
         poolNum = [0 for _ in pools]
         if tournament.format == 'SWIFA':
             for i, team in enumerate(teams):
                 pools[i % len(pools)][3].teams.append(team)
                 team.numInPool = poolNum[i % len(pools)] + 1
-                team.pool = pools[i % len(pools)]
+                team.pool = pools[i % len(pools)][3]
                 fencers = team.fencers.order_by(Fencer.teamPosition.asc())
                 for j in range(2):
                     pools[i % len(pools)][j].fencers.append(fencers[j])
                     fencers[j].numInPool = poolNum[i % len(pools)] + 1
-                    fencer[j].pool = pools[i % len(pools)][j]
+                    fencers[j].pool = pools[i % len(pools)][j]
                 poolNum[i % len(pools)] += 1
 
         elif tournament.format == 'USFA Individual':
