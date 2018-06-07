@@ -209,7 +209,7 @@ def editTournament(tournament_id):
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None:
-            #TODO: send user email to register
+            #TODO: send user email to register, requires a mail server
             return
         access = AccessTable(user_id=user.id, tournament_id=tournament.id, mainTO=False)
         user.tournaments.append(access)
@@ -241,20 +241,17 @@ def editRegistration(event_id):
                 lastName=form.fencerA.data.split()[1].title(),
                 teamPosition='A')
             team.fencers.append(fencerA)
-            #team.fencerA_id = fencerA.id
             fencerB = Fencer(
                 firstName=form.fencerB.data.split()[0].title(),
                 lastName=form.fencerB.data.split()[1].title(),
                 teamPosition='B')
             team.fencers.append(fencerB)
-            #team.fencerB_id = fencerB.id
             if form.fencerC.data is not '':
                 fencerC = Fencer(
                     firstName=form.fencerC.data.split()[0].title(),
                     lastName=form.fencerC.data.split()[1].title(),
                     teamPosition='C')
                 team.fencers.append(fencerC)
-                #team.fencerC_id = fencerC.id
                 db.session.add(fencerC)
             else: #create dummy fencer to fill c slot
                 fencerC = Fencer(
@@ -270,7 +267,6 @@ def editRegistration(event_id):
                     lastName=form.fencerD.data.split()[1].title(),
                     teamPosition='D')
                 team.fencers.append(fencerD)
-                #team.fencerD_id = fencerD.id
                 db.session.add(fencerD)
             else: #create dummy fencer to fill d slot
                 fencerD = Fencer(
@@ -330,10 +326,12 @@ def editPools(event_id):
             allPoolsDone = False
     if allPoolsDone:
         event.stage = 5
+        if tournament.format == 'SWIFA':
+            pass
         db.session.commit()
-    if event.tournament.format == 'SWIFA':
+    if tournament.format == 'SWIFA':
         return render_template('edit-pools-teams.html', event=event, pools=pools)
-    elif event.tournament.format == 'USFA Individual':
+    elif tournament.format == 'USFA Individual':
         return render_template('edit-pools.html', event=event, pools=pools)
 
 
@@ -369,6 +367,12 @@ def editPool(event_id, pool_id):
             fencer.indicator = Fencer.indicator + result.fencerScore
             opponent.touchesRecieved = Fencer.touchesRecieved + result.fencerScore
             opponent.indicator = Fencer.indicator - result.fencerScore
+            if tournament.format == 'SWIFA':
+                fencer.team.victories = Team.victories + (1 if result.fencerWin else 0)
+                fencer.team.touchesScored = Team.touchesScored + result.fencerScore
+                fencer.team.indicator = Team.indicator + result.fencerScore
+                opponent.team.touchesRecieved = Team.touchesRecieved + result.fencerScore
+                opponent.team.indicator = Team.indicator - result.fencerScore
             pool.results.append(result)
             db.session.add(result)
         pool.state = 1
@@ -450,7 +454,7 @@ def submitDE(de_id):
     round = tableau['results'][match].index([None, None, 'match' + str(des.index(de)+1)])
     tableau['results'][match][round] = [de.fencer1Score, de.fencer2Score]
     de.event.tableauJson = json.dumps(tableau)
-    nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)]
+    nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)] #TODO: not finding parent de
     if (des.index(de)) % 2 is 0:
         nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
     else:

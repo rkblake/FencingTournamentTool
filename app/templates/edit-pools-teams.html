@@ -11,6 +11,9 @@
         <p>
             <a href="{{ url_for('editPool', event_id=event.id, pool_id=pool.id) }}">Pool {{ pool.poolNum }} {{ pool.poolLetter }}</a>
         </p>
+        {% elif pool.poolLetter == 'O' %}
+        <p>
+            Pool {{ pool.poolNum }} <span style="color: green;">Overall Team Pool</span>
         {% else %}
         <p>
             Pool {{ pool.poolNum }} <span style="color: green;">Complete</span>

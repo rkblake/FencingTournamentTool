@@ -1,6 +1,6 @@
 import math
 
-def nextPow2(v):
+def nextPow2(v): #rounds up to next power of 2
     v -= 1
     v |= v >> 1
     v |= v >> 2
@@ -47,11 +47,11 @@ def generate_tournament(fencers):
     return pairs
 
 
-def quicksort(x):
+def quicksort(x): #descending
     if len(x) < 2:
         return x
     else:
         pivot = x[0]
         less = [i for i in x[1:] if i[0].numFencers <= pivot[0].numFencers]
         greater = [i for i in x[1:] if i[0].numFencers > pivot[0].numFencers]
-        return quicksort(less) + [pivot] + quicksort(greater)
+        return quicksort(greater) + [pivot] + quicksort(less)
