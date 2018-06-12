@@ -141,6 +141,7 @@ def initialSeeding(event_id):
     event = Event.query.get_or_404(event_id)
     if event.tournament.format == 'SWIFA':
         teams = event.teams.filter_by(isCheckedIn=True)
+        return render_template('initial-seed-teams.html', event=event, teams=teams)
     elif event.tournament.format == 'USFA Individual':
         fencers = event.fencers.filter_by(isCheckedIn=True)
         fencers = fencers.order_by(Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
@@ -322,7 +323,7 @@ def editPools(event_id):
     pools = event.pools
     allPoolsDone = True
     for pool in pools:
-        if pool.state is 0:
+        if pool.state is 0 and pool.poolLetter is not 'O':
             allPoolsDone = False
     if allPoolsDone:
         event.stage = 5
@@ -656,7 +657,7 @@ def createPools(event_id):
                 team.numInPool = poolNum[i % len(pools)] + 1
                 team.pool = pools[i % len(pools)][3]
                 fencers = team.fencers.order_by(Fencer.teamPosition.asc())
-                for j in range(2):
+                for j in range(3):
                     pools[i % len(pools)][j].fencers.append(fencers[j])
                     fencers[j].numInPool = poolNum[i % len(pools)] + 1
                     fencers[j].pool = pools[i % len(pools)][j]

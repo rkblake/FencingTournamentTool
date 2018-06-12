@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>Initial Seed for {{ event.name }}</h1>
+    <hr>
+    <table class="table table-striped">
+        <thead>
+		<tr>
+			<th>Seed</th>
+            <th>Team</th>
+			<th>Fencer A</th>
+			<th>Fencer B</th>
+			<th>Fencer C</th>
+			<th>Alternate</th>
+		</tr>
+        </thead>
+        <tbody>
+		{% for team in teams %}
+		<tr>
+            <td>{{ loop.index }}</td>
+			<td>{{ team.name }}</td>
+            {% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'A' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'B' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'C' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% for fencer in team.fencers %}
+			{% if fencer.teamPosition == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% endfor %}
+			{% if team.fencers.count() == 3 %}<td></td>{% endif %}
+			{% if team.fencers.count() == 2 %}<td></td><td></td>{% endif %}
+        </tr>
+		{% endfor %}
+        </tbody>
+	</table>
+{% endblock %}
