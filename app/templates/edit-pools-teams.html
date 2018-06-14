@@ -4,6 +4,7 @@
     {% if event.stage >= 4 %}
         <p>
             <a href="{{ url_for('pools', event_id=event.id) }}">Go to pool results</a>
+            <a href="{{ url_for('generateBracket', event_id=event.id)}}"
         </p>
     {% endif %}
     {% for pool in pools %}

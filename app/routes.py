@@ -394,13 +394,15 @@ def generateBracket(event_id):
     fencers = [Fencer.query.get(id) for (id, _) in q]
     fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
     bracket = generate_tournament(fencers)
+    i = 0
     for _ in range(int((1 - 2 ** math.log(len(bracket), 2))/(1 - 2))):
-        de = DE(state = 4)
+        de = DE(state = 4, idInEvent=i)
         db.session.add(de)
         event.des.append(de)
+        i += 1
     for fencer1, fencer2 in bracket:
         if fencer2 is None:
-            de = DE(fencer1_id=fencer1.id, state=3)
+            de = DE(fencer1_id=fencer1.id, state=3, idInEvent=i)
             event.des.append(de)
             des = de.event.des.order_by(DE.id.asc()).all()
             print(de)
@@ -416,6 +418,7 @@ def generateBracket(event_id):
             de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0)
             event.des.append(de)
         db.session.add(de)
+        i += 1
 
     tableau = dict()
     tableau['teams'] = generate_tournament(fencerNames)
@@ -610,7 +613,7 @@ def createPools(event_id):
         return redirect(url_for('index'))
     form = CreatePoolForm()
     if tournament.format == 'SWIFA':
-        teams = event.teams.filter_by(isCheckedIn=True).order_by(Team.club_id.asc())
+        teams = event.teams.filter_by(isCheckedIn=True).order_by(Team.club_id.asc(), func.random())
     elif tournament.format == 'USFA Individual':
         fencers = event.fencers.order_by(Fencer.team_id.desc())
         fencers = fencers.filter_by(isCheckedIn=True)

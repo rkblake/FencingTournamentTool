@@ -119,6 +119,7 @@ class Pool(db.Model):
 class DE(db.Model):
     __tablename__ = 'de'
     id = db.Column(db.Integer, primary_key=True)
+    idInEvent = db.Column(db.Integer)
     state = db.Column(db.Integer) #0 = not started, 1 = in progress, 2 = finished, 3 = bye, 4 = tbd
     fencer1_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencer1 = db.relationship('Fencer', foreign_keys=[fencer1_id])
