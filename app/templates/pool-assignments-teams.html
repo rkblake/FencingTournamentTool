@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block head %}
+	<style>
+		table, th, td {
+			boredr: 0px;
+		}
+		ul {
+			list-style-type: none;
+		}
+	</style>
+	{{ super() }}
+{% endblock %}
+
+{% block app_content %}
+	<h1>{{ event.name }}</h1>
+
+	{% for pool in pools %}
+		{% if pool.poolLetter == 'O' %}
+		<h2>Pool {{ pool.poolNum }}</h2>
+		<ul class="list-group">
+			{% for team in pool.teams %}
+			<li class="list-group-item">{{ team.name }}<li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+	{% endfor %}
+{% endblock %}
