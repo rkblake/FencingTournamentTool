@@ -355,7 +355,7 @@ def editPool(event_id, pool_id):
                 validInput = False
         if not validInput:
             flash('Invalid score')
-            return redirect(url_for('editPool', event_id=evnt_id, pool_id=pool_id))
+            return redirect(url_for('editPool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
             fencer = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
@@ -401,13 +401,11 @@ def generateBracket(event_id):
             de = DE(fencer1_id=fencer1.id, state=3)
             event.des.append(de)
             des = de.event.des.order_by(DE.id.asc()).all()
-            print(de)
-            nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)]
-            print(nextDE)
-            if (des.index(de)) % 2 is 0:
+            nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
+            if (des.index(de) + 1) % 2 is 0:
                 nextDE.fencer1 = de.fencer1
             else:
-                nextDE.fencer2 = de.fencer2
+                nextDE.fencer2 = de.fencer1
             if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
                 nextDE.state = 0
         else:
@@ -419,7 +417,6 @@ def generateBracket(event_id):
     tableau['teams'] = generate_tournament(fencerNames)
     tableau['results'] = [[] for _ in range(int(math.log(len(tableau['teams'])*2,2)))]
     i = 1
-    #print(math.log(len(tableau['teams'])*2, 2))
     for round in range(int(math.log(len(tableau['teams'])*2,2))):
         tableau['results'][round] = [[] for _ in range(2 ** round)]
         for match in range(2 ** round):
@@ -443,23 +440,21 @@ def submitDE(de_id):
         de.fencer1Win = True if de.fencer1Score > de.fencer2Score else False
     de.state = 2
     tableau = json.loads(de.event.tableauJson)
-    #tableau['results'].append([de.fencer1Score, de.fencer2Score])
 
     des = de.event.des.order_by(DE.id.asc()).all()
-    #print(des)
-    match = len(tableau['teams']) - int(math.log(des.index(de), 2))
-    print(len(tableau['teams']), int(math.log(des.index(de) + 1, 2)))
-    #print(tableau)
-    round = tableau['results'][match].index([None, None, 'match' + str(des.index(de)+1)])
-    tableau['results'][match][round] = [de.fencer1Score, de.fencer2Score]
+    round = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+    print(des.index(de) + 1, len(tableau['teams']), int(math.log(des.index(de) + 1, 2)))
+    match = tableau['results'][round].index([None, None, 'match' + str(des.index(de)+1)])
+    tableau['results'][round][match] = [de.fencer1Score, de.fencer2Score]
     de.event.tableauJson = json.dumps(tableau)
-    nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2)] #TODO: not finding parent de
-    if (des.index(de)) % 2 is 0:
-        nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
-    else:
-        nextDE.fencer2 = de.fencer1 if de.fencer1Win else de.fencer2
-    if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
-        nextDE.state = 0
+    nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
+    if des.index(de) is not 0: #if not the final put winner in next de
+        if (des.index(de) + 1) % 2 is 0:
+            nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
+        else:
+            nextDE.fencer2 = de.fencer1 if de.fencer1Win else de.fencer2
+        if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
+            nextDE.state = 0
     db.session.commit()
     return redirect(url_for('editDE', event_id=de.event.id))
 
@@ -571,7 +566,14 @@ def editTeamInfo(event_id, team_id):
 @app.route('/event/<int:event_id>/delete-team/<int:team_id>')
 @login_required
 def deleteTeam(event_id, team_id):
-    pass
+    event = Event.query.get_or_404(event_id)
+    tournament = event.tournament
+    if not isTOofTourney(current_user, tournament):
+        return redirect(url_for('index'))
+    team = Team.query.get_or_404(team_id)
+    db.session.delete(team)
+    db.session.commit()
+    return redirect(url_for('editRegistration', event_id=event_id))
 
 
 @app.route('/event/<int:event_id>/open-registration')

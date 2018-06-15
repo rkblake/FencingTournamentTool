@@ -1,7 +1,6 @@
 <div class="de pool-container">
         <form action="{{ url_for('submitDE', de_id=de.id) }}" method="post">
             <p>
-                {{ de.id }}<br>
                 {{ de.fencer1.lastName }}, {{ de.fencer1.firstName }} <input type="text" name="fencer1" style="width: 30px;"/> vs {{ de.fencer2.lastName }}, {{ de.fencer2.firstName }} <input type="text" name="fencer2" style="width: 30px;"/><br>
                 <input type="checkbox" name="fencer1Win"> If tie check if fencer 1 wins<br>
             </p>
