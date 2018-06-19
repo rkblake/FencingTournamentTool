@@ -4,8 +4,13 @@
     <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}" />
     <h1>Pools for {{ event.name }}</h1>
     {% for pool in pools %}
-        <h2>Pool {{ pool.poolNum }}</h2>
-        {% include '_pool.html' %}
+        {% if pool.poolLetter == None %}
+            <h2>Pool {{ pool.poolNum }}</h2>
+            {% include '_pool.html' %}
+        {% elif pool.poolLetter == 'O' %}
+            <h2>Pool {{ pool.poolNum }}</h2>
+            {% include '_pool-teams.html' %}
+        {% endif %}
     {% endfor %}
 
 {% endblock %}

@@ -3,7 +3,7 @@
 {% block app_content %}
     {% if event.stage >= 4 %}
         <p>
-            <a href="{{ url_for('pools', event_id=event.id) }}">Go to pool results</a>
+            <a href="{{ url_for('pools', event_id=event.id) }}">Go to pool results</a><br>
             <a href="{{ url_for('generateBracket', event_id=event.id)}}">Generate DEs</a>
         </p>
     {% endif %}

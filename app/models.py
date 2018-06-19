@@ -124,6 +124,10 @@ class DE(db.Model):
     fencer1 = db.relationship('Fencer', foreign_keys=[fencer1_id])
     fencer2_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencer2 = db.relationship('Fencer', foreign_keys=[fencer2_id])
+    team1_id = db.Column(db.Integer, db.ForeignKey('team.id'), default=None)
+    team1 = db.relationship('Team', foreign_keys=[team1_id])
+    team2_id = db.Column(db.Integer, db.ForeignKey('team.id'), default=None)
+    team2 = db.relationship('Team', foreign_keys=[team2_id])
     fencer1Score = db.Column(db.Integer)
     fencer2Score = db.Column(db.Integer)
     fencer1Win = db.Column(db.Boolean)
@@ -140,6 +144,11 @@ class Result(db.Model):
     de = db.relationship('DE', foreign_keys=[de_id])
     fencer = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     opponent = db.Column(db.Integer, db.ForeignKey('fencer.id'))
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    opponentTeam_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    team = db.relationship('Team', foreign_keys=[team_id])
+    opponentTeam = db.relationship('Team', foreign_keys=[opponentTeam_id])
+
     fencerScore = db.Column(db.Integer)
     fencerWin = db.Column(db.Boolean)
 

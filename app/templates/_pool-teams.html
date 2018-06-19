@@ -1,0 +1,40 @@
+<table class="results">
+    <thead>
+        <tr>
+            <th></th>
+            <th>#</th>
+            {% for i in range(1, pool.numFencers+1) %}
+            <th>{{ i }}</th>
+            {% endfor %}
+            <th></th>
+            <th>V</th>
+            <th>V/M</th>
+            <th>TS</th>
+            <th>TR</th>
+            <th>Ind</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for team in teams[pool.poolNum] %}
+            <tr>
+                <td class="contestant"><div class="name">{{ team.name }}</div></td>
+                <th>{{ team.numInPool }}</th>
+                {% for i in range(pool.numFencers) %}
+                    {% if i+1 == team.numInPool %}
+                        <td class="match"></td>
+                    {% else %}
+                        {% if results[team.pool.poolNum][team.numInPool|string + (i+1)|string].fencerWin %}
+                        <td class="match victory">V{% else %}<td class="match defeat">D{% endif %}{{ results[team.pool.poolNum][team.numInPool|string + (i+1)|string].fencerScore }}
+                        </td>
+                    {% endif %}
+                {% endfor %}
+                <th></th>
+                <td class="stat">{{ team.victories }}</td>
+                <td class="stat">{{ "%.2f"|format(team.victories / (pool.numFencers - 1)) }}</td>
+                <td class="stat">{{ team.touchesScored }}</td>
+                <td class="stat">{{ team.touchesRecieved }}</td>
+                <td class="stat">{{ team.indicator }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

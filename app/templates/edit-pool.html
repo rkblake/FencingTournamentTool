@@ -22,7 +22,7 @@
             </thead>
             {% for fencer in fencers %}
                 <tr>
-                    <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div><div class="location">{{ fencer.club.name }}</div></td>
+                    <td class="contestant"><div class="name">{{ fencer.lastName }}, {{ fencer.firstName }}</div><div class="location">{{ fencer.club.name }}{{ fencer.team.name }}</div></td>
                     <th>{{ fencer.numInPool }}</th>
                     {% for j in range(pool.numFencers) %}
                         {% if fencer.numInPool == j + 1 %}
