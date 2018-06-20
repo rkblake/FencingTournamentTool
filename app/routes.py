@@ -398,11 +398,7 @@ def editPool(event_id, pool_id):
                 fencer.indicator = Fencer.indicator + result.fencerScore
                 opponent.touchesRecieved = Fencer.touchesRecieved + result.fencerScore
                 opponent.indicator = Fencer.indicator - result.fencerScore
-<<<<<<< HEAD
                 if tournament.format == 'SWIFA': #TODO
-=======
-                if tournament.format == 'SWIFA':
->>>>>>> b28cc50101339c63f1523ad957e59da4d081def2
                     teamResult = Result.query.filter_by(pool_id=pool_id, team=fencer.team, opponentTeam=opponent.team).first()
                     if teamResult is not None:
                         teamResult.fencerScore = Result.fencerScore + fencer.touchesScored
