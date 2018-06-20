@@ -171,12 +171,16 @@ def pools(event_id):
     if event.tournament.format == 'SWIFA':
         teams = dict()
         for pool in pools:
-            teams[pool.poolNum] = pool.teams.order_by(Team.numInPool.asc())
-            results[pool.poolNum] = dict()
-            for result in pool.results:
-                team = Team.query.filter_by(pool=pool, id=result.fencer).first()
-                opponent = Team.query.filter_by(id=result.opponent).first()
-                results[pool.poolNum][str(team.numInPool)+str(opponent.numInPool)] = result
+            if pool.poolLetter is 'O':
+                print('o')
+                teams[pool.poolNum] = pool.teams.order_by(Team.numInPool.asc())
+                results[pool.poolNum] = dict()
+                for result in pool.results:
+                    team = Team.query.filter_by(pool=pool, id=result.team).first()
+                    opponentTeam = Team.query.filter_by(id=result.opponentTeam).first()
+                    print(team)
+                    print(opponentTeam)
+                    results[pool.poolNum][str(team.numInPool)+str(opponentTeam.numInPool)] = result
         return render_template('pools.html', title='Pools', event=event, pools=pools, results=results, teams=teams)
     elif event.tournament.format == 'USFA Individual':
         fencers = dict()
@@ -371,7 +375,7 @@ def editPool(event_id, pool_id):
             return redirect(url_for('editPool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
-            if tournament.format == 'SWIFA':
+            if tournament.format == 'SWIFA' and False:
                 team = Team.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
                 opponentTeam = Team.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
                 result = Result(pool_id=pool_id, team=team, fencerScore=value[1:], opponentTeam=opponentTeam, fencerWin=(value[0].upper() == 'V'))
@@ -385,7 +389,7 @@ def editPool(event_id, pool_id):
                 #fencer.team.indicator = Team.indicator + result.fencerScore
                 #opponent.team.touchesRecieved = Team.touchesRecieved + result.fencerScore
                 #opponent.team.indicator = Team.indicator - result.fencerScore
-            elif tournament.format == 'USFA Individual':
+            else: #tournament.format == 'USFA Individual':
                 fencer = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[0]).first()
                 opponent = Fencer.query.filter_by(pool_id=pool_id, numInPool=key[1]).first()
                 result = Result(pool_id=pool.id, fencer=fencer.id, fencerScore=value[1:], opponent=opponent.id, fencerWin=(value[0].upper() == 'V'))
@@ -394,6 +398,17 @@ def editPool(event_id, pool_id):
                 fencer.indicator = Fencer.indicator + result.fencerScore
                 opponent.touchesRecieved = Fencer.touchesRecieved + result.fencerScore
                 opponent.indicator = Fencer.indicator - result.fencerScore
+                if tournament.format == 'SWIFA': #TODO
+                    teamResult = Result.query.filter_by(pool_id=pool_id, team=fencer.team, opponentTeam=opponent.team).first()
+                    if teamResult is not None:
+                        teamResult.fencerScore = Result.fencerScore + fencer.touchesScored
+                    else:
+                        teamResult = Result(pool_id=pool_id, team=fencer.team, opponentTeam=opponent.team, fencerScore=fencer.touchesScore)
+                    fencer.team.victories = Team.victories + (1 if result.fencerWin else 0)
+                    fencer.team.touchesScored = Team.touchesScored + result.fencerScore
+                    fencer.team.indicator = Team.indicator + result.fencerScore
+                    opponent.team.touchesRecieved = Team.touchesRecieved + result.fencerScore
+                    opponent.team.indicator = Team.indicator - result.fencerScore
             pool.results.append(result)
             db.session.add(result)
         pool.state = 1

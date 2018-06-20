@@ -91,7 +91,7 @@ class Team(db.Model):
     event_id = db.Column('Event', db.ForeignKey('event.id'))
     event = db.relationship('Event', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[event_id])
     pool_id = db.Column('Pool', db.ForeignKey('pool.id'))
-    pool = db.relationship('Pool', backref='teams', foreign_keys=[pool_id])
+    pool = db.relationship('Pool', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[pool_id])
     club_id = db.Column('Club', db.ForeignKey('club.id'))
     #club = db.relationship('Club', foreign_keys=[club_id])
     #fencerA_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
@@ -148,7 +148,6 @@ class Result(db.Model):
     opponentTeam_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team = db.relationship('Team', foreign_keys=[team_id])
     opponentTeam = db.relationship('Team', foreign_keys=[opponentTeam_id])
-
     fencerScore = db.Column(db.Integer)
     fencerWin = db.Column(db.Boolean)
 
