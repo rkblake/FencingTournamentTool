@@ -30,7 +30,7 @@
                 {% endfor %}
                 <th></th>
                 <td class="stat">{{ team.victories }}</td>
-                <td class="stat">{{ "%.2f"|format(team.victories / (pool.numFencers - 1)) }}</td>
+                <td class="stat">{{ "%.2f"|format(team.victories / (pool.numFencers - 1) / 3) }}</td>
                 <td class="stat">{{ team.touchesScored }}</td>
                 <td class="stat">{{ team.touchesRecieved }}</td>
                 <td class="stat">{{ team.indicator }}</td>
