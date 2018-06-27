@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>Pool results for {{ event.name }}</h1>
+    <hr>
+    <table class="table table-striped">
+		<tr>
+			<th>Place</th>
+			<th>Team</th>
+            <th>V/M</th>
+            <th>Victories</th>
+            <th>Indicator</th>
+		</tr>
+		{% for team in teams %}
+		<tr>
+            <td>{{ loop.index }}</td>
+			<td>{{ team[0].name }}</td>
+            <td>{{ "%.2f"|format(team[1]) }}</td>
+            <td>{{ team[0].victories }}</td>
+            <td>{{ team[0].indicator }}</td>
+        </tr>
+		{% endfor %}
+	</table>
+{% endblock %}

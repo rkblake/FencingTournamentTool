@@ -83,7 +83,11 @@ class AddTeamForm(FlaskForm):
     fencerB = StringField('Fencer B', validators=[DataRequired()])
     fencerC = StringField('Fencer C', validators=[Optional()])
     fencerD = StringField('Fencer D (Alt)', validators=[Optional()])
-    club = StringField('Club/University', validators=[DataRequired()])
+    choices = [('Rice', 'Rice'), ('St. Thomas', 'St. Thomas'), ('TAMU', 'TAMU'),
+        ('TAMUCC', 'TAMUCC'), ('TXST', 'TXST'), ('UH', 'UH'), ('UNT', 'UNT'), ('UTA', 'UTA'),
+        ('UTD', 'UTD'), ('UT', 'UT'), ('UTSA', 'UTSA')]
+    club = SelectField('University', choices=choices)
+    #club = StringField('Club/University', validators=[DataRequired()])
     #checked_in = BooleanField('Checked In')
     submit = SubmitField('Add Team')
 
