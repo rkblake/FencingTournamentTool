@@ -201,18 +201,17 @@ def poolAssignment(event_id):
     return render_template('pool-assignments-teams.html', title='Pool Assignments', event=event, pools=pools)
 
 
-#TODO: live des for public
 @app.route('/event/<int:event_id>/de')
 def de(event_id):
     event = Event.query.get_or_404(event_id)
-    #return render_template('de.html', event=event)
-    return "in progress"
+    return render_template('de.html', title='DE', event=event, directElims=json.loads(event.tableauJson))
 
 
-#TODO: final results for public
 @app.route('/event/<int:event_id>/final')
-def final(tournament_id, event_id):
-    return "in progress"
+def final(event_id):
+    event = Event.query.get_or_404(event_id)
+    teams = event.teams.order_by(Team.finalPlace.asc()).all()
+    return render_template('final.html', event=event, teams=teams)
 
 
 @app.route('/tournament/<int:tournament_id>/edit', methods=['GET', 'POST'])
@@ -433,7 +432,7 @@ def editPool(event_id, pool_id):
 
 @app.route('/event/<int:event_id>/generate-bracket')
 @login_required
-def generateBracket(event_id): #TODO: fence for third
+def generateBracket(event_id):
     event = Event.query.get_or_404(event_id)
     if not isTOofTourney(current_user, event.tournament):
         return redirect(url_for('index'))
@@ -451,7 +450,7 @@ def generateBracket(event_id): #TODO: fence for third
         de = DE(state=4, event_id=event.id, round=int(len(bracket)/2 - int(math.log(i+1, 2))))
         db.session.add(de)
         event.des.append(de)
-    third = DE(state=4, isThird=True, event_id=event.id)
+    third = DE(state=4, isThird=True, event_id=event.id, round=int(math.log(len(bracket), 2)))
     db.session.add(third)
     event.des.append(de)
     for fencer1, fencer2 in bracket:
@@ -523,7 +522,8 @@ def submitDE(de_id):
     des = de.event.des.filter_by(isThird=False).order_by(DE.id.asc()).all()
 
     if not de.isThird and des.index(de) not in [0,1,2]: #not final, third, or semi
-        round = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2)) - 1
+        #round = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2)) - 1
+        round = de.round - 1
         match = tableau['results'][round].index([None, None, 'match' + str(des.index(de)+1)])
         tableau['results'][round][match] = [de.fencer1Score, de.fencer2Score]
         de.event.tableauJson = json.dumps(tableau)
@@ -532,17 +532,21 @@ def submitDE(de_id):
             if (des.index(de) + 1) % 2 is 0:
                 if de.fencer1Win:
                     nextDE.team1 = de.team1
-                    de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    de.team2.roundEliminatedIn = de.round
                 else:
                     nextDE.team1 = de.team2
-                    de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    de.team1.roundEliminatedIn = de.round
             else:
                 if de.fencer1Win:
                     nextDE.team2 = de.team1
-                    de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    de.team2.roundEliminatedIn = de.round
                 else:
                     nextDE.team2 = de.team2
-                    de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                    de.team1.roundEliminatedIn = de.round
             if nextDE.team1 is not None and nextDE.team2 is not None:
                 nextDE.state = 0
         elif de.event.tournament.format == 'USFA Individual':
@@ -555,18 +559,21 @@ def submitDE(de_id):
         #check if all DEs in round finished
         numElim = Team.query.filter_by(roundEliminatedIn=(round+1), event_id=de.event.id).count()
         byes = DE.query.filter_by(event_id=de.event.id, team2_id=None, state=3).count()
-        print('round: {}\tnumElim: {}\texpected: {}'.format(round+1, numElim, int(len(tableau['teams'])/2**round)))
+        #print('round: {}\tnumElim: {}\texpected: {}'.format(round+1, numElim, int(len(tableau['teams'])/2**round)))
         if round is 0 and numElim is (int(len(tableau['teams'])/2**round) - byes) or round > 0 and numElim is int(len(tableau['teams'])/2**round):
-            DEsInRound = db.engine.execute('SELECT (d.fencer1Score - d.fencer2Score) AS score FROM de d WHERE d.round = {} WHERE d.team2_id IS NOT NULL ORDER BY ABS(score) DESC;'.format(round+1))
+            q = db.engine.execute('SELECT d.id, abs(d.fencer1Score - d.fencer2Score) AS score FROM de d WHERE d.event_id is {} AND d.round is {} AND d.team2_id IS NOT NULL ORDER BY score DESC;'.format(de.event.id, round+1))
+            DEsInRound = [DE.query.get(id) for (id, _) in q]
+            #print('DEs in round: {}'.format(len(DEsInRound)))
             if round is 0:
                 place1 = Team.query.filter_by(event_id=de.event.id, isCheckedIn=True).count()
+                #place1 = numElim - byes
             else:
                 place1 = int(len(tableau['teams'])/(2**round-1))
             print(place1)
             for i, val in enumerate(DEsInRound):
-                loserTeam = de.team2 if de.fencer1Win else de.team1
-                loserTeam.finalPlace = i + place1
-    elif des.index(de) in [1,2]: #semifinal
+                loserTeam = val.team2 if val.fencer1Win else val.team1
+                loserTeam.finalPlace = place1 - i
+    elif not de.isThird and des.index(de) in [1,2]: #semifinal
         third = event.des.filter_by(isThird=True).first()
         if (des.index(de) + 1) % 2 is 0:
             third.team1 = de.team2 if de.fencer1Win else de.team1
@@ -574,7 +581,15 @@ def submitDE(de_id):
             third.team2 = de.team2 if de.fencer1Win else de.team1
         if third.team1 is not None and third.team2 is not None:
             third.state = 0
-        round = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2)) - 1
+        final = des[0]
+        if (des.index(de) + 1) % 2 is 0:
+            final.team1 = de.team1 if de.fencer1Win else de.team2
+        else:
+            final.team2 = de.team1 if de.fencer1Win else de.team2
+        if final.team1 is not None and final.team2 is not None:
+            final.state = 0
+        #round = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2)) - 1
+        round = de.round - 1
         match = tableau['results'][round].index([None, None, 'match' + str(des.index(de)+1)])
         tableau['results'][round][match] = [de.fencer1Score, de.fencer2Score]
         de.event.tableauJson = json.dumps(tableau)
@@ -583,9 +598,10 @@ def submitDE(de_id):
         match = tableau['results'][round].index([None, None, 'third'])
         tableau['results'][round][match] = [de.fencer1Score, de.fencer2Score]
         de.event.tableauJson = json.dumps(tableau)
-        de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-        de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+        de.team1.roundEliminatedIn = de.round
+        de.team2.roundEliminatedIn = de.round
         de.team1.finalPlace = 3 if de.fencer1Win else 4
+        de.team2.finalPlace = 4 if de.fencer1Win else 3
     elif des.index(de) is 0: #final
         round = int(math.log(len(tableau['teams']), 2))
         match = tableau['results'][round].index([None, None, 'match1'])
@@ -594,6 +610,12 @@ def submitDE(de_id):
         de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
         de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
         de.team1.finalPlace = 1 if de.fencer1Win else 2
+        de.team2.finalPlace = 2 if de.fencer1Win else 1
+    #check if all DEs finished
+    DEsNotFinished = de.event.des.filter_by(state=0).count()
+    #print(DEsNotFinished)
+    if DEsNotFinished is 0:
+        de.event.stage = 6
     db.session.commit()
     return redirect(url_for('editDE', event_id=de.event.id))
 
@@ -602,7 +624,6 @@ def submitDE(de_id):
 @login_required
 def editDE(event_id):
     event = Event.query.get_or_404(event_id)
-    #fencers = event.fencers.order_by(Fencer.victories.desc(), Fencer.indicator.desc())
     des = event.des.order_by(DE.round.asc())
     return render_template('edit-de.html', event=event, directElims=json.loads(event.tableauJson), des=des)
 

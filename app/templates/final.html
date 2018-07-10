@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>Final results for {{ event.name }}</h1>
+    <hr>
+    <table class="table table-striped">
+        <tr>
+            <th>Place</th>
+            <th>Team</th>
+        </tr>
+        {% for team in teams %}
+        <tr>
+            <td>{{ team.finalPlace }}</td>
+            <td>{{ team.name }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

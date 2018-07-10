@@ -8,6 +8,10 @@
 {% block app_content %}
     <h1>{{ tournament.name }}</h1>
     {% for event in events %}
-        {% include '_event.html' %}
+		{% if public %}
+	        {% include '_event-public.html' %}
+		{% else %}
+			{% include 'event.html' %}
+		{% endif %}
     {% endfor %}
 {% endblock %}

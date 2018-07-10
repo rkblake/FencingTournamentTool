@@ -1,30 +1,42 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    {{ super() }}
+    <style>
+      .label {
+        color: black;
+        line-height: 1.42857143;
+        text-align: left;
+      }
+
+      .pool-container {
+          height: 100px;
+          padding-top: 8px;
+      }
+    </style>
+{% endblock %}
+
 {% block app_content %}
+
 <div class="tournament"></div>
 
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" />
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
-
 <script>
-var minData =  {
-    "teams" : [
-        ["A","B"],
-        ["C","D"],
-        ["E","F"],
-        ["G","H"]
-    ],
-    "results" : [
-        [[2,3], [1,4], [3,2], [5,1]],
-        [[2,3], [3,2]],
-        [[1,2], [3,0]]
-    ]
-}
+var bracketData =  JSON.parse('{{ directElims | tojson | safe }}');
 
-$('.tournament').bracket({
-    init: minData
-});
+var resizeParams = {
+    teamWidth: 120,
+    scoreWidth: 40,
+    matchMargin: 40,
+    roundMargin: 50,
+    init: bracketData
+};
+
+$('.tournament').bracket(resizeParams);
 </script>
 
 {% endblock %}
