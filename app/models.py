@@ -89,6 +89,7 @@ class Team(db.Model):
     touchesRecieved = db.Column(db.Integer, default=0)
     indicator = db.Column(db.Integer, default=0)
     roundEliminatedIn = db.Column(db.Integer, default=None, nullable=True)
+    finalPlace = db.Column(db.Integer, default=None, nullable=True)
     event_id = db.Column('Event', db.ForeignKey('event.id'))
     event = db.relationship('Event', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[event_id])
     pool_id = db.Column('Pool', db.ForeignKey('pool.id'))
@@ -122,6 +123,7 @@ class DE(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     state = db.Column(db.Integer) #0 = not started, 1 = in progress, 2 = finished, 3 = bye, 4 = tbd
     isThird = db.Column(db.Boolean, default=False)
+    round = db.Column(db.Integer, default=None, nullable=True)
     fencer1_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencer1 = db.relationship('Fencer', foreign_keys=[fencer1_id])
     fencer2_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))

@@ -55,3 +55,5 @@ def quicksort(x): #descending
         less = [i for i in x[1:] if i[0].numFencers <= pivot[0].numFencers]
         greater = [i for i in x[1:] if i[0].numFencers > pivot[0].numFencers]
         return quicksort(greater) + [pivot] + quicksort(less)
+
+#TODO: get round
