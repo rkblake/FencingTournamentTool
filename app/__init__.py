@@ -4,8 +4,9 @@ from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-#from flask_admin import Admin
-#from flask_admin.contrib.sqla import ModelView
+
+from logging.handlers import RotatingFileHandler
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -16,9 +17,14 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 app.jinja_env.trim_blocks=True
 app.jinja_env.lstrip_blocks=True
-'''admin = Admin(app, name='fencingtournamenttool', template_mode='bootstrap3')
-admin.add_view(ModelView(User, db.session))
-admin.add_view(ModelView(Fencer, db.session))
-admin.add_view(ModelView())'''
+
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+file_handler = RotatingFileHandler('logs/ftt.log', maxbytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formattor('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info('FencingTournamentTool startup')
 
 from app import routes, models
