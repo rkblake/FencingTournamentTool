@@ -156,14 +156,9 @@ def initialSeeding(event_id):
 def poolResults(event_id):
     event = Event.query.get_or_404(event_id)
     #TODO: needs more tie checking
-    if event.tournament.format == 'SWIFA':
-        teams = db.engine.execute('SELECT t.id, (t.victories*1.0 / (p.numFencers - 1)) as winPercent FROM team t JOIN pool p ON t.Pool = p.id WHERE t.isCheckedIn IS 1 AND t.Event = {} ORDER BY winPercent DESC, t.indicator DESC;'.format(event_id))
-        teams = [(Team.query.get(i), j) for (i, j) in teams]
-        return render_template('pool-results-teams.html', title='Pool Results', event=event, teams=teams)
-    elif event.tournament.format == 'USFA Individual':
-        fencers = db.engine.execute('SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
-        fencers = [(Fencer.query.get(i), j) for (i, j) in fencers]
-        return render_template('pool-results.html', title='Pool Results', event=event, fencers=fencers)
+    teams = db.engine.execute('SELECT t.id, (t.victories*1.0 / (p.numFencers - 1)) as winPercent FROM team t JOIN pool p ON t.Pool = p.id WHERE t.isCheckedIn IS 1 AND t.Event = {} ORDER BY winPercent DESC, t.indicator DESC;'.format(event_id))
+    teams = [(Team.query.get(i), j) for (i, j) in teams]
+    return render_template('pool-results-teams.html', title='Pool Results', event=event, teams=teams)
 
 
 @app.route('/event/<int:event_id>/pools')
@@ -171,27 +166,16 @@ def pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
     results = dict()
-    if event.tournament.format == 'SWIFA':
-        teams = dict()
-        for pool in pools:
-            if pool.poolLetter is 'O':
-                teams[pool.poolNum] = pool.teams.order_by(Team.numInPool.asc())
-                results[pool.poolNum] = dict()
-                for result in pool.results:
-                    team = Team.query.filter_by(pool=pool, id=result.team.id).first()
-                    opponentTeam = Team.query.filter_by(id=result.opponentTeam.id).first()
-                    results[pool.poolNum][str(team.numInPool)+str(opponentTeam.numInPool)] = result
-        return render_template('pools.html', title='Pools', event=event, pools=pools, results=results, teams=teams)
-    elif event.tournament.format == 'USFA Individual':
-        fencers = dict()
-        for pool in pools:
-            fencers[pool.poolNum] = pool.fencers.order_by(Fencer.numInPool.asc())
+    teams = dict()
+    for pool in pools:
+        if pool.poolLetter is 'O':
+            teams[pool.poolNum] = pool.teams.order_by(Team.numInPool.asc())
             results[pool.poolNum] = dict()
             for result in pool.results:
-                fencer = Fencer.query.filter_by(pool=pool, id=result.fencer).first()
-                opponent = Fencer.query.filter_by(id=result.opponent).first()
-                results[pool.poolNum][str(fencer.numInPool)+str(opponent.numInPool)] = result
-        return render_template('pools.html', title='Pools', event=event, pools=pools, results=results, fencers=fencers)
+                team = Team.query.filter_by(pool=pool, id=result.team.id).first()
+                opponentTeam = Team.query.filter_by(id=result.opponentTeam.id).first()
+                results[pool.poolNum][str(team.numInPool)+str(opponentTeam.numInPool)] = result
+    return render_template('pools.html', title='Pools', event=event, pools=pools, results=results, teams=teams)
 
 
 @app.route('/event/<int:event_id>/pool-assignment')
@@ -243,94 +227,70 @@ def editRegistration(event_id):
     if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
 
-    if tournament.format == 'SWIFA':
-        teams = event.teams.all()
-        form = AddTeamForm()
-        if form.validate_on_submit():
-            club = Club.query.filter_by(name=form.club.data.lower()).first()
-            if club is None:
-                club = Club(name=form.club.data.lower())
-            team = Team(name=form.teamName.data, isCheckedIn=True)
-            fencerA = Fencer(
-                firstName=form.fencerA.data.split()[0].title(),
-                lastName=form.fencerA.data.split()[1].title(),
-                teamPosition='A')
-            team.fencers.append(fencerA)
-            fencerB = Fencer(
-                firstName=form.fencerB.data.split()[0].title(),
-                lastName=form.fencerB.data.split()[1].title(),
-                teamPosition='B')
-            team.fencers.append(fencerB)
-            if form.fencerC.data is not '':
-                fencerC = Fencer(
-                    firstName=form.fencerC.data.split()[0].title(),
-                    lastName=form.fencerC.data.split()[1].title(),
-                    teamPosition='C')
-                team.fencers.append(fencerC)
-                db.session.add(fencerC)
-            else: #create dummy fencer to fill c slot
-                fencerC = Fencer(
-                    firstName='',
-                    lastName='',
-                    teamPosition='C'
-                )
-                team.fencers.append(fencerC)
-                db.session.add(fencerC)
-            if form.fencerD.data is not '':
-                fencerD = Fencer(
-                    firstName=form.fencerD.data.split()[0].title(),
-                    lastName=form.fencerD.data.split()[1].title(),
-                    teamPosition='D')
-                team.fencers.append(fencerD)
-                db.session.add(fencerD)
-            else: #create dummy fencer to fill d slot
-                fencerD = Fencer(
-                    firstName='',
-                    lastName='',
-                    teamPosition='D'
-                )
-                team.fencers.append(fencerD)
-                db.session.add(fencerD)
-            club.teams.append(team)
-            event.teams.append(team)
-            event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
-            event.numFencers += 1
-            db.session.add_all([club, team, fencerA, fencerB])
-            db.session.commit()
-            flash('Added team')
-            return redirect(url_for('editRegistration', event_id=event_id))
-        return render_template('edit-registration-teams.html', form=form, teams=teams, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
-
-    elif tournament.format == 'USFA Individual':
-        fencers = event.fencers
-        form = AddFencerForm()
-        if form.validate_on_submit():
-            club = Club.query.filter_by(name=form.club.data).first()
-            if form.club.data is not None and club is None:
-                club = Club(name=form.club.data.upper())
-            fencer = Fencer(
-                    firstName=form.firstName.data.title(),
-                    lastName=form.lastName.data.title(),
-                    club=club,
-                    ratingClass=form.rating.data[0].upper(),
-                    ratingYear=int(form.rating.data[1:] or 18),
-                    isCheckedIn=form.checked_in.data)
-            if club is not None:
-                club.fencers.append(fencer)
-            event.fencers.append(fencer)
-            event.numFencers += 1
-            if fencer.isCheckedIn:
-                event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
-            db.session.add(fencer)
-            db.session.commit()
-            flash('Added fencer')
-        return render_template('edit-registration.html', form=form, fencers=fencers, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
+    teams = event.teams.all()
+    form = AddTeamForm()
+    if form.validate_on_submit():
+        club = Club.query.filter_by(name=form.club.data.lower()).first()
+        if club is None:
+            club = Club(name=form.club.data.lower())
+        team = Team(name=form.teamName.data, isCheckedIn=True)
+        fencerA = Fencer(
+            firstName=form.fencerA.data.split()[0].title(),
+            lastName=form.fencerA.data.split()[1].title(),
+            teamPosition='A')
+        team.fencers.append(fencerA)
+        fencerB = Fencer(
+            firstName=form.fencerB.data.split()[0].title(),
+            lastName=form.fencerB.data.split()[1].title(),
+            teamPosition='B')
+        team.fencers.append(fencerB)
+        if form.fencerC.data is not '':
+            fencerC = Fencer(
+                firstName=form.fencerC.data.split()[0].title(),
+                lastName=form.fencerC.data.split()[1].title(),
+                teamPosition='C')
+            team.fencers.append(fencerC)
+            db.session.add(fencerC)
+        else: #create dummy fencer to fill c slot
+            fencerC = Fencer(
+                firstName='',
+                lastName='',
+                teamPosition='C'
+            )
+            team.fencers.append(fencerC)
+            db.session.add(fencerC)
+        if form.fencerD.data is not '':
+            fencerD = Fencer(
+                firstName=form.fencerD.data.split()[0].title(),
+                lastName=form.fencerD.data.split()[1].title(),
+                teamPosition='D')
+            team.fencers.append(fencerD)
+            db.session.add(fencerD)
+        else: #create dummy fencer to fill d slot
+            fencerD = Fencer(
+                firstName='',
+                lastName='',
+                teamPosition='D'
+            )
+            team.fencers.append(fencerD)
+            db.session.add(fencerD)
+        club.teams.append(team)
+        event.teams.append(team)
+        event.numFencersCheckedIn = Event.numFencersCheckedIn + 1
+        event.numFencers += 1
+        db.session.add_all([club, team, fencerA, fencerB])
+        db.session.commit()
+        flash('Added team')
+        return redirect(url_for('editRegistration', event_id=event_id))
+    return render_template('edit-registration-teams.html', form=form, teams=teams, event=event, allCheckedIn=(event.numFencersCheckedIn == event.numFencers))
 
 
 @app.route('/event/<int:event_id>/edit-pools')
 @login_required
 def editPools(event_id):
     event = Event.query.get_or_404(event_id)
+    if event.stage > 5:
+        return redirect(url_for('index'))
     tournament = Tournament.query.filter_by(id=event.tournament_id).first()
     if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
@@ -344,10 +304,7 @@ def editPools(event_id):
         if tournament.format == 'SWIFA':
             pass
         db.session.commit()
-    if tournament.format == 'SWIFA':
-        return render_template('edit-pools-teams.html', event=event, pools=pools)
-    elif tournament.format == 'USFA Individual':
-        return render_template('edit-pools.html', event=event, pools=pools)
+    return render_template('edit-pools-teams.html', event=event, pools=pools)
 
 
 @app.route('/event/<int:event_id>/pool/<int:pool_id>/edit', methods=['GET', 'POST'])
@@ -436,16 +393,10 @@ def generateBracket(event_id):
     event = Event.query.get_or_404(event_id)
     if not isTOofTourney(current_user, event.tournament):
         return redirect(url_for('index'))
-    if event.tournament.format == 'SWIFA':
-        q = db.engine.execute('SELECT t.id, (t.victories*1.0 / (p.numFencers - 1)) as winPercent FROM team t JOIN pool p ON t.Pool = p.id WHERE t.isCheckedIn IS 1 AND t.Event = {} ORDER BY winPercent DESC, t.indicator DESC;'.format(event_id))
-        teams = [Team.query.get(id) for (id, _) in q]
-        fencerNames = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
-        bracket = generate_tournament(teams)
-    elif event.tournament.format == 'USFA Individual':
-        q = db.engine.execute('SELECT u.id, (u.victories*1.0 / (p.numFencers - 1)) as winPercent FROM fencer u JOIN pool p ON u.pool_id = p.id WHERE u.isCheckedIn IS 1 AND u.event_id = {} ORDER BY winPercent DESC, u.indicator DESC;'.format(event_id))
-        fencers = [Fencer.query.get(id) for (id, _) in q]
-        fencerNames = [(fencer.lastName + ", " + fencer.firstName + " (" + str(i+1) + ")") for i, fencer in enumerate(fencers)]
-        bracket = generate_tournament(fencers)
+    q = db.engine.execute('SELECT t.id, (t.victories*1.0 / (p.numFencers - 1)) as winPercent FROM team t JOIN pool p ON t.Pool = p.id WHERE t.isCheckedIn IS 1 AND t.Event = {} ORDER BY winPercent DESC, t.indicator DESC;'.format(event_id))
+    teams = [Team.query.get(id) for (id, _) in q]
+    fencerNames = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
+    bracket = generate_tournament(teams)
     for i in range(int((1 - 2 ** math.log(len(bracket), 2))/(1 - 2))):
         de = DE(state=4, event_id=event.id, round=int(len(bracket)/2 - int(math.log(i+1, 2))))
         db.session.add(de)
@@ -455,32 +406,18 @@ def generateBracket(event_id):
     event.des.append(de)
     for fencer1, fencer2 in bracket:
         if fencer2 is None:
-            if event.tournament.format == 'SWIFA':
-                de = DE(team1_id=fencer1.id, state=3, round=1)
-            elif event.tournament.format == 'USFA Individual':
-                de = DE(fencer1_id=fencer1.id, state=3, round=1)
+            de = DE(team1_id=fencer1.id, state=3, round=1)
             event.des.append(de)
             des = de.event.des.filter_by(isThird=False).order_by(DE.id.asc()).all()
             nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
-            if event.tournament.format == 'SWIFA':
-                if (des.index(de) + 1) % 2 is 0:
-                    nextDE.team1 = de.team1
-                else:
-                    nextDE.team2 = de.team1
-                if nextDE.team1 is not None and nextDE.team2 is not None:
-                    nextDE.state = 0
-            elif event.tournament.format == 'USFA Individual':
-                if (des.index(de) + 1) % 2 is 0:
-                    nextDE.fencer1 = de.fencer1
-                else:
-                    nextDE.fencer2 = de.fencer1
-                if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
-                    nextDE.state = 0
+            if (des.index(de) + 1) % 2 is 0:
+                nextDE.team1 = de.team1
+            else:
+                nextDE.team2 = de.team1
+            if nextDE.team1 is not None and nextDE.team2 is not None:
+                nextDE.state = 0
         else:
-            if event.tournament.format == 'SWIFA':
-                de = DE(team1_id=(fencer1.id if fencer1 is not None else None), team2_id=(fencer2.id if fencer2 is not None else None), state=0, round=1)
-            elif event.tournament.format == 'USFA Individual':
-                de = DE(fencer1_id=(fencer1.id if fencer1 is not None else None), fencer2_id=(fencer2.id if fencer2 is not None else None), state=0, round=1)
+            de = DE(team1_id=(fencer1.id if fencer1 is not None else None), team2_id=(fencer2.id if fencer2 is not None else None), state=0, round=1)
             event.des.append(de)
         db.session.add(de)
 
@@ -528,34 +465,26 @@ def submitDE(de_id):
         tableau['results'][round][match] = [de.fencer1Score, de.fencer2Score]
         de.event.tableauJson = json.dumps(tableau)
         nextDE = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
-        if de.event.tournament.format == 'SWIFA':
-            if (des.index(de) + 1) % 2 is 0:
-                if de.fencer1Win:
-                    nextDE.team1 = de.team1
-                    #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-                    de.team2.roundEliminatedIn = de.round
-                else:
-                    nextDE.team1 = de.team2
-                    #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-                    de.team1.roundEliminatedIn = de.round
+        if (des.index(de) + 1) % 2 is 0:
+            if de.fencer1Win:
+                nextDE.team1 = de.team1
+                #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                de.team2.roundEliminatedIn = de.round
             else:
-                if de.fencer1Win:
-                    nextDE.team2 = de.team1
-                    #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-                    de.team2.roundEliminatedIn = de.round
-                else:
-                    nextDE.team2 = de.team2
-                    #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-                    de.team1.roundEliminatedIn = de.round
-            if nextDE.team1 is not None and nextDE.team2 is not None:
-                nextDE.state = 0
-        elif de.event.tournament.format == 'USFA Individual':
-            if (des.index(de) + 1) % 2 is 0:
-                nextDE.fencer1 = de.fencer1 if de.fencer1Win else de.fencer2
+                nextDE.team1 = de.team2
+                #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                de.team1.roundEliminatedIn = de.round
+        else:
+            if de.fencer1Win:
+                nextDE.team2 = de.team1
+                #de.team2.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                de.team2.roundEliminatedIn = de.round
             else:
-                nextDE.fencer2 = de.fencer1 if de.fencer1Win else de.fencer2
-            if nextDE.fencer1 is not None and nextDE.fencer2 is not None:
-                nextDE.state = 0
+                nextDE.team2 = de.team2
+                #de.team1.roundEliminatedIn = int(len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+                de.team1.roundEliminatedIn = de.round
+        if nextDE.team1 is not None and nextDE.team2 is not None:
+            nextDE.state = 0
         #check if all DEs in round finished
         numElim = Team.query.filter_by(roundEliminatedIn=(round+1), event_id=de.event.id).count()
         byes = DE.query.filter_by(event_id=de.event.id, team2_id=None, state=3).count()
@@ -735,6 +664,8 @@ def deleteTeam(event_id, team_id):
         event.numFencersCheckedIn = Event.numFencersCheckedIn - 1
     event.numFencers = Event.numFencers - 1
     db.session.delete(team)
+    for fencer in team.fencers:
+        db.session.delete(fencer)
     db.session.commit()
     return redirect(url_for('editRegistration', event_id=event_id))
 
@@ -772,66 +703,41 @@ def createPools(event_id):
     if not isTOofTourney(current_user, tournament):
         return redirect(url_for('index'))
     form = CreatePoolForm()
-    if tournament.format == 'SWIFA':
-        teams = event.teams.filter_by(isCheckedIn=True).order_by(Team.club_id.asc(), func.random())
-    elif tournament.format == 'USFA Individual':
-        fencers = event.fencers.order_by(Fencer.team_id.desc())
-        fencers = fencers.filter_by(isCheckedIn=True)
+    teams = event.teams.filter_by(isCheckedIn=True).order_by(Team.club_id.asc(), func.random())
     form.numFencers.data = event.numFencersCheckedIn
     if form.validate_on_submit():
         pools = []
         poolNum = 1
         for _ in range(0, form.numPools1.data):
-            if tournament.format == 'SWIFA':
-                poolA = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='A')
-                poolB = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='B')
-                poolC = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='C')
-                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='O')
-                pools.append([poolA, poolB, poolC, poolOverall])
-                db.session.add_all([poolA, poolB, poolC, poolOverall])
-            elif tournament.format == 'USFA Individual':
-                pool = Pool(event_id=event.id, numFencers=form.numFencers1.data, poolNum=poolNum)
-                pools.append(pool)
-                db.session.add(pool)
+            poolA = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='A')
+            poolB = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='B')
+            poolC = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='C')
+            poolOverall = Pool(event_id = event.id, numFencers=form.numFencers1.data, poolNum=poolNum, poolLetter='O')
+            pools.append([poolA, poolB, poolC, poolOverall])
+            db.session.add_all([poolA, poolB, poolC, poolOverall])
             poolNum += 1
         for _ in range(0, form.numPools2.data):
-            if tournament.format == 'SWIFA':
-                poolA = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='A')
-                poolB = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='B')
-                poolC = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='C')
-                poolOverall = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='O')
-                pools.append([poolA, poolB, poolC, poolOverall])
-                db.session.add_all([poolA, poolB, poolC, poolOverall])
-            elif tournament.format == 'USFA Individual':
-                pool = Pool(event_id=event.id, numFencers=form.numFencers2.data, poolNum=poolNum)
-                pools.append(pool)
-                db.session.add(pool)
+            poolA = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='A')
+            poolB = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='B')
+            poolC = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='C')
+            poolOverall = Pool(event_id = event.id, numFencers=form.numFencers2.data, poolNum=poolNum, poolLetter='O')
+            pools.append([poolA, poolB, poolC, poolOverall])
+            db.session.add_all([poolA, poolB, poolC, poolOverall])
             poolNum += 1
 
-        if event.tournament.format == 'SWIFA':
-            pools = quicksort(pools)
-        elif event.tournament.format == 'USFA Individual':
-            pools.sort(key=attrgetter('numFencers'), reverse=True)
+        pools = quicksort(pools)
 
         poolNum = [0 for _ in pools]
-        if tournament.format == 'SWIFA':
-            for i, team in enumerate(teams):
-                pools[i % len(pools)][3].teams.append(team)
-                team.numInPool = poolNum[i % len(pools)] + 1
-                team.pool = pools[i % len(pools)][3]
-                fencers = team.fencers.order_by(Fencer.teamPosition.asc())
-                for j in range(3):
-                    pools[i % len(pools)][j].fencers.append(fencers[j])
-                    fencers[j].numInPool = poolNum[i % len(pools)] + 1
-                    fencers[j].pool = pools[i % len(pools)][j]
-                poolNum[i % len(pools)] += 1
-
-        elif tournament.format == 'USFA Individual':
-            for i, fencer in enumerate(fencers.order_by(Fencer.lastName.asc())):
-                pools[i % len(pools)].fencers.append(fencer)
-                fencer.numInPool = poolNum[i % len(pools)] + 1
-                poolNum[i % len(pools)] += 1
-                fencer.pool = pools[i % len(pools)]
+        for i, team in enumerate(teams):
+            pools[i % len(pools)][3].teams.append(team)
+            team.numInPool = poolNum[i % len(pools)] + 1
+            team.pool = pools[i % len(pools)][3]
+            fencers = team.fencers.order_by(Fencer.teamPosition.asc())
+            for j in range(3):
+                pools[i % len(pools)][j].fencers.append(fencers[j])
+                fencers[j].numInPool = poolNum[i % len(pools)] + 1
+                fencers[j].pool = pools[i % len(pools)][j]
+            poolNum[i % len(pools)] += 1
 
         event.stage = 3
         db.session.commit()

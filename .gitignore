@@ -103,3 +103,4 @@ ENV/
 # database
 *.db
 migrations/
+logs/

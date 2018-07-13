@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional, NoneOf
 from wtforms.fields.html5 import DateField
 from app.models import User, Event
 
@@ -11,9 +11,9 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=32, message='Username must be between 4 and 32 characters.')])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=4, max=32, message='Password must be between 4 and 32 characters.')])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
@@ -21,6 +21,8 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError('Please use a different username.')
+        if not username.data.isalnum():
+            raise ValidationError('Username must be alphanumeric; no special characters allowed.')
 
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
@@ -30,7 +32,7 @@ class RegistrationForm(FlaskForm):
 class CreateTournamentForm(FlaskForm):
     name = StringField('Tournament Name', validators=[DataRequired()])
     #date = DateField('Date', format='%Y-%m-%d')
-    choices = [("USFA Individual", "USFA Individual"), ("USFA Team", "USFA Team"), ("SWIFA", "SWIFA")]
+    choices = [("SWIFA", "SWIFA")] #TODO: remove field and use SWIFA format
     format = SelectField('Format', choices=choices)
     submit = SubmitField('Create Tournament')
 
@@ -67,6 +69,8 @@ class CreatePoolForm(FlaskForm):
     def validate(self):
         if not FlaskForm.validate(self):
             return False
+        if (abs(self.numFencers1.data - self.numFencers2.data) > 1) and self.numFencers2.data is not 0:
+            return False
         if self.numPools1.data * self.numFencers1.data + self.numPools2.data * self.numFencers2.data == int(self.numFencers.data):
             return True
         else:
@@ -83,14 +87,16 @@ class AddTeamForm(FlaskForm):
     fencerB = StringField('Fencer B', validators=[DataRequired()])
     fencerC = StringField('Fencer C', validators=[Optional()])
     fencerD = StringField('Fencer D (Alt)', validators=[Optional()])
-    choices = [('Rice', 'Rice'), ('St. Thomas', 'St. Thomas'), ('TAMU', 'TAMU'),
-        ('TAMUCC', 'TAMUCC'), ('TXST', 'Texas State'), ('UH', 'UH'), ('UNT', 'UNT'), ('UTA', 'UTA'),
-        ('UTD', 'UTD'), ('UT', 'UT Austin'), ('UTSA', 'UTSA')]
-    club = SelectField('University', choices=choices)
-    #club = StringField('Club/University', validators=[DataRequired()])
-    #checked_in = BooleanField('Checked In')
+    choices = [('none', 'Choose a university'), ('Rice', 'Rice'), ('St. Thomas', 'St. Thomas'), ('TAMU', 'TAMU'),
+        ('TAMUCC', 'TAMUCC'), ('Texas State', 'Texas State'), ('UH', 'UH'), ('UNT', 'UNT'), ('UTA', 'UTA'),
+        ('UTD', 'UTD'), ('UT', 'UT'), ('UTSA', 'UTSA')]
+    club = SelectField('University', choices=choices, validators=[NoneOf(['none'], message='Please select a university.')])
     submit = SubmitField('Add Team')
 
+    def validate_club(self, club): #TODO: why isnt this being used?
+        print(club.data)
+        if club.data is 'none':
+            raise ValidationError('Please select a university.')
 '''
 class EditPoolForm(FlaskForm):
     def __init__(self, numFencers):

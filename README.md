@@ -27,8 +27,10 @@ flask run
 
 ## Release History
 
-* 0.0.0
-    * everything up to pools working
+* 0.1.0
+    * All basic features working
+    * Split project into SWIFA and USFA parts
+    * Added more checking on user registration
 
 ## Meta
 

@@ -61,7 +61,7 @@
 		<tr>
 			<td>
 				<a class="btn btn-warning btn-sm padded" role="button" href="{{ url_for('editTeamInfo', event_id=event.id, team_id=team.id) }}">&#9998;</a>
-				<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('deleteTeam', event_id=event.id, team_id=team.id) }}">&#21024;</a>
+				<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('deleteTeam', event_id=event.id, team_id=team.id) }}">&#x2421;</a>
 				{% if team.isCheckedIn %}
 					<a class="btn btn-success btn-sm disabled padded" role="button" aria-disabled="true">&#10004;</a>
 					<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('makeAbsentTeam', event_id=event.id, team_id=team.id) }}">&#128683;</a>
