@@ -41,7 +41,7 @@ def load_user(id):
 class Tournament(db.Model):
     __tablename__ = 'tournament'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
+    name = db.Column(db.String(256))
     format = db.Column(db.String())
     organizers = db.relationship('AccessTable', backref='tournament')
     events = db.relationship('Event', backref='tournament', lazy='dynamic')
@@ -78,7 +78,7 @@ class Club(db.Model): #also university
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
+    name = db.Column(db.String(64))
     fencers = db.relationship('Fencer', backref='team_members', lazy='dynamic')
     is_checked_in = db.Column(db.Boolean)
     num_in_pool = db.Column(db.Integer)
@@ -93,21 +93,17 @@ class Team(db.Model):
     pool_id = db.Column('Pool', db.ForeignKey('pool.id'))
     pool = db.relationship('Pool', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[pool_id])
     club_id = db.Column('Club', db.ForeignKey('club.id'))
-    #club = db.relationship('Club', foreign_keys=[club_id])
-    #fencerA_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    #fencerB_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    #fencerC_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
-    #fencerD_id = db.Column('Fencer', db.ForeignKey('fencer.id'))
 
     def __repr__(self):
         return '<Team {}>'.format(self.name)
+
 
 class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     poolNum = db.Column(db.Integer)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     num_fencers = db.Column(db.Integer)
-    state = db.Column(db.Integer, default=0) #0 = pools not finished, 1 = pools finished
+    state = db.Column(db.Integer, default=0)  # 0 = pools not finished, 1 = pools finished
     pool_letter = db.Column(db.String(1))
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
@@ -119,7 +115,7 @@ class Pool(db.Model):
 class DE(db.Model):
     __tablename__ = 'de'
     id = db.Column(db.Integer, primary_key=True)
-    state = db.Column(db.Integer) #0 = not started, 1 = in progress, 2 = finished, 3 = bye, 4 = tbd
+    state = db.Column(db.Integer)  # 0 = not started, 1 = in progress, 2 = finished, 3 = bye, 4 = tbd
     is_third = db.Column(db.Boolean, default=False)
     round = db.Column(db.Integer, default=None, nullable=True)
     fencer1_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
@@ -155,19 +151,17 @@ class Result(db.Model):
 
 class Fencer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(64), index=True)
-    last_name = db.Column(db.String(63), index=True)
+    first_name = db.Column(db.String(32), index=True)
+    last_name = db.Column(db.String(32), index=True)
     is_checked_in = db.Column(db.Boolean)
     num_in_pool = db.Column(db.Integer)
     victories = db.Column(db.Integer, default=0)
-    #defeats = db.Column(db.Integer, )
     touches_scored = db.Column(db.Integer, default=0)
     touches_recieved = db.Column(db.Integer, default=0)
     indicator = db.Column(db.Integer, default=0)
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     pool = db.relationship('Pool', backref='pool')
     club_id = db.Column(db.Integer, db.ForeignKey('club.id'))
-    #club = db.relationship('Club', foreign_keys=[club_id])
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team = db.relationship('Team', backref='team', foreign_keys=[team_id])
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))

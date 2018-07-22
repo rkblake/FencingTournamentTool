@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional, NoneOf
@@ -33,33 +34,20 @@ class RegistrationForm(FlaskForm):
 
 
 class CreateTournamentForm(FlaskForm):
-    name = StringField('Tournament Name', validators=[DataRequired()])
-    choices = [("SWIFA", "SWIFA")]  # TODO: remove field and use SWIFA format
-    format = SelectField('Format', choices=choices)
+    name = StringField('Tournament Name', validators=[DataRequired(), Length(max=256)])
     submit = SubmitField('Create Tournament')
 
 
 class CreateEventForm(FlaskForm):
-    name = StringField('Event name', validators=[DataRequired()])
+    name = StringField('Event name', validators=[DataRequired(), Length(max=256)])
     date = DateField('Date', format='%Y-%m-%d')
     submit = SubmitField('Create Event')
 
-#TODO: don't allow same name fencers, ask for nickname after first_name in paren
-class AddFencerForm(FlaskForm):
-    first_name = StringField('Fencer first name', validators=[DataRequired()])
-    last_name = StringField('Fencer last name', validators=[DataRequired()])
-    club = StringField('Club', validators=[Optional()], filters=[lambda x : x or None])
-    rating = StringField('Rating', validators=[DataRequired(), Length(min=1,max=3)])
-    checked_in = BooleanField('Checked In')
-    submit = SubmitField('Add Fencer')
+    def validate_date(self, date):
+        present = datetime.now()
+        if datetime.strptime(date.data.strftime('%Y-%m-%d'), '%Y-%m-%d') < present:
+            raise ValidationError('Date cannot be in the past.')
 
-    def validate_rating(self, rating):
-        if rating.data.upper() == 'U' or rating.data.upper() == 'U18':
-            return True
-        if rating.data[0].upper() not in ['A', 'B', 'C', 'D', 'E']:
-            raise ValidationError('Not a valid rating')
-        if int(rating.data[1:]) < 14 or int(rating.data[1:]) > 18:
-            raise ValidationError('Not a valid rating')
 
 class CreatePoolForm(FlaskForm):
     num_fencers = HiddenField()
@@ -85,11 +73,11 @@ class AddTOForm(FlaskForm):
     submit = SubmitField('Add TO')
 
 class AddTeamForm(FlaskForm):
-    teamName = StringField('Team name', validators=[DataRequired()])
-    fencer_a = StringField('Fencer A', validators=[DataRequired()])
-    fencer_b = StringField('Fencer B', validators=[DataRequired()])
-    fencer_c = StringField('Fencer C', validators=[Optional()])
-    fencer_d = StringField('Fencer D (Alt)', validators=[Optional()])
+    teamName = StringField('Team name', validators=[DataRequired(), Length(max=64)])
+    fencer_a = StringField('Fencer A', validators=[DataRequired(), Length(max=64)])
+    fencer_b = StringField('Fencer B', validators=[DataRequired(), Length(max=64)])
+    fencer_c = StringField('Fencer C', validators=[Optional(), Length(max=64)])
+    fencer_d = StringField('Fencer D (Alt)', validators=[Optional(), Length(max=64)])
     choices = [
         ('none', 'Choose a university'),
         ('Rice', 'Rice'),
@@ -109,25 +97,3 @@ class AddTeamForm(FlaskForm):
     def validate_club(self, club): #TODO: why isnt this being used?
         if club.data is 'none':
             raise ValidationError('Please select a university.')
-'''
-class EditPoolForm(FlaskForm):
-    def __init__(self, num_fencers):
-        super().__init__()
-        self.num_fencers = num_fencers
-        self.field = [['' for _ in range(num_fencers)] for _ in range(num_fencers)]
-        for i in range(0, num_fencers):
-            for j in range(0, num_fencers):
-                if i == j:
-                    continue
-                self.field[i][j] = StringField(validators=[DataRequired()])
-        self.submit = SubmitField('Submit pool results')
-
-    def validate(self):
-        for i in range(0, int(self.num_fencers.data)):
-            for j in range(0, int(self.num_fencers.data)):
-                if i == j:
-                    continue
-                if not (field[i][j].data[0].upper() is 'V' and field[i][j].data[0].upper() is 'D' or field[j][i].data[0].upper() is 'V' and field[j][i].data[0].upper() is 'D'):
-                    return False
-        return True
-'''

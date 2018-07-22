@@ -12,7 +12,7 @@ from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, \
     CreateEventForm, CreatePoolForm, AddTOForm, AddTeamForm
 from app.models import AccessTable, User, Tournament, Event, Club, Team, \
     Pool, DE, Result, Fencer
-from app.utils import generate_tournament, quicksort
+from app.utils import generate_tournament, quicksort, validate_input
 
 
 def is_to_of_tournament(user, tournament):
@@ -374,88 +374,61 @@ def edit_pool(event_id, pool_id):
         return redirect(url_for('index'))
     if request.method == "POST":
         valid_input = True
-        for key, val in request.form.items():
-            # TODO: input validation, replace single v with v5
-            if val[0].upper() not in ['V', 'D']:
-                valid_input = False
-            elif (val[0].upper() is 'V'
-                  and request.form['result'+key[7]+key[6]][0] is not 'D'):
-                valid_input = False
-            elif (val[0].upper() is 'D'
-                  and request.form['result'+key[7]+key[6]][0] is not 'V'):
-                valid_input = False
+        valid_input = validate_input(request.form.items())
         if not valid_input:
             flash('Invalid score')
             return redirect(
                 url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
-            if False:  # tournament.format == 'SWIFA':
-                team = Team.query.filter_by(
-                    pool_id=pool_id, num_in_pool=key[0]).first()
-                opponent_team = Team.query.filter_by(
-                    pool_id=pool_id, num_in_pool=key[1]).first()
-                result = Result(
-                    pool_id=pool_id,
-                    team=team,
-                    fencer_score=value[1:],
-                    opponent_team=opponent_team,
-                    fencer_win=(value[0].upper() == 'V'))
-                team.victories = Team.victories + (1 if result.fencer_win else 0)
-                team.touches_scored = Team.touches_scored + result.fencer_score
-                team.indicator = Team.indicator + result.fencer_score
-                opponent_team.touches_recieved = Team.touches_recieved + result.fencer_score
-                opponent_team.indicator = Team.indicator - result.fencer_score
-            else:  # tournament.format == 'USFA Individual':
-                fencer = Fencer.query.filter_by(
-                    pool_id=pool_id, num_in_pool=key[0]).first()
-                opponent = Fencer.query.filter_by(
-                    pool_id=pool_id, num_in_pool=key[1]).first()
-                result = Result(
-                    pool_id=pool.id,
-                    fencer=fencer.id,
+            fencer = Fencer.query.filter_by(
+                pool_id=pool_id, num_in_pool=key[0]).first()
+            opponent = Fencer.query.filter_by(
+                pool_id=pool_id, num_in_pool=key[1]).first()
+            result = Result(
+                pool_id=pool.id,
+                fencer=fencer.id,
+                team=fencer.team,
+                fencer_score=value[1:],
+                opponent=opponent.id,
+                opponent_team=opponent.team,
+                fencer_win=(value[0].upper() == 'V'))
+            fencer.victories = Fencer.victories + (1 if result.fencer_win else 0)
+            fencer.touches_scored = Fencer.touches_scored + result.fencer_score
+            fencer.indicator = Fencer.indicator + result.fencer_score
+            opponent.touches_recieved = Fencer.touches_recieved + result.fencer_score
+            opponent.indicator = Fencer.indicator - result.fencer_score
+            fencer.team.touches_scored = Team.touches_scored + result.fencer_score
+            fencer.team.indicator = Team.indicator + result.fencer_score
+            opponent.team.touches_recieved = Team.touches_recieved + result.fencer_score
+            opponent.team.indicator = Team.indicator - result.fencer_score
+            team_result = Result.query.filter_by(
+                pool_id=fencer.team.pool.id,
+                team=fencer.team,
+                opponent_team=opponent.team).first()
+            if team_result is not None:
+                team_result.fencer_score = Result.fencer_score + result.fencer_score
+                team_result.fencer_win = fencer.team.victories > opponent.team.victories
+            else:
+                team_result = Result(
+                    pool_id=fencer.team.pool.id,
                     team=fencer.team,
-                    fencer_score=value[1:],
-                    opponent=opponent.id,
                     opponent_team=opponent.team,
-                    fencer_win=(value[0].upper() == 'V'))
-                fencer.victories = Fencer.victories + (1 if result.fencer_win else 0)
-                fencer.touches_scored = Fencer.touches_scored + result.fencer_score
-                fencer.indicator = Fencer.indicator + result.fencer_score
-                opponent.touches_recieved = Fencer.touches_recieved + result.fencer_score
-                opponent.indicator = Fencer.indicator - result.fencer_score
-                if tournament.format == 'SWIFA':
-                    fencer.team.touches_scored = Team.touches_scored + result.fencer_score
-                    fencer.team.indicator = Team.indicator + result.fencer_score
-                    opponent.team.touches_recieved = Team.touches_recieved + result.fencer_score
-                    opponent.team.indicator = Team.indicator - result.fencer_score
-                    team_result = Result.query.filter_by(
-                        pool_id=fencer.team.pool.id,
-                        team=fencer.team,
-                        opponent_team=opponent.team).first()
-                    if team_result is not None:
-                        team_result.fencer_score = Result.fencer_score + result.fencer_score
-                        team_result.fencer_win = fencer.team.victories > opponent.team.victories
-                    else:
-                        team_result = Result(
-                            pool_id=fencer.team.pool.id,
-                            team=fencer.team,
-                            opponent_team=opponent.team,
-                            fencer_score=result.fencer_score)
-                        fencer.team.pool.results.append(team_result)
-                        db.session.add(team_result)
-                    individual_results = db.session.query(Result).filter(
-                        Result.team_id == fencer.team.id,
-                        Result.opponent_team_id == opponent.team.id,
-                        Result.pool_id != fencer.team.pool.id).all()
-                    if len(individual_results) >= 2:
-                        wins = 0
-                        for individual_result in individual_results:
-                            if individual_result.fencer_win:
-                                wins += 1
-                        if wins is 2:
-                            team_result.fencer_win = True
-                            fencer.team.victories = Team.victories + 1
+                    fencer_score=result.fencer_score)
+                fencer.team.pool.results.append(team_result)
+                db.session.add(team_result)
+            individual_results = db.session.query(Result).filter(
+                Result.team_id == fencer.team.id,
+                Result.opponent_team_id == opponent.team.id,
+                Result.pool_id != fencer.team.pool.id).all()
+            if len(individual_results) >= 2:
+                wins = 0
+                for individual_result in individual_results:
+                    if individual_result.fencer_win:
+                        wins += 1
+                if wins is 2:
+                    team_result.fencer_win = True
+                    fencer.team.victories = Team.victories + 1
             pool.results.append(result)
             db.session.add(result)
         pool.state = 1
@@ -637,10 +610,8 @@ def submit_DE(de_id):
         match = tableau['results'][round].index([None, None, 'match1'])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
         de.event.tableau_jos = json.dumps(tableau)
-        de.team1.round_eliminated_in = int(
-            len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
-        de.team2.round_eliminated_in = int(
-            len(tableau['teams'])/2) - int(math.log(des.index(de) + 1, 2))
+        de.team1.round_eliminated_in = de.round
+        de.team2.round_eliminated_in = de.round
         de.team1.final_place = 1 if de.fencer1_win else 2
         de.team2.final_place = 2 if de.fencer1_win else 1
     # check if all DEs finished

@@ -54,3 +54,9 @@ def quicksort(x): #descending
         less = [i for i in x[1:] if i[0].num_fencers <= pivot[0].num_fencers]
         greater = [i for i in x[1:] if i[0].num_fencers > pivot[0].num_fencers]
         return quicksort(greater) + [pivot] + quicksort(less)
+
+
+def validate_input(items):
+    for key, val in items:
+        print(key, val)
+    return True
