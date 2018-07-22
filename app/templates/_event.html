@@ -2,35 +2,35 @@
 	<div class="pool-text">
 		<p class="pool-text">
 			<b>{{ event.name }}</b> on <b>{{ event.date }}</b><br>
-			<a href="{{ url_for('editRegistration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> |
+			<a href="{{ url_for('edit_registration', tournament_id=tournament.id, event_id=event.id) }}">Registration</a> |
 			{% if event.stage == 2 %}
 				<a href="">Pool Assignments</a>
 			{% elif event.stage >= 3 %}
-				<a href="{{ url_for('editPools', event_id=event.id) }}">Pools</a> |
+				<a href="{{ url_for('edit_pools', event_id=event.id) }}">Pools</a> |
 			{% else %}
 				Pools |
 			{% endif %}
 			{% if event.stage >= 5 %}
-				<a href="{{ url_for('editDE', event_id=event.id)}}">DEs</a><br>
+				<a href="{{ url_for('edit_DE', event_id=event.id)}}">DEs</a><br>
 			{% else %}
 				DEs<br>
 			{% endif %}
 			{% if event.stage >= 2 %}
-				<a href="{{ url_for('initialSeeding', event_id=event.id) }}">Initial Seeding</a> |
+				<a href="{{ url_for('initial_seeding', event_id=event.id) }}">Initial Seeding</a> |
 			{% else %}
 				Initial Seeding |
 			{% endif %}
 			{% if event.stage >= 4 %}
-				<a href="{{ url_for('poolResults', event_id=event.id) }}">Pool Results</a> |
+				<a href="{{ url_for('pool_results', event_id=event.id) }}">Pool Results</a> |
 			{% else %}
 				Pool Results |
 			{% endif %}
 			{% if event.stage >= 6 %}
-				<a href="{{ url_for('final', event_id=event.id) }}">Final Results</a><br>
+				<a href="{{ url_for('public_final', event_id=event.id) }}">Final Results</a><br>
 			{% else %}
 				Final Results<br>
 			{% endif %}
-			{{ event.numFencersCheckedIn }} Checked In / {{ event.numFencers }} Registered
+			{{ event.num_fencers_checked_in }} Checked In / {{ event.num_fencers }} Registered
 		</p>
 	</div>
 </div>

@@ -18,7 +18,7 @@
 
 {% block app_content %}
 	<p>
-		<a class="btn btn-success padded" role="button" href="{{ url_for('createTournament') }}">Create Tournament</a>
+		<a class="btn btn-success padded" role="button" href="{{ url_for('create_tournament') }}">Create Tournament</a>
 	</p>
 	{% if tournaments|length == 0 %}
 		<div class="fill">You don't have any tournaments.</div>

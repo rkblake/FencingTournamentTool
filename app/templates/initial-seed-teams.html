@@ -20,16 +20,16 @@
             <td>{{ loop.index }}</td>
 			<td>{{ team.name }}</td>
             {% for fencer in team.fencers %}
-			{% if fencer.teamPosition == 'A' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.team_position == 'A' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
 			{% endfor %}
 			{% for fencer in team.fencers %}
-			{% if fencer.teamPosition == 'B' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.team_position == 'B' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
 			{% endfor %}
 			{% for fencer in team.fencers %}
-			{% if fencer.teamPosition == 'C' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.team_position == 'C' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
 			{% endfor %}
 			{% for fencer in team.fencers %}
-			{% if fencer.teamPosition == 'D' %}<td>{{ fencer.lastName }}, {{ fencer.firstName }}</td>{% endif %}
+			{% if fencer.team_position == 'D' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
 			{% endfor %}
 			{% if team.fencers.count() == 3 %}<td></td>{% endif %}
 			{% if team.fencers.count() == 2 %}<td></td><td></td>{% endif %}

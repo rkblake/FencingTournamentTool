@@ -16,7 +16,7 @@
 	<h1>{{ event.name }}</h1>
 
 	{% for pool in pools %}
-		{% if pool.poolLetter == 'O' %}
+		{% if pool.pool_letter == 'O' %}
 		<h2>Pool {{ pool.poolNum }}</h2>
 		<ul class="list-group">
 			{% for team in pool.teams %}

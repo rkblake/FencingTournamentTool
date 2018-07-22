@@ -1,7 +1,5 @@
 from app import db, app, login
-from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import column_property
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -12,7 +10,7 @@ class AccessTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
-    mainTO = db.Column(db.Boolean, default=False)
+    main_to = db.Column(db.Boolean, default=False)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -56,9 +54,9 @@ class Event(db.Model):
     name = db.Column(db.String(64))
     date = db.Column(db.Date, index=True)
     stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
-    numFencers = db.Column(db.Integer, default=0)
-    numFencersCheckedIn = db.Column(db.Integer, default=0)
-    tableauJson = db.Column(db.String)
+    num_fencers = db.Column(db.Integer, default=0)
+    num_fencers_checked_in = db.Column(db.Integer, default=0)
+    tableau_jos = db.Column(db.String)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     #tournament = db.relationship('Tournament', foreign_keys=[tournament_id])
     pools = db.relationship('Pool', backref='event', lazy='dynamic')
@@ -82,14 +80,14 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     fencers = db.relationship('Fencer', backref='team_members', lazy='dynamic')
-    isCheckedIn = db.Column(db.Boolean)
-    numInPool = db.Column(db.Integer)
+    is_checked_in = db.Column(db.Boolean)
+    num_in_pool = db.Column(db.Integer)
     victories = db.Column(db.Integer, default=0)
-    touchesScored = db.Column(db.Integer, default=0)
-    touchesRecieved = db.Column(db.Integer, default=0)
+    touches_scored = db.Column(db.Integer, default=0)
+    touches_recieved = db.Column(db.Integer, default=0)
     indicator = db.Column(db.Integer, default=0)
-    roundEliminatedIn = db.Column(db.Integer, default=None, nullable=True)
-    finalPlace = db.Column(db.Integer, default=None, nullable=True)
+    round_eliminated_in = db.Column(db.Integer, default=None, nullable=True)
+    final_place = db.Column(db.Integer, default=None, nullable=True)
     event_id = db.Column('Event', db.ForeignKey('event.id'))
     event = db.relationship('Event', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[event_id])
     pool_id = db.Column('Pool', db.ForeignKey('pool.id'))
@@ -108,21 +106,21 @@ class Pool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     poolNum = db.Column(db.Integer)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
-    numFencers = db.Column(db.Integer)
+    num_fencers = db.Column(db.Integer)
     state = db.Column(db.Integer, default=0) #0 = pools not finished, 1 = pools finished
-    poolLetter = db.Column(db.String(1))
+    pool_letter = db.Column(db.String(1))
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
     #teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):
-        return '<Pool {}, {} fencers>'.format(self.poolNum, self.numFencers)
+        return '<Pool {}, {} fencers>'.format(self.poolNum, self.num_fencers)
 
 class DE(db.Model):
     __tablename__ = 'de'
     id = db.Column(db.Integer, primary_key=True)
     state = db.Column(db.Integer) #0 = not started, 1 = in progress, 2 = finished, 3 = bye, 4 = tbd
-    isThird = db.Column(db.Boolean, default=False)
+    is_third = db.Column(db.Boolean, default=False)
     round = db.Column(db.Integer, default=None, nullable=True)
     fencer1_id = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     fencer1 = db.relationship('Fencer', foreign_keys=[fencer1_id])
@@ -132,9 +130,9 @@ class DE(db.Model):
     team1 = db.relationship('Team', foreign_keys=[team1_id])
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'), default=None)
     team2 = db.relationship('Team', foreign_keys=[team2_id])
-    fencer1Score = db.Column(db.Integer)
-    fencer2Score = db.Column(db.Integer)
-    fencer1Win = db.Column(db.Boolean)
+    fencer1_score = db.Column(db.Integer)
+    fencer2_score = db.Column(db.Integer)
+    fencer1_win = db.Column(db.Boolean)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
 
     def __repr__(self):
@@ -149,24 +147,22 @@ class Result(db.Model):
     fencer = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     opponent = db.Column(db.Integer, db.ForeignKey('fencer.id'))
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
-    opponentTeam_id = db.Column(db.Integer, db.ForeignKey('team.id'))
+    opponent_team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team = db.relationship('Team', foreign_keys=[team_id])
-    opponentTeam = db.relationship('Team', foreign_keys=[opponentTeam_id])
-    fencerScore = db.Column(db.Integer)
-    fencerWin = db.Column(db.Boolean)
+    opponent_team = db.relationship('Team', foreign_keys=[opponent_team_id])
+    fencer_score = db.Column(db.Integer)
+    fencer_win = db.Column(db.Boolean)
 
 class Fencer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    firstName = db.Column(db.String(64), index=True)
-    lastName = db.Column(db.String(63), index=True)
-    isCheckedIn = db.Column(db.Boolean)
-    numInPool = db.Column(db.Integer)
-    ratingClass = db.Column(db.String(1))
-    ratingYear = db.Column(db.Integer)
+    first_name = db.Column(db.String(64), index=True)
+    last_name = db.Column(db.String(63), index=True)
+    is_checked_in = db.Column(db.Boolean)
+    num_in_pool = db.Column(db.Integer)
     victories = db.Column(db.Integer, default=0)
     #defeats = db.Column(db.Integer, )
-    touchesScored = db.Column(db.Integer, default=0)
-    touchesRecieved = db.Column(db.Integer, default=0)
+    touches_scored = db.Column(db.Integer, default=0)
+    touches_recieved = db.Column(db.Integer, default=0)
     indicator = db.Column(db.Integer, default=0)
     pool_id = db.Column(db.Integer, db.ForeignKey('pool.id'))
     pool = db.relationship('Pool', backref='pool')
@@ -175,7 +171,7 @@ class Fencer(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     team = db.relationship('Team', backref='team', foreign_keys=[team_id])
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
-    teamPosition = db.Column(db.String(1))
+    team_position = db.Column(db.String(1))
 
     def __repr__(self):
-        return '<Fencer {}, {} Num {}>'.format(self.lastName, self.firstName, self.numInPool)
+        return '<Fencer {}, {} Num {}>'.format(self.last_name, self.first_name, self.num_in_pool)

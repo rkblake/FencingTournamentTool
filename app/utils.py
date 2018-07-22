@@ -1,6 +1,4 @@
-import math
-
-def nextPow2(v): #rounds up to next power of 2
+def nextPow2(v):  # rounds up to next power of 2
     v -= 1
     v |= v >> 1
     v |= v >> 2
@@ -10,7 +8,8 @@ def nextPow2(v): #rounds up to next power of 2
     v += 1
     return v
 
-def tournament_round( no_of_teams , matchlist ):
+
+def tournament_round(no_of_teams, matchlist):
     new_matches = []
     for team_or_match in matchlist:
         if type(team_or_match) == type([]):
@@ -52,6 +51,6 @@ def quicksort(x): #descending
         return x
     else:
         pivot = x[0]
-        less = [i for i in x[1:] if i[0].numFencers <= pivot[0].numFencers]
-        greater = [i for i in x[1:] if i[0].numFencers > pivot[0].numFencers]
+        less = [i for i in x[1:] if i[0].num_fencers <= pivot[0].num_fencers]
+        greater = [i for i in x[1:] if i[0].num_fencers > pivot[0].num_fencers]
         return quicksort(greater) + [pivot] + quicksort(less)
