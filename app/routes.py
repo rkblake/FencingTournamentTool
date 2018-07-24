@@ -8,11 +8,9 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 
-from app.forms import LoginForm, RegistrationForm, CreateTournamentForm, \
-    CreateEventForm, CreatePoolForm, AddTOForm, AddTeamForm
-from app.models import AccessTable, User, Tournament, Event, Club, Team, \
-    Pool, DE, Result, Fencer
-from app.utils import generate_tournament, quicksort, validate_input
+from app.forms import *
+from app.models import *
+from app.utils import generate_tournament, quicksort, validate_scores
 
 
 def is_to_of_tournament(user, tournament):
@@ -107,8 +105,7 @@ def create_tournament():
     user = User.query.filter_by(username=current_user.username).first()
     form = CreateTournamentForm()
     if form.validate_on_submit():
-        tournament = Tournament(
-            name=form.name.data.title(), format=form.format.data)
+        tournament = Tournament(name=form.name.data.title())
         access = AccessTable(
             user_id=user.id, tournament_id=tournament.id, main_to=True)
         user.tournaments.append(access)
@@ -148,28 +145,16 @@ def create_event(tournament_id):
 def registration(event_id):
     event = Event.query.get_or_404(event_id)
     title = 'Registration'
-    if event.tournament.format == 'SWIFA':
-        return render_template(
-            'registration-teams.html', title=title, event=event)
-    return render_template('registration.html', title=title, event=event)
+    return render_template(
+        'registration-teams.html', title=title, event=event)
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
 def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.tournament.format == 'SWIFA':
-        teams = event.teams.filter_by(is_checked_in=True)
-        return render_template(
-            'initial-seed-teams.html', event=event, teams=teams)
-    elif event.tournament.format == 'USFA Individual':
-        fencers = event.fencers.filter_by(is_checked_in=True)
-        fencers = fencers.order_by(
-            Fencer.ratingClass.asc(), Fencer.ratingYear.desc())
-        return render_template(
-            'initialSeed.html',
-            title='Initial Seeding',
-            event=event,
-            fencers=fencers)
+    teams = event.teams.filter_by(is_checked_in=True)
+    return render_template(
+        'initial-seed-teams.html', event=event, teams=teams)
 
 
 @app.route('/event/<int:event_id>/pool-results')
@@ -344,10 +329,7 @@ def edit_registration(event_id):
 @login_required
 def edit_pools(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.stage > 5:
-        return redirect(url_for('index'))
-    tournament = Tournament.query.filter_by(id=event.tournament_id).first()
-    if not is_to_of_tournament(current_user, tournament):
+    if event.stage > 5 or not is_to_of_tournament(current_user, evetn.tournament):
         return redirect(url_for('index'))
     pools = event.pools
     all_pools_done = True
@@ -356,8 +338,6 @@ def edit_pools(event_id):
             all_pools_done = False
     if all_pools_done:
         event.stage = 5
-        if tournament.format == 'SWIFA':
-            pass
         db.session.commit()
     return render_template('edit-pools-teams.html', event=event, pools=pools)
 
@@ -367,20 +347,17 @@ def edit_pools(event_id):
 @login_required
 def edit_pool(event_id, pool_id):
     pool = Pool.query.filter_by(id=pool_id).first()
-    event = pool.event
-    tournament = event.tournament
-    user = User.query.filter_by(username=current_user.username).first()
-    if not is_to_of_tournament(user, tournament):
+    if not is_to_of_tournament(current_user, pool.event.tournament):
         return redirect(url_for('index'))
     if request.method == "POST":
-        valid_input = True
-        valid_input = validate_input(request.form.items())
-        if not valid_input:
-            flash('Invalid score')
+        if not validate_scores(request.form):
+            flash('Invalid score.')
             return redirect(
                 url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
+            if value == '':
+                value = 'd0'
             fencer = Fencer.query.filter_by(
                 pool_id=pool_id, num_in_pool=key[0]).first()
             opponent = Fencer.query.filter_by(
@@ -421,6 +398,7 @@ def edit_pool(event_id, pool_id):
                 Result.team_id == fencer.team.id,
                 Result.opponent_team_id == opponent.team.id,
                 Result.pool_id != fencer.team.pool.id).all()
+            print(individual_results)
             if len(individual_results) >= 2:
                 wins = 0
                 for individual_result in individual_results:
@@ -437,7 +415,7 @@ def edit_pool(event_id, pool_id):
     elif request.method == "GET":
         fencers = pool.fencers.order_by(Fencer.num_in_pool.asc())
         return render_template(
-            'edit-pool.html', event=event, pool=pool, fencers=fencers)
+            'edit-pool.html', event=pool.event, pool=pool, fencers=fencers)
 
 
 @app.route('/event/<int:event_id>/generate-bracket')
@@ -572,7 +550,6 @@ def submit_DE(de_id):
                     event_id=de.event.id, is_checked_in=True).count()
             else:
                 place1 = int(len(tableau['teams'])/(2**round-1))
-            print(place1)
             for i, val in enumerate(des_in_round):
                 loser_team = val.team2 if val.fencer1_win else val.team1
                 loser_team.final_place = place1 - i

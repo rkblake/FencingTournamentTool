@@ -1,3 +1,4 @@
+from datetime import date as pydate
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField, SelectField
@@ -44,8 +45,8 @@ class CreateEventForm(FlaskForm):
     submit = SubmitField('Create Event')
 
     def validate_date(self, date):
-        present = datetime.now()
-        if datetime.strptime(date.data.strftime('%Y-%m-%d'), '%Y-%m-%d') < present:
+        present = pydate.today()
+        if datetime.strptime(date.data.strftime('%Y-%m-%d'), '%Y-%m-%d').date() < present:
             raise ValidationError('Date cannot be in the past.')
 
 

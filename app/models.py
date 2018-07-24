@@ -44,7 +44,7 @@ class Tournament(db.Model):
     name = db.Column(db.String(256))
     format = db.Column(db.String())
     organizers = db.relationship('AccessTable', backref='tournament')
-    events = db.relationship('Event', backref='tournament', lazy='dynamic')
+    events = db.relationship('Event', backref='tournament', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return '<Tournament {}>'.format(self.name)
@@ -58,11 +58,9 @@ class Event(db.Model):
     num_fencers_checked_in = db.Column(db.Integer, default=0)
     tableau_jos = db.Column(db.String)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
-    #tournament = db.relationship('Tournament', foreign_keys=[tournament_id])
-    pools = db.relationship('Pool', backref='event', lazy='dynamic')
-    des = db.relationship('DE', backref='event', lazy='dynamic')
-    fencers = db.relationship('Fencer', backref='event', lazy='dynamic')
-    #teams = db.relationship('Team', backref='event', lazy='dynamic')
+    pools = db.relationship('Pool', backref='event', lazy='dynamic', cascade='all, delete-orphan')
+    des = db.relationship('DE', backref='event', lazy='dynamic', cascade='all, delete-orphan')
+    fencers = db.relationship('Fencer', backref='event', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return '<Event {}>'.format(self.name)
@@ -70,8 +68,8 @@ class Event(db.Model):
 class Club(db.Model): #also university
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    fencers = db.relationship('Fencer', backref='club')
-    teams = db.relationship('Team', backref='club', lazy='dynamic')
+    fencers = db.relationship('Fencer', backref='club', cascade='all, delete-orphan')
+    teams = db.relationship('Team', backref='club', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return '<Club {}>'.format(self.name)
@@ -79,7 +77,7 @@ class Club(db.Model): #also university
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    fencers = db.relationship('Fencer', backref='team_members', lazy='dynamic')
+    fencers = db.relationship('Fencer', backref='team_members', lazy='dynamic', cascade='all, delete-orphan')
     is_checked_in = db.Column(db.Boolean)
     num_in_pool = db.Column(db.Integer)
     victories = db.Column(db.Integer, default=0)
@@ -89,9 +87,9 @@ class Team(db.Model):
     round_eliminated_in = db.Column(db.Integer, default=None, nullable=True)
     final_place = db.Column(db.Integer, default=None, nullable=True)
     event_id = db.Column('Event', db.ForeignKey('event.id'))
-    event = db.relationship('Event', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[event_id])
+    event = db.relationship('Event', backref=db.backref('teams', lazy='dynamic', cascade='all, delete-orphan'), foreign_keys=[event_id])
     pool_id = db.Column('Pool', db.ForeignKey('pool.id'))
-    pool = db.relationship('Pool', backref=db.backref('teams', lazy='dynamic'), foreign_keys=[pool_id])
+    pool = db.relationship('Pool', backref=db.backref('teams', lazy='dynamic', cascade='all, delete-orphan'), foreign_keys=[pool_id])
     club_id = db.Column('Club', db.ForeignKey('club.id'))
 
     def __repr__(self):
@@ -105,8 +103,8 @@ class Pool(db.Model):
     num_fencers = db.Column(db.Integer)
     state = db.Column(db.Integer, default=0)  # 0 = pools not finished, 1 = pools finished
     pool_letter = db.Column(db.String(1))
-    results = db.relationship('Result', backref='results', lazy='dynamic')
-    fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
+    results = db.relationship('Result', backref='results', lazy='dynamic', cascade='all, delete-orphan')
+    fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic', cascade='all, delete-orphan')
     #teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):

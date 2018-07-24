@@ -13,19 +13,21 @@ def tournament_round(no_of_teams, matchlist):
     new_matches = []
     for team_or_match in matchlist:
         if type(team_or_match) == type([]):
-            new_matches += [ tournament_round( no_of_teams, team_or_match ) ]
+            new_matches += [tournament_round(no_of_teams, team_or_match)]
         else:
-            new_matches += [ [ team_or_match, no_of_teams + 1 - team_or_match ] ]
+            new_matches += [[team_or_match, no_of_teams + 1 - team_or_match]]
     return new_matches
+
 
 def flatten_list( matches ):
     teamlist = []
     for team_or_match in matches:
         if type(team_or_match) == type([]):
-            teamlist += flatten_list( team_or_match )
+            teamlist += flatten_list(team_or_match)
         else:
             teamlist += [team_or_match]
     return teamlist
+
 
 def generate_tournament(fencers):
     fencers = [fencer for fencer in fencers]
@@ -34,8 +36,8 @@ def generate_tournament(fencers):
     result = [1]
     while teams != num:
         teams *= 2
-        result = tournament_round( teams, result )
-    result = flatten_list( result )
+        result = tournament_round(teams, result)
+    result = flatten_list(result)
 
     for _ in range(num - len(fencers)):
         fencers.append(None)
@@ -46,7 +48,7 @@ def generate_tournament(fencers):
     return pairs
 
 
-def quicksort(x): #descending
+def quicksort(x):  # descending sort
     if len(x) < 2:
         return x
     else:
@@ -56,7 +58,21 @@ def quicksort(x): #descending
         return quicksort(greater) + [pivot] + quicksort(less)
 
 
-def validate_input(items):
-    for key, val in items:
-        print(key, val)
+def validate_scores(form):  # TODO: only check upper right triangle; accept same score ties as long as one is a victory
+    for key, score in form.items():
+        if ((score == '') ^ (form['result'+key[7]+key[6]] == '')):
+            return False
+        elif score == '' and form['result'+key[7]+key[6]] == '':
+            continue
+
+        if score[0].upper() not in ['V', 'D']:
+            return False
+        elif score[0].upper() == 'V' and form['result'+key[7]+key[6]].upper() == 'V':
+            return False
+        elif score[0].upper() == 'D' and form['result'+key[7]+key[6]].upper() == 'D':
+            return False
+        elif score[0].upper() == 'V' and score[1] < form['result'+key[7]+key[6]][1]:
+            return False
+        elif score[0].upper() == 'D' and score[1] > form['result'+key[7]+key[6]][1]:
+            return False
     return True

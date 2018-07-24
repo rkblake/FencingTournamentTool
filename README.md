@@ -34,6 +34,7 @@ flask run
 * 0.2.0
     * Added more constraints to forms
     * Prevented event date in the past
+    * Added pool sheet score validation
 
 ## Meta
 

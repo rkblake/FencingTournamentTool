@@ -19,7 +19,7 @@
 
 	<hr>
 
-	{% if event.stage != 1 %}
+	{% if event.stage == 0 or event.stage == 2 %}
 		<a class="btn btn-primary padded" href="{{ url_for('open_registration', event_id=event.id) }}" role="button">Open Registration</a>
 		<a class="btn btn-danger disabled padded" role="button" aria-disabled="true">Close Registration</a>
 		{% if event.stage == 2 %}
