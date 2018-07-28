@@ -6,7 +6,7 @@ import math
 from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app import app, db
+from app import app, db, cache
 
 from app.forms import *
 from app.models import *
@@ -85,6 +85,7 @@ def personal_user(username):
 
 
 @app.route('/tournament/<int:tournament_id>')
+@cache.cached(timeout=60)
 def public_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     events = tournament.events
@@ -142,6 +143,7 @@ def create_event(tournament_id):
 
 
 @app.route('/event/<int:event_id>/registration')
+@cache.cached(timeout=60)
 def registration(event_id):
     event = Event.query.get_or_404(event_id)
     title = 'Registration'
@@ -150,6 +152,7 @@ def registration(event_id):
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
+@cache.cached(timeout=60)
 def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True)
@@ -158,6 +161,7 @@ def initial_seeding(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-results')
+@cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
     # TODO: needs more tie checking
@@ -175,6 +179,7 @@ def pool_results(event_id):
 
 
 @app.route('/event/<int:event_id>/pools')
+@cache.cached(timeout=60)
 def public_pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -200,6 +205,7 @@ def public_pools(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-assignment')
+@cache.cached(timeout=60)
 def pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -211,6 +217,7 @@ def pool_assignment(event_id):
 
 
 @app.route('/event/<int:event_id>/de')
+@cache.cached(timeout=60)
 def public_de(event_id):
     event = Event.query.get_or_404(event_id)
     return render_template(
@@ -221,6 +228,7 @@ def public_de(event_id):
 
 
 @app.route('/event/<int:event_id>/final')
+@cache.cached(timeout=60)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.order_by(Team.final_place.asc()).all()
@@ -329,7 +337,7 @@ def edit_registration(event_id):
 @login_required
 def edit_pools(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.stage > 5 or not is_to_of_tournament(current_user, evetn.tournament):
+    if event.stage > 5 or not is_to_of_tournament(current_user, event.tournament):
         return redirect(url_for('index'))
     pools = event.pools
     all_pools_done = True
@@ -398,7 +406,6 @@ def edit_pool(event_id, pool_id):
                 Result.team_id == fencer.team.id,
                 Result.opponent_team_id == opponent.team.id,
                 Result.pool_id != fencer.team.pool.id).all()
-            print(individual_results)
             if len(individual_results) >= 2:
                 wins = 0
                 for individual_result in individual_results:

@@ -4,6 +4,7 @@ from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_caching import Cache
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -18,6 +19,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 app.jinja_env.trim_blocks=True
 app.jinja_env.lstrip_blocks=True
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 if not os.path.exists('logs'):
     os.mkdir('logs')
