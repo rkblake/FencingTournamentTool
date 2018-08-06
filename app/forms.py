@@ -98,3 +98,14 @@ class AddTeamForm(FlaskForm):
     def validate_club(self, club): #TODO: why isnt this being used?
         if club.data is 'none':
             raise ValidationError('Please select a university.')
+
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = StringFiled('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Request Password Reset')
