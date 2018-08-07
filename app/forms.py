@@ -101,7 +101,7 @@ class AddTeamForm(FlaskForm):
 
 
 class ResetPasswordRequestForm(FlaskForm):
-    email = StringFiled('Email', validators=[DataRequired(), Email()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
 
 
