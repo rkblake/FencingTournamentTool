@@ -73,12 +73,18 @@ class AddTOForm(FlaskForm):
     email = StringField('Organizers Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Add TO')
 
+def validate_name(form, field):
+    if len(field.data.split()) != 2:
+        raise ValidationError('Fencer name must contain first and last name.')
+    if not field.data.replace(' ', '').isalpha():
+        raise ValidationError('Fencer name must contain only letters.')
+
 class AddTeamForm(FlaskForm):
     teamName = StringField('Team name', validators=[DataRequired(), Length(max=64)])
-    fencer_a = StringField('Fencer A', validators=[DataRequired(), Length(max=64)])
-    fencer_b = StringField('Fencer B', validators=[DataRequired(), Length(max=64)])
-    fencer_c = StringField('Fencer C', validators=[Optional(), Length(max=64)])
-    fencer_d = StringField('Fencer D (Alt)', validators=[Optional(), Length(max=64)])
+    fencer_a = StringField('Fencer A', validators=[DataRequired(), Length(max=64), validate_name])
+    fencer_b = StringField('Fencer B', validators=[DataRequired(), Length(max=64), validate_name])
+    fencer_c = StringField('Fencer C', validators=[Optional(), Length(max=64), validate_name])
+    fencer_d = StringField('Fencer D (Alt)', validators=[Optional(), Length(max=64), validate_name])
     choices = [
         ('none', 'Choose a university'),
         ('Rice', 'Rice'),
