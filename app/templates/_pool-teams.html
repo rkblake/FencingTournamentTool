@@ -33,7 +33,7 @@
                 <td class="stat">{{ "%.2f"|format(team.victories / (pool.num_fencers - 1)) }}</td>
                 <td class="stat">{{ team.touches_scored }}</td>
                 <td class="stat">{{ team.touches_recieved }}</td>
-                <td class="stat">{{ team.indicator }}</td>
+                <td class="stat">{% if team.indicator > 0 %}+{% endif %}{{ team.indicator }}</td>
             </tr>
         {% endfor %}
     </tbody>
