@@ -1,0 +1,7 @@
+{{ club.name }} Fencing Team,
+
+{{ tournament.name }} is approaching. Click the following link to preregister.
+
+{{ url_for('preregister', token=token, _external=True) }}
+
+The FencingTournamentTool Team

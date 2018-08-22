@@ -1,7 +1,10 @@
 from datetime import date as pydate
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, HiddenField, IntegerField, SelectField
+from wtforms import StringField, PasswordField, BooleanField, \
+                    SubmitField, HiddenField, IntegerField, \
+                    SelectField, FormField, widgets, FileField, \
+                    TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional, NoneOf
 from wtforms.fields.html5 import DateField
 from app.models import User
@@ -35,12 +38,19 @@ class RegistrationForm(FlaskForm):
 
 
 class CreateTournamentForm(FlaskForm):
-    name = StringField('Tournament Name', validators=[DataRequired(), Length(max=256)])
+    name = StringField('Tournament Name', validators=[DataRequired(), Length(max=64)])
     submit = SubmitField('Create Tournament')
 
 
 class CreateEventForm(FlaskForm):
-    name = StringField('Event name', validators=[DataRequired(), Length(max=256)])
+    name = StringField('Event name', validators=[DataRequired(), Length(max=64)])
+    choices = [
+        ('none', 'Choose a weapon'),
+        ('foil', 'Foil'),
+        ('epee', 'Epee'),
+        ('saber', 'Saber')
+    ]
+    weapon = SelectField('Weapon', choices=choices, validators=[NoneOf(['none'], message='Please select a Weapon.')])
     date = DateField('Date', format='%Y-%m-%d')
     submit = SubmitField('Create Event')
 
@@ -73,11 +83,22 @@ class AddTOForm(FlaskForm):
     email = StringField('Organizers Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Add TO')
 
+
 def validate_name(form, field):
+    if field is None:
+        return True
     if len(field.data.split()) != 2:
         raise ValidationError('Fencer name must contain first and last name.')
     if not field.data.replace(' ', '').isalpha():
         raise ValidationError('Fencer name must contain only letters.')
+
+
+class TeamField(FlaskForm):
+    fencer_a = StringField('Fencer A', validators=[Optional(), Length(max=64), validate_name])
+    fencer_b = StringField('Fencer B', validators=[Optional(), Length(max=64), validate_name])
+    fencer_c = StringField('Fencer C', validators=[Optional(), Length(max=64), validate_name])
+    fencer_d = StringField('Fencer D (Alt)', validators=[Optional(), Length(max=64), validate_name])
+
 
 class AddTeamForm(FlaskForm):
     teamName = StringField('Team name', validators=[DataRequired(), Length(max=64)])
@@ -96,7 +117,7 @@ class AddTeamForm(FlaskForm):
         ('UNT', 'UNT'),
         ('UTA', 'UTA'),
         ('UTD', 'UTD'),
-        ('UT', 'UT'),
+        ('UTFC', 'UT'),
         ('UTSA', 'UTSA')]
     club = SelectField('University', choices=choices, validators=[NoneOf(['none'], message='Please select a university.')])
     submit = SubmitField('Add Team')
@@ -104,6 +125,24 @@ class AddTeamForm(FlaskForm):
     def validate_club(self, club): #TODO: why isnt this being used?
         if club.data is 'none':
             raise ValidationError('Please select a university.')
+
+
+class PreregisterForm(FlaskForm):
+    Foil_A = FormField(TeamField)
+    Foil_B = FormField(TeamField)
+    Epee_A = FormField(TeamField)
+    Epee_B = FormField(TeamField)
+    Saber_A = FormField(TeamField)
+    Saber_B = FormField(TeamField)
+    submit = SubmitField('Preregister')
+
+    def validate(self):
+        return True
+
+
+class EmailListForm(FlaskForm):
+    email_json = FileField('JSON Formatted Email List', validators=[DataRequired()], filters=[lambda x : x or None])
+    submit = SubmitField('Send Preregistration Emails')
 
 
 class ResetPasswordRequestForm(FlaskForm):

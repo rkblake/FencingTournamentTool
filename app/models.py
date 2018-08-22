@@ -74,6 +74,7 @@ class Event(db.Model):
     num_fencers_checked_in = db.Column(db.Integer, default=0)
     tableau_jos = db.Column(db.String)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
+    weapon = db.Column(db.String(5))
     pools = db.relationship('Pool', backref='event', lazy='dynamic', cascade='all, delete-orphan')
     des = db.relationship('DE', backref='event', lazy='dynamic', cascade='all, delete-orphan')
     fencers = db.relationship('Fencer', backref='event', lazy='dynamic', cascade='all, delete-orphan')

@@ -27,15 +27,16 @@ flask run
 
 ## Release History
 
-* 0.1.0
-    * All basic features working
-    * Split project into SWIFA and USFA parts
-    * Added more checking on user registration
 * 0.2.0
     * Added more constraints to forms
     * Prevented event date in the past
     * Added pool sheet score validation
     * Added Email support
+    * Added preregistration
+* 0.1.0
+    * All basic features working
+    * Split project into SWIFA and USFA parts
+    * Added more checking on user registration
 
 ## Meta
 

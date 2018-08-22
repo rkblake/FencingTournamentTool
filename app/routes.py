@@ -2,6 +2,8 @@ from datetime import datetime
 from urllib.parse import urlparse
 import json
 import math
+from time import time
+import re
 
 from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request
@@ -11,10 +13,12 @@ from app import app, db, cache
 from app.forms import *
 from app.models import *
 from app.utils import generate_tournament, quicksort, validate_scores
-from app.email import send_password_reset_email
+from app.email import send_password_reset_email, send_prereg_email
 
 
 def is_to_of_tournament(user, tournament):
+    if current_user.is_anonymous:
+        return False
     access = AccessTable.query.filter_by(
         user_id=user.id, tournament_id=tournament.id).first()
     return bool(access)
@@ -133,6 +137,7 @@ def create_event(tournament_id):
             name=form.name.data.title(),
             date=datetime.strptime(
                 form.date.data.strftime('%m/%d/%Y'), '%m/%d/%Y'),
+            weapon=form.weapon.data,
             tournament=tournament)
         tournament.events.append(event)
         db.session.add(event)
@@ -274,25 +279,22 @@ def edit_registration(event_id):
     teams = event.teams.all()
     form = AddTeamForm()
     if form.validate_on_submit():
+
+        def add_fencer(name, position):
+            return Fencer(first_name=name.split()[0],
+                          last_name=name.split()[1],
+                          team_position=position)
+
         club = Club.query.filter_by(name=form.club.data).first()
         if club is None:
             club = Club(name=form.club.data)
         team = Team(name=form.teamName.data, is_checked_in=True)
-        fencer_a = Fencer(
-            first_name=form.fencer_a.data.split()[0].title(),
-            last_name=form.fencer_a.data.split()[1].title(),
-            team_position='A')
+        fencer_a = add_fencer(form.fencer_a.data, 'A')
         team.fencers.append(fencer_a)
-        fencer_b = Fencer(
-            first_name=form.fencer_b.data.split()[0].title(),
-            last_name=form.fencer_b.data.split()[1].title(),
-            team_position='B')
+        fencer_b = add_fencer(form.fencer_b.data, 'B')
         team.fencers.append(fencer_b)
         if form.fencer_c.data != '':
-            fencer_c = Fencer(
-                first_name=form.fencer_c.data.split()[0].title(),
-                last_name=form.fencer_c.data.split()[1].title(),
-                team_position='C')
+            fencer_c = add_fencer(form.fencer_c.data, 'C')
             team.fencers.append(fencer_c)
             db.session.add(fencer_c)
         else:  # create dummy fencer to fill c slot
@@ -304,10 +306,7 @@ def edit_registration(event_id):
             team.fencers.append(fencer_c)
             db.session.add(fencer_c)
         if form.fencer_d.data != '':
-            fencer_d = Fencer(
-                first_name=form.fencer_d.data.split()[0].title(),
-                last_name=form.fencer_d.data.split()[1].title(),
-                team_position='D')
+            fencer_d = add_fencer(form.fencer_d.data, 'D')
             team.fencers.append(fencer_d)
             db.session.add(fencer_d)
         else:  # create dummy fencer to fill d slot
@@ -853,7 +852,7 @@ def reset_password_request():
         form=form)
 
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -867,3 +866,120 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset-password.html', form=form)
+
+
+@app.route('/preregister/<token>', methods=['GET', 'POST'])
+def preregister(token):
+    json = jwt.decode(token, app.config['SECRET_KEY'],
+                    algorithms=['HS256'])
+    if not json:
+        return redirect(url_for('index'))
+    club = Club.query.get(json['club'])
+    tournament = Tournament.query.get(json['tournament'])
+    foil_event = tournament.events.filter_by(weapon='foil').first()
+    epee_event = tournament.events.filter_by(weapon='epee').first()
+    saber_event = tournament.events.filter_by(weapon='saber').first()
+    form = PreregisterForm()
+    if form.validate_on_submit():
+
+        def add_team(club, event, team_name, name_list):
+            letters = ['A', 'B', 'C', 'D']
+            team = Team(name=team_name, is_checked_in=False)
+            event.teams.append(team)
+            club.teams.append(team)
+            event.num_fencers += 1
+            for i, name in enumerate(name_list):
+                if name is None or name == '':
+                    name = ['', '']
+                else:
+                    name = name.split()
+                fencer = Fencer(first_name=name[0], last_name=name[1], team_position=letters[i])
+                team.fencers.append(fencer)
+                db.session.add(fencer)
+
+        #print(request.form)
+        if request.form.get('Foil_A_slider'):
+            team_name = club.name + " Foil "
+            if request.form.get('Foil_B_slider'):
+                team_name += 'A'
+            add_team(club, foil_event, team_name, [
+                form.Foil_A.fencer_a.data,
+                form.Foil_A.fencer_b.data,
+                form.Foil_A.fencer_c.data,
+                form.Foil_A.fencer_d.data])
+        if request.form.get('Foil_B_slider'):
+            team_name = club.name + " Foil "
+            if request.form.get('Foil_A_slider'):
+                team_name += 'B'
+            add_team(club, foil_event, team_name, [
+                form.Foil_B.fencer_a.data,
+                form.Foil_B.fencer_b.data,
+                form.Foil_B.fencer_c.data,
+                form.Foil_B.fencer_d.data])
+        if request.form.get('Epee_A_slider'):
+            team_name = club.name + " Epee "
+            if request.form.get('Epee_B_slider'):
+                team_name += 'A'
+            add_team(club, epee_event, team_name, [
+                form.Epee_A.fencer_a.data,
+                form.Epee_A.fencer_b.data,
+                form.Epee_A.fencer_c.data,
+                form.Epee_A.fencer_d.data])
+        if request.form.get('Epee_B_slider'):
+            team_name = club.name + " Epee "
+            if request.form.get('Epee_A_slider'):
+                team_name += 'B'
+            add_team(club, epee_event, team_name, [
+                form.Epee_B.fencer_a.data,
+                form.Epee_B.fencer_b.data,
+                form.Epee_B.fencer_c.data,
+                form.Epee_B.fencer_d.data])
+        if request.form.get('Saber_A_slider'):
+            team_name = club.name + " Saber "
+            if request.form.get('Saber_B_slider'):
+                team_name += 'A'
+            add_team(club, saber_event, team_name, [
+                form.Saber_A.fencer_a.data,
+                form.Saber_A.fencer_b.data,
+                form.Saber_A.fencer_c.data,
+                form.Saber_A.fencer_d.data])
+        if request.form.get('Saber_B_slider'):
+            team_name = club.name + " Saber "
+            if request.form.get('Saber_A_slider'):
+                team_name += 'B'
+            add_team(club, saber_event, team_name, [
+                form.Saber_B.fencer_a.data,
+                form.Saber_B.fencer_b.data,
+                form.Saber_B.fencer_c.data,
+                form.Saber_B.fencer_d.data])
+        db.session.commit()
+        flash('You have preregistered.')
+        return redirect(url_for('index'))
+    return render_template('preregistration.html', title='Preregistration', form=form, tournament=tournament, club=club)
+
+
+@app.route('/tournament/<int:tournament_id>/send-prereg-email', methods=['GET', 'POST'])
+def send_prereg(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')  # TODO: add this to similar checks
+        return redirect(url_for('index'))
+    form = EmailListForm()
+    if form.validate_on_submit():
+        data = json.load(form.email_json.data.stream)
+        for club_name, email in data.items():
+            if club_name not in app.config['UNIVERSITIES'] or not re.match(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", email):
+                flash('Invalid JSON')
+                return redirect(url_for('send_prereg', tournament_id=tournament.id))
+            club = Club.query.filter_by(name=club_name).first()
+            if club is None:
+                club = Club(name=club_name)
+                db.session.add(club)
+                db.session.commit()
+            token = jwt.encode(
+                {'club': club.id, 'tournament': tournament.id, 'exp': time() + 604800},
+                app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+            send_prereg_email(email, token, club, tournament)
+        flash('Preregistration emails have been sent.')
+        return redirect(url_for('edit_tournament', tournament_id=tournament.id))
+    return render_template('send-prereg-email.html', title='Preregistration', form=form, tournament=tournament)

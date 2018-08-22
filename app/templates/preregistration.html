@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block head %}
+	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script language="javascript">
+        function validate() {
+            var regex = RegExp('([a-zA-Z]{1,32} [a-zA-z]{1,32}){0,1}');
+            var elements = document.getElementById('preregistration').elements;
+            for(var i = 0, element; element = elements[i++];) {
+                if(element.type === "text" && !element.disabled && !regex.test(element.value)) {
+                    alert(element.name);
+                    return false;
+                }
+            }
+            return true;
+        }
+        jQuery(document).ready(function () {
+            $(':text').attr('disabled', true);
+            $('#Foil_A_slider').click(function () {
+                $('[id^=Foil_A-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+            $('#Foil_B_slider').click(function () {
+                $('[id^=Foil_B-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+            $('#Epee_A_slider').click(function () {
+                $('[id^=Epee_A-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+            $('#Epee_B_slider').click(function () {
+                $('[id^=Epee_B-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+            $('#Saber_A_slider').click(function () {
+                $('[id^=Saber_A-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+            $('#Saber_B_slider').click(function () {
+                $('[id^=Saber_B-fencer]').attr("disabled", !$(this).is(":checked"));
+            });
+        });
+    </script>
+	{{ super() }}
+{% endblock %}
+
+{% block app_content %}
+<h1>{{ club.name }}'s preregistration for {{ tournament.name }}</h1>
+<div class="row">
+    <div class="col-md-4">
+        <form action="" method="post" class="form" role="form" name="preregistration" id="preregistration" onsubmit="return validate()">
+            {{ form.csrf_token }}
+
+
+            <fieldset>
+                <legend>
+                    <label for="Foil_A">Foil A</label>
+                </legend>
+
+                <label class="switch">
+                    <input type="checkbox" id="Foil_A_slider" name="Foil_A_slider">
+                    <span class="slider round"></span>
+                </label>
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_A-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Foil_A-fencer_a" name="Foil_A-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_A-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Foil_A-fencer_b" name="Foil_A-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_A-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Foil_A-fencer_c" name="Foil_A-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_A-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Foil_A-fencer_d" name="Foil_A-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+
+            <fieldset>
+                <legend>
+                    <label for="Foil_B">Foil B</label>
+                </legend>
+
+
+                <label class="switch">
+                    <input type="checkbox" id="Foil_B_slider" name="Foil_B_slider">
+                    <span class="slider round"></span>
+                </label>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_B-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Foil_B-fencer_a" name="Foil_B-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_B-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Foil_B-fencer_b" name="Foil_B-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_B-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Foil_B-fencer_c" name="Foil_B-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Foil_B-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Foil_B-fencer_d" name="Foil_B-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+
+            <fieldset>
+                <legend>
+                    <label for="Epee_A">Epee A</label>
+                </legend>
+
+
+                <label class="switch">
+                    <input type="checkbox" id="Epee_A_slider" name="Epee_A_slider">
+                    <span class="slider round"></span>
+                </label>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_A-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Epee_A-fencer_a" name="Epee_A-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_A-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Epee_A-fencer_b" name="Epee_A-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_A-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Epee_A-fencer_c" name="Epee_A-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_A-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Epee_A-fencer_d" name="Epee_A-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+
+            <fieldset>
+                <legend>
+                    <label for="Epee_B">Epee B</label>
+                </legend>
+
+                <label class="switch">
+                    <input type="checkbox" id="Epee_B_slider" name="Epee_B_slider">
+                    <span class="slider round"></span>
+                </label>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_B-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Epee_B-fencer_a" name="Epee_B-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_B-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Epee_B-fencer_b" name="Epee_B-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_B-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Epee_B-fencer_c" name="Epee_B-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Epee_B-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Epee_B-fencer_d" name="Epee_B-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+
+            <fieldset>
+                <legend>
+                    <label for="Saber_A">Saber A</label>
+                </legend>
+
+                <label class="switch">
+                    <input type="checkbox" id="Saber_A_slider" name="saber_A_slider">
+                    <span class="slider round"></span>
+                </label>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_A-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Saber_A-fencer_a" name="Saber_A-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_A-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Saber_A-fencer_b" name="Saber_A-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_A-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Saber_A-fencer_c" name="Saber_A-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_A-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Saber_A-fencer_d" name="Saber_A-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+
+            <fieldset>
+                <legend>
+                    <label for="Saber_B">Saber B</label>
+                </legend>
+
+                <label class="switch">
+                    <input type="checkbox" id="Saber_B_slider" name="Saber_B_slider">
+                    <span class="slider round"></span>
+                </label>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_B-fencer_a">Fencer A</label>
+                    <input class="form-control" id="Saber_B-fencer_a" name="Saber_B-fencer_a" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_B-fencer_b">Fencer B</label>
+                    <input class="form-control" id="Saber_B-fencer_b" name="Saber_B-fencer_b" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_B-fencer_c">Fencer C</label>
+                    <input class="form-control" id="Saber_B-fencer_c" name="Saber_B-fencer_c" type="text" value="">
+                </div>
+
+
+                <div class="form-group ">
+                    <label class="control-label" for="Saber_B-fencer_d">Fencer D (Alt)</label>
+                    <input class="form-control" id="Saber_B-fencer_d" name="Saber_B-fencer_d" type="text" value="">
+                </div>
+            </fieldset>
+
+            <input class="btn btn-default" id="submit" name="submit" type="submit" value="Preregister">
+
+        </form>
+    </div>
+</div>
+{% endblock %}

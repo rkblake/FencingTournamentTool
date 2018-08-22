@@ -23,3 +23,15 @@ def send_password_reset_email(user):
                                          user=user, token=token),
                html_body=render_template('email/reset_password.html',
                                          user=user, token=token))
+
+
+def send_prereg_email(email, token, club, tournament):
+    send_email('[FencingTournamentTool] SWIFA Preregistration',
+               sender=app.config['ADMINS'][0],
+               recipients=[email],
+               text_body=render_template('email/preregistration.txt',
+                                         club=club, tournament=tournament,
+                                         token=token),
+               html_body=render_template('email/preregistration.html',
+                                         club=club, tournament=tournament,
+                                         token=token))
