@@ -170,12 +170,11 @@ def initial_seeding(event_id):
 @cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
-    # TODO: needs more tie checking
     teams = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in IS 1 AND t.Event = {}
-        ORDER BY winPercent DESC, t.indicator DESC;""".format(event_id))
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;""".format(event_id))
     teams = [(Team.query.get(i), j) for (i, j) in teams]
     return render_template(
         'pool-results-teams.html',
@@ -435,7 +434,7 @@ def generate_bracket(event_id):
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in IS 1 AND t.Event = {}
-        ORDER BY winPercent DESC, t.indicator DESC;""".format(event_id))
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;""".format(event_id))
     teams = [Team.query.get(id) for (id, _) in q]
     fencer_names = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
     bracket = generate_tournament(teams)
@@ -760,55 +759,22 @@ def create_pools(event_id):
         .order_by(Team.club_id.asc(), func.random())
     form.num_fencers.data = event.num_fencers_checked_in
     if form.validate_on_submit():
+
+        def add_pools(event, pool_num, num_fencers):
+            letters = ['A', 'B', 'C', 'O']
+            for letter in letters:
+                pool = Pool(event_id=event.id, num_fencers=num_fencers,
+                            pool_num=pool_num, pool_letter=letter)
+                pools.append(pool)
+                db.session.add(pool)
+
         pools = []
         pool_num = 1
         for _ in range(0, form.numPools1.data):
-            pool_a = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers1.data,
-                poolNum=pool_num,
-                pool_letter='A')
-            pool_b = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers1.data,
-                poolNum=pool_num,
-                pool_letter='B')
-            pool_c = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers1.data,
-                poolNum=pool_num,
-                pool_letter='C')
-            pool_overall = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers1.data,
-                poolNum=pool_num,
-                pool_letter='O')
-            pools.append([pool_a, pool_b, pool_c, pool_overall])
-            db.session.add_all([pool_a, pool_b, pool_c, pool_overall])
+            add_pools(event, pool_num, form.numFencers1.data)
             pool_num += 1
         for _ in range(0, form.numPools2.data):
-            pool_a = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers2.data,
-                poolNum=pool_num,
-                pool_letter='A')
-            pool_b = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers2.data,
-                poolNum=pool_num,
-                pool_letter='B')
-            pool_c = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers2.data,
-                poolNum=pool_num,
-                pool_letter='C')
-            pool_overall = Pool(
-                event_id=event.id,
-                num_fencers=form.numFencers2.data,
-                poolNum=pool_num,
-                pool_letter='O')
-            pools.append([pool_a, pool_b, pool_c, pool_overall])
-            db.session.add_all([pool_a, pool_b, pool_c, pool_overall])
+            add_pools(event, pool_num, form.numFencers2.data)
             pool_num += 1
 
         pools = quicksort(pools)
