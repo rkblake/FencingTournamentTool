@@ -2,9 +2,8 @@
 
 {% block app_content %}
 	<h1>Create Pools</h1>
-	<p>
-		{{ num_fencers }} fencers checked in.
-	</p>
+	<p>The number of pools * number of fencers + numeber of pools * number of fencers must equal fencers checked in.</p>
+	<p>{{ num_fencers }} fencers checked in.</p>
 	<form action="" method="post">
 		{{ form.hidden_tag() }}
 		<p>

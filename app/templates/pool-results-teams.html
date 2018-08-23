@@ -17,7 +17,7 @@
 			<td>{{ team[0].name }}</td>
             <td>{{ "%.2f"|format(team[1]) }}</td>
             <td>{{ team[0].victories }}</td>
-            <td>{{ team[0].indicator }}</td>
+            <td>{% if team[0].indicator > 0 %}+{% endif %}{{ team[0].indicator }}</td>
         </tr>
 		{% endfor %}
 	</table>
