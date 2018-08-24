@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_caching import Cache
 from flask_mail import Mail
+import flask_profiler
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -20,8 +21,22 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 app.jinja_env.trim_blocks=True
 app.jinja_env.lstrip_blocks=True
-#cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache = Cache(app, config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': 'cache'})
 mail = Mail(app)
+app.config['flask_profiler'] = {
+    'enabled': True,
+    'storage': {
+        'engine': 'sqlite'
+    },
+    'basicAuth': {
+        'enabled': True,
+        'username': 'randall',
+        'password': 'secret'
+    },
+    'ignore': [
+        '^/static/.*'
+    ]
+}
 
 if not os.path.exists('logs'):
     os.mkdir('logs')

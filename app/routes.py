@@ -9,7 +9,8 @@ import re
 from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app import app, db
+from app import app, db, cache
+import flask_profiler
 
 from app.forms import *
 from app.models import *
@@ -91,7 +92,7 @@ def personal_user(username):
 
 
 @app.route('/tournament/<int:tournament_id>')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def public_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     events = tournament.events
@@ -150,7 +151,7 @@ def create_event(tournament_id):
 
 
 @app.route('/event/<int:event_id>/registration')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def registration(event_id):
     event = Event.query.get_or_404(event_id)
     title = 'Registration'
@@ -159,7 +160,7 @@ def registration(event_id):
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True)
@@ -168,7 +169,7 @@ def initial_seeding(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-results')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
     teams = db.engine.execute(
@@ -185,7 +186,7 @@ def pool_results(event_id):
 
 
 @app.route('/event/<int:event_id>/pools')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def public_pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -211,7 +212,7 @@ def public_pools(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-assignment')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -223,7 +224,7 @@ def pool_assignment(event_id):
 
 
 @app.route('/event/<int:event_id>/de')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def public_de(event_id):
     event = Event.query.get_or_404(event_id)
     return render_template(
@@ -234,7 +235,7 @@ def public_de(event_id):
 
 
 @app.route('/event/<int:event_id>/final')
-#@cache.cached(timeout=60)
+@cache.cached(timeout=60)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.order_by(Team.final_place.asc()).all()
@@ -972,3 +973,5 @@ def send_prereg(tournament_id):
         flash('Preregistration emails have been sent.')
         return redirect(url_for('edit_tournament', tournament_id=tournament.id))
     return render_template('send-prereg-email.html', title='Preregistration', form=form, tournament=tournament)
+
+flask_profiler.init_app(app)
