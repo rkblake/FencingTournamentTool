@@ -72,7 +72,7 @@ class Event(db.Model):
     stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
     num_fencers = db.Column(db.Integer, default=0)
     num_fencers_checked_in = db.Column(db.Integer, default=0)
-    tableau_jos = db.Column(db.String)
+    tableau_json = db.Column(db.String)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     weapon = db.Column(db.String(5))
     pools = db.relationship('Pool', backref='event', lazy='dynamic', cascade='all, delete-orphan')

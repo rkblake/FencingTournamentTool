@@ -71,6 +71,8 @@ class CreatePoolForm(FlaskForm):
     def validate(self):
         if not FlaskForm.validate(self):
             return False
+        if self.numFencers1 == 0 or self.numFencers2 == 0:
+            return False
         if (abs(self.numFencers1.data - self.numFencers2.data) > 1) and self.numFencers2.data is not 0:
             return False
         if self.numPools1.data * self.numFencers1.data + self.numPools2.data * self.numFencers2.data == int(self.num_fencers.data):

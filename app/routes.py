@@ -9,7 +9,7 @@ import re
 from sqlalchemy import func
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app import app, db, cache
+from app import app, db
 
 from app.forms import *
 from app.models import *
@@ -230,7 +230,7 @@ def public_de(event_id):
         'de.html',
         title='DE',
         event=event,
-        directElims=json.loads(event.tableau_jos))
+        directElims=json.loads(event.tableau_json))
 
 
 @app.route('/event/<int:event_id>/final')
@@ -494,7 +494,7 @@ def generate_bracket(event_id):
             tableau['results'][round][match] = [None, None, 'match' + str(i)]
             i += 1
     tableau['results'] = tableau['results'][::-1]
-    event.tableau_jos = json.dumps(tableau)
+    event.tableau_json = json.dumps(tableau)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=event_id))
 
@@ -514,7 +514,7 @@ def submit_DE(de_id):
     else:
         de.fencer1_win = True if de.fencer1_score > de.fencer2_score else False
     de.state = 2
-    tableau = json.loads(de.event.tableau_jos)
+    tableau = json.loads(de.event.tableau_json)
 
     des = de.event.des.filter_by(is_third=False).order_by(DE.id.asc()).all()
 
@@ -524,7 +524,7 @@ def submit_DE(de_id):
         match = tableau['results'][round].index(
             [None, None, 'match' + str(des.index(de)+1)])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
-        de.event.tableau_jos = json.dumps(tableau)
+        de.event.tableau_json = json.dumps(tableau)
         next_de = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
         if (des.index(de) + 1) % 2 is 0:
             if de.fencer1_win:
@@ -585,12 +585,12 @@ def submit_DE(de_id):
         match = tableau['results'][round].index(
             [None, None, 'match' + str(des.index(de)+1)])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
-        de.event.tableau_jos = json.dumps(tableau)
+        de.event.tableau_json = json.dumps(tableau)
     elif de.is_third:  # third
         round = int(math.log(len(tableau['teams']), 2))
         match = tableau['results'][round].index([None, None, 'third'])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
-        de.event.tableau_jos = json.dumps(tableau)
+        de.event.tableau_json = json.dumps(tableau)
         de.team1.round_eliminated_in = de.round
         de.team2.round_eliminated_in = de.round
         de.team1.final_place = 3 if de.fencer1_win else 4
@@ -599,7 +599,7 @@ def submit_DE(de_id):
         round = int(math.log(len(tableau['teams']), 2))
         match = tableau['results'][round].index([None, None, 'match1'])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
-        de.event.tableau_jos = json.dumps(tableau)
+        de.event.tableau_json = json.dumps(tableau)
         de.team1.round_eliminated_in = de.round
         de.team2.round_eliminated_in = de.round
         de.team1.final_place = 1 if de.fencer1_win else 2
@@ -779,19 +779,21 @@ def create_pools(event_id):
 
         def add_pools(event, pool_num, num_fencers):
             letters = ['A', 'B', 'C', 'O']
+            tmp_pools = []
             for letter in letters:
                 pool = Pool(event_id=event.id, num_fencers=num_fencers,
-                            pool_num=pool_num, pool_letter=letter)
-                pools.append(pool)
+                            poolNum=pool_num, pool_letter=letter)
+                tmp_pools.append(pool)
                 db.session.add(pool)
+            return tmp_pools
 
         pools = []
         pool_num = 1
         for _ in range(0, form.numPools1.data):
-            add_pools(event, pool_num, form.numFencers1.data)
+            pools.append(add_pools(event, pool_num, form.numFencers1.data))
             pool_num += 1
         for _ in range(0, form.numPools2.data):
-            add_pools(event, pool_num, form.numFencers2.data)
+            pools.append(add_pools(event, pool_num, form.numFencers2.data))
             pool_num += 1
 
         pools = quicksort(pools)
