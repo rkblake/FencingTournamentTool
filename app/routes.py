@@ -1,6 +1,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 import json
+from json import JSONDecodeError
 import math
 from time import time
 import re
@@ -90,7 +91,7 @@ def personal_user(username):
 
 
 @app.route('/tournament/<int:tournament_id>')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def public_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     events = tournament.events
@@ -149,7 +150,7 @@ def create_event(tournament_id):
 
 
 @app.route('/event/<int:event_id>/registration')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def registration(event_id):
     event = Event.query.get_or_404(event_id)
     title = 'Registration'
@@ -158,7 +159,7 @@ def registration(event_id):
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True)
@@ -167,7 +168,7 @@ def initial_seeding(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-results')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
     teams = db.engine.execute(
@@ -184,7 +185,7 @@ def pool_results(event_id):
 
 
 @app.route('/event/<int:event_id>/pools')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def public_pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -210,7 +211,7 @@ def public_pools(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-assignment')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -222,7 +223,7 @@ def pool_assignment(event_id):
 
 
 @app.route('/event/<int:event_id>/de')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def public_de(event_id):
     event = Event.query.get_or_404(event_id)
     return render_template(
@@ -233,7 +234,7 @@ def public_de(event_id):
 
 
 @app.route('/event/<int:event_id>/final')
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.order_by(Team.final_place.asc()).all()
@@ -245,6 +246,7 @@ def public_final(event_id):
 def edit_tournament(tournament_id):
     tournament = Tournament.query.filter_by(id=tournament_id).first()
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     form = AddTOForm()
     if form.validate_on_submit():
@@ -273,6 +275,7 @@ def edit_registration(event_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
 
     teams = event.teams.all()
@@ -337,6 +340,7 @@ def edit_registration(event_id):
 def edit_pools(event_id):
     event = Event.query.get_or_404(event_id)
     if event.stage > 5 or not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     pools = event.pools
     all_pools_done = True
@@ -355,6 +359,7 @@ def edit_pools(event_id):
 def edit_pool(event_id, pool_id):
     pool = Pool.query.filter_by(id=pool_id).first()
     if not is_to_of_tournament(current_user, pool.event.tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     if request.method == "POST":
         if not validate_scores(request.form):
@@ -429,6 +434,7 @@ def edit_pool(event_id, pool_id):
 def generate_bracket(event_id):
     event = Event.query.get_or_404(event_id)
     if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     q = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
@@ -499,6 +505,7 @@ def submit_DE(de_id):
     de = DE.query.get(de_id)
     event = Event.query.get_or_404(de.event.id)
     if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     de.fencer1_score = int(request.form['fencer1'])
     de.fencer2_score = int(request.form['fencer2'])
@@ -609,11 +616,14 @@ def submit_DE(de_id):
 @login_required
 def edit_DE(event_id):
     event = Event.query.get_or_404(event_id)
+    if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
+        return redirect(url_for('index'))
     des = event.des.order_by(DE.round.asc())
     return render_template(
         'edit-de.html',
         event=event,
-        directElims=json.loads(event.tableau_jos),
+        directElims=json.loads(event.tableau_json),
         des=des)
 
 
@@ -623,6 +633,7 @@ def check_in_team(event_id, team_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     team = Team.query.get(team_id)
     team.is_checked_in = True
@@ -637,6 +648,7 @@ def make_team_absent(event_id, team_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     team = Team.query.get(team_id)
     team.is_checked_in = False
@@ -652,6 +664,7 @@ def edit_team(event_id, team_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     team = Team.query.get(team_id)
     old_club = team.club
@@ -712,6 +725,7 @@ def delete_team(event_id, team_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     team = Team.query.get_or_404(team_id)
     if team.is_checked_in:
@@ -730,6 +744,7 @@ def open_registration(event_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     event.stage = 1
     db.session.commit()
@@ -742,6 +757,7 @@ def close_registration(event_id):
     event = Event.query.get_or_404(event_id)
     tournament = event.tournament
     if not is_to_of_tournament(current_user, tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     event.stage = 2
     db.session.commit()
@@ -753,6 +769,7 @@ def close_registration(event_id):
 def create_pools(event_id):
     event = Event.query.get_or_404(event_id)
     if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     form = CreatePoolForm()
     teams = event.teams.filter_by(is_checked_in=True)\
@@ -932,7 +949,11 @@ def send_prereg(tournament_id):
         return redirect(url_for('index'))
     form = EmailListForm()
     if form.validate_on_submit():
-        data = json.load(form.email_json.data.stream)
+        try:
+            data = json.load(form.email_json.data.stream)
+        except JSONDecodeError as e:
+            flask('Invalid JSON')
+            return redirect(url_for('send_prereg', tournament_id=tournament.id))
         for club_name, email in data.items():
             if club_name not in app.config['UNIVERSITIES'] or not re.match(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", email):
                 flash('Invalid JSON')
