@@ -104,3 +104,6 @@ ENV/
 *.db
 migrations/
 logs/
+*.sql
+
+cache/

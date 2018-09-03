@@ -149,6 +149,12 @@ def create_event(tournament_id):
     return render_template(
         'create-event.html', tournament=tournament, form=form)
 
+@app.route(
+    '/tournament/<int:tournament_id>/create-event-default', methods=['GET', 'POST'])
+@login_required
+def create_event_default(tournament_id):
+    return 'not implemented'
+
 
 @app.route('/event/<int:event_id>/registration')
 @cache.cached(timeout=60)
@@ -176,8 +182,31 @@ def pool_results(event_id):
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in IS 1 AND t.Event = {}
-        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;""".format(event_id))
-    teams = [(Team.query.get(i), j) for (i, j) in teams]
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;
+        """.format(event_id))
+    teams = [[Team.query.get(i), j, ''] for (i, j) in teams]
+    place = 0
+    places = [[] for _ in range(len(teams))]
+    for team in teams:
+        if not places[place]:
+            places[place].append(team)
+        elif (team[0].indicator == places[place][0][0].indicator
+                and team[0].touches_scored == places[place][0][0].touches_scored
+                and team[1] == places[place][0][1]):
+            places[place].append(team)
+        else:
+            place += 1
+            places[place].append(team)
+    place = 1
+    for row in list(filter(lambda x: x, places)):
+        if len(row) == 1:
+            row[0][2] = str(place)
+            place += 1
+        else:
+            for team in row:
+                team[2] = str(place) + 'T'
+            place += len(row)
+
     return render_template(
         'pool-results-teams.html',
         title='Pool Results',
@@ -238,7 +267,7 @@ def public_de(event_id):
 @cache.cached(timeout=60)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
-    teams = event.teams.order_by(Team.final_place.asc()).all()
+    teams = event.teams.filter_by(is_checked_in=True).order_by(Team.final_place.asc()).all()
     return render_template('final.html', event=event, teams=teams)
 
 
@@ -340,7 +369,7 @@ def edit_registration(event_id):
 @login_required
 def edit_pools(event_id):
     event = Event.query.get_or_404(event_id)
-    if event.stage > 5 or not is_to_of_tournament(current_user, event.tournament):
+    if not is_to_of_tournament(current_user, event.tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     pools = event.pools
@@ -349,7 +378,7 @@ def edit_pools(event_id):
         if pool.state is 0 and pool.pool_letter is not 'O':
             all_pools_done = False
     if all_pools_done:
-        event.stage = 5
+        event.advance_stage(5)
         db.session.commit()
     return render_template('edit-pools-teams.html', event=event, pools=pools)
 
@@ -608,7 +637,7 @@ def submit_DE(de_id):
     # check if all DEs finished
     des_not_finished = de.event.des.filter_by(state=0).count()
     if des_not_finished is 0:
-        de.event.stage = 6
+        de.event.advance_stage(6)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=de.event.id))
 
@@ -636,6 +665,9 @@ def check_in_team(event_id, team_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
+    if event.stage >= 3:
+        flash('Checking in teams is not allowed after pools have been created.')
+        return redirect(url_for('edit_registration', event_id=event_id))
     team = Team.query.get(team_id)
     team.is_checked_in = True
     event.num_fencers_checked_in = Event.num_fencers_checked_in + 1
@@ -651,6 +683,9 @@ def make_team_absent(event_id, team_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
+    if event.stage >= 3:
+        flash('Making teams absent is not allowed after pools have been created.')
+        return redirect(url_for('edit_registration', event_id=event_id))
     team = Team.query.get(team_id)
     team.is_checked_in = False
     event.num_fencers_checked_in = Event.num_fencers_checked_in - 1
@@ -724,10 +759,12 @@ def edit_team(event_id, team_id):
 @login_required
 def delete_team(event_id, team_id):
     event = Event.query.get_or_404(event_id)
-    tournament = event.tournament
-    if not is_to_of_tournament(current_user, tournament):
+    if not is_to_of_tournament(current_user, event.tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
+    if event.stage >= 3:
+        flash('Deleting teams is not allowed after pools have been created.')
+        return redirect(url_for('edit_registration', event_id=event_id))
     team = Team.query.get_or_404(team_id)
     if team.is_checked_in:
         event.num_fencers_checked_in = Event.num_fencers_checked_in - 1
@@ -747,7 +784,7 @@ def open_registration(event_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    event.stage = 1
+    event.advance_stage(1)
     db.session.commit()
     return redirect(url_for('edit_registration', event_id=event_id))
 
@@ -760,7 +797,7 @@ def close_registration(event_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    event.stage = 2
+    event.advance_stage(2)
     db.session.commit()
     return redirect(url_for('edit_registration', event_id=event_id))
 
@@ -811,7 +848,7 @@ def create_pools(event_id):
                 fencers[j].pool = pools[i % len(pools)][j]
             pool_num[i % len(pools)] += 1
 
-        event.stage = 3
+        event.advance_stage(3)
         db.session.commit()
         return redirect(url_for('edit_pools', event_id=event_id))
     return render_template(

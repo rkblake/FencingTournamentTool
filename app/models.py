@@ -82,6 +82,9 @@ class Event(db.Model):
     def __repr__(self):
         return '<Event {}>'.format(self.name)
 
+    def advance_stage(self, next_stage):
+        self.stage = next_stage if next_stage > self.stage else self.stage
+
 class Club(db.Model): #also university
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))

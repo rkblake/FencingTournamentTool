@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-    <h1>Pool results for {{ event.name }}</h1>
+    <h1>Pool Results for {{ event.name }}</h1>
     <hr>
     <table class="table table-striped">
 		<tr>
@@ -10,14 +10,16 @@
             <th>V/M</th>
             <th>Victories</th>
             <th>Indicator</th>
+            <th>Touches Scored</th>
 		</tr>
 		{% for team in teams %}
 		<tr>
-            <td>{{ loop.index }}</td>
+            <td>{{ team[2] }}</td>
 			<td>{{ team[0].name }}</td>
             <td>{{ "%.2f"|format(team[1]) }}</td>
             <td>{{ team[0].victories }}</td>
             <td>{% if team[0].indicator > 0 %}+{% endif %}{{ team[0].indicator }}</td>
+            <td>{{ team[0].touches_scored }}</td>
         </tr>
 		{% endfor %}
 	</table>
