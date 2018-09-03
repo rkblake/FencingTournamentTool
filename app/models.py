@@ -4,6 +4,16 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 import jwt
+from enum import Enum
+
+class Stage(Enum):
+    PREREGISTRATION = 0
+    REGISTRATION_OPEN = 1
+    REGISTRATION_CLOSE = 2
+    POOLS = 3
+    POOLS_DONE = 4
+    DES = 5
+    DONE = 6
 
 Base = declarative_base()
 
@@ -83,7 +93,7 @@ class Event(db.Model):
         return '<Event {}>'.format(self.name)
 
     def advance_stage(self, next_stage):
-        self.stage = next_stage if next_stage > self.stage else self.stage
+        self.stage = next_stage.value if next_stage.value > self.stage else self.stage
 
 class Club(db.Model): #also university
     id = db.Column(db.Integer, primary_key=True)

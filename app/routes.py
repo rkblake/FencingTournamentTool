@@ -378,7 +378,7 @@ def edit_pools(event_id):
         if pool.state is 0 and pool.pool_letter is not 'O':
             all_pools_done = False
     if all_pools_done:
-        event.advance_stage(5)
+        event.advance_stage(Stage.DES)
         db.session.commit()
     return render_template('edit-pools-teams.html', event=event, pools=pools)
 
@@ -637,7 +637,7 @@ def submit_DE(de_id):
     # check if all DEs finished
     des_not_finished = de.event.des.filter_by(state=0).count()
     if des_not_finished is 0:
-        de.event.advance_stage(6)
+        de.event.advance_stage(Stage.DONE)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=de.event.id))
 
@@ -784,7 +784,7 @@ def open_registration(event_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    event.advance_stage(1)
+    event.advance_stage(Stage.REGISTRATION_OPEN)
     db.session.commit()
     return redirect(url_for('edit_registration', event_id=event_id))
 
@@ -797,7 +797,7 @@ def close_registration(event_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    event.advance_stage(2)
+    event.advance_stage(Stage.REGISTRATION_CLOSE)
     db.session.commit()
     return redirect(url_for('edit_registration', event_id=event_id))
 
@@ -848,7 +848,7 @@ def create_pools(event_id):
                 fencers[j].pool = pools[i % len(pools)][j]
             pool_num[i % len(pools)] += 1
 
-        event.advance_stage(3)
+        event.advance_stage(Stage.POOLS)
         db.session.commit()
         return redirect(url_for('edit_pools', event_id=event_id))
     return render_template(
