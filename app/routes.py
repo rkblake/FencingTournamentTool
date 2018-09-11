@@ -219,8 +219,8 @@ def pool_results(event_id):
 def public_pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
-    results = dict()
-    teams = dict()
+    results = {}
+    teams = {}
     for pool in pools:
         if pool.pool_letter is 'O':
             teams[pool.poolNum] = pool.teams.order_by(Team.num_in_pool.asc())
@@ -281,7 +281,10 @@ def edit_tournament(tournament_id):
     form = AddTOForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user is None:
+        if user is current_user:
+            flash('You are already a TO of this tournament.')
+            return redirect(url_for('edit_tournament', tournament_id=tournament_id))
+        elif user is None:
             # TODO: send user email to register, requires a mail server
             return
         access = AccessTable(
