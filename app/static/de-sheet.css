@@ -1,0 +1,33 @@
+table.de-sheet {
+  border-color: #ccc;
+  border-collapse: collapse;
+  text-align: center;
+  font-family: sans-serif;
+  table-layout: fixed;
+  width: 60em;
+}
+
+table.de-sheet tbody,
+table.de-sheet tr,
+table.de-sheet td {
+  border-color: inherit;
+}
+
+table.de-sheet tr {
+  height: 3em;
+}
+
+table.de-sheet td[data-label] {
+  position: relative;
+}
+
+table.de-sheet td[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  top: 1pt;
+  left: 2pt;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #555;
+}

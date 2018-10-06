@@ -120,7 +120,7 @@ def create_tournament():
         tournament.organizers.append(access)
         db.session.add(tournament)
         db.session.commit()
-        flash('Created new tournament')
+        flash('Created new tournament.')
         return redirect(url_for('edit_tournament', tournament_id=tournament.id))
     return render_template(
         'create-tournament.html', title='Create Tournament', form=form)
@@ -144,7 +144,7 @@ def create_event(tournament_id):
         tournament.events.append(event)
         db.session.add(event)
         db.session.commit()
-        flash('Created new event')
+        flash('Created new event.')
         return redirect(url_for('edit_tournament', tournament_id=tournament_id))
     return render_template(
         'create-event.html', tournament=tournament, form=form)
@@ -256,6 +256,8 @@ def pool_assignment(event_id):
 @cache.cached(timeout=60)
 def public_de(event_id):
     event = Event.query.get_or_404(event_id)
+    if(event.tableau_json == None):
+        return "DEs have not been posted yet. Please check again later."
     return render_template(
         'de.html',
         title='DE',
@@ -281,12 +283,12 @@ def edit_tournament(tournament_id):
     form = AddTOForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user is current_user:
+        if user == current_user:
             flash('You are already a TO of this tournament.')
             return redirect(url_for('edit_tournament', tournament_id=tournament_id))
         elif user is None:
             # TODO: send user email to register, requires a mail server
-            return
+            return 'not implemented yet'
         access = AccessTable(
             user_id=user.id, tournament_id=tournament.id, main_to=False)
         user.tournaments.append(access)
@@ -316,8 +318,8 @@ def edit_registration(event_id):
     if form.validate_on_submit():
 
         def add_fencer(name, position):
-            return Fencer(first_name=name.split()[0],
-                          last_name=name.split()[1],
+            return Fencer(first_name=name.split()[0].title(),
+                          last_name=name.split()[1].title(),
                           team_position=position)
 
         club = Club.query.filter_by(name=form.club.data).first()
@@ -401,8 +403,8 @@ def edit_pool(event_id, pool_id):
                 url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
-            if value == '':
-                value = 'd0'
+            if value == 'v':
+                value = 'v5'
             fencer = Fencer.query.filter_by(
                 pool_id=pool_id, num_in_pool=key[0]).first()
             opponent = Fencer.query.filter_by(
@@ -652,6 +654,8 @@ def edit_DE(event_id):
     if not is_to_of_tournament(current_user, event.tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
+    if event.tableau_json == None:
+        return "DEs have not been posted yet."
     des = event.des.order_by(DE.round.asc())
     return render_template(
         'edit-de.html',
@@ -723,8 +727,8 @@ def edit_team(event_id, team_id):
         if form.fencer_c.data is not fencer_c.first_name + ' ' + fencer_c.last_name:
             name = form.fencer_c.data
             if name != '':
-                fencer_c.first_name = str.split()[0].title()
-                fencer_c.last_name = str.split()[1].title()
+                fencer_c.first_name = form.fencer_c.data.split()[0].title()
+                fencer_c.last_name = form.fencer_c.data.split()[1].title()
             else:
                 fencer_c.first_name = ''
                 fencer_c.last_name = ''
@@ -741,6 +745,7 @@ def edit_team(event_id, team_id):
             club = Club.query.filter_by(name=form.club.data).first()
             if club is None:
                 club = Club(name=form.club.data)
+                db.session.add(club)
             else:
                 club.teams.append(team)
             team.club = club
