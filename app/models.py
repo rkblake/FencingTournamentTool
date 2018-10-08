@@ -138,7 +138,9 @@ class Pool(db.Model):
     #teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):
-        return '<Pool {}, {} fencers>'.format(self.poolNum, self.num_fencers)
+        return ('<Pool {}, {} teams>'.format(self.poolNum, self.num_fencers) if
+            self.pool_letter == 'O' else
+            '<Pool {}, {} fencers>'.format(self.poolNum, self.num_fencers))
 
 class DE(db.Model):
     __tablename__ = 'de'
