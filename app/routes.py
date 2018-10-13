@@ -450,7 +450,7 @@ def edit_pool(event_id, pool_id):
                 for individual_result in individual_results:
                     if individual_result.fencer_win:
                         wins += 1
-                if wins is 2:
+                if wins == 2:
                     team_result.fencer_win = True
                     fencer.team.victories = Team.victories + 1
             pool.results.append(result)
