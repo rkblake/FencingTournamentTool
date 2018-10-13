@@ -224,7 +224,7 @@ def public_pools(event_id):
     for pool in pools:
         if pool.pool_letter is 'O':
             teams[pool.poolNum] = pool.teams.order_by(Team.num_in_pool.asc())
-            results[pool.poolNum] = dict()
+            results[pool.poolNum] = {}
             for result in pool.results:
                 team = Team.query.filter_by(
                     pool=pool, id=result.team.id).first()
@@ -589,8 +589,8 @@ def submit_DE(de_id):
             q = db.engine.execute(
                 """SELECT d.id, abs(d.fencer1_score - d.fencer2_score) AS score
                 FROM de d
-                WHERE d.event_id = {} AND d.round is {}
-                AND d.team2_id IS NOT NULL
+                WHERE d.event_id = {} AND d.round = {}
+                AND d.team2_id != NULL
                 ORDER BY score DESC;""".format(de.event.id, round+1))
             des_in_round = [DE.query.get(id) for (id, _) in q]
             if round is 0:
