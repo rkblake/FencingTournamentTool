@@ -474,7 +474,7 @@ def generate_bracket(event_id):
     q = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
-        WHERE t.is_checked_in IS 1 AND t.Event = {}
+        WHERE t.is_checked_in = 1 AND t.Event = {}
         ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;""".format(event_id))
     teams = [Team.query.get(id) for (id, _) in q]
     fencer_names = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
@@ -514,7 +514,7 @@ def generate_bracket(event_id):
             event.des.append(de)
         db.session.add(de)
 
-    tableau = dict()
+    tableau = {}
     tableau['teams'] = generate_tournament(fencer_names)
     tableau['results'] = [[] for _ in range(
         int(math.log(len(tableau['teams'])*2, 2)))]
@@ -589,7 +589,7 @@ def submit_DE(de_id):
             q = db.engine.execute(
                 """SELECT d.id, abs(d.fencer1_score - d.fencer2_score) AS score
                 FROM de d
-                WHERE d.event_id is {} AND d.round is {}
+                WHERE d.event_id = {} AND d.round is {}
                 AND d.team2_id IS NOT NULL
                 ORDER BY score DESC;""".format(de.event.id, round+1))
             des_in_round = [DE.query.get(id) for (id, _) in q]
