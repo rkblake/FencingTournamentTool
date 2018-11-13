@@ -119,7 +119,7 @@ class AddTeamForm(FlaskForm):
         ('UNT', 'UNT'),
         ('UTA', 'UTA'),
         ('UTD', 'UTD'),
-        ('UTFC', 'UT'),
+        ('UTFC', 'UTFC'),
         ('UTSA', 'UTSA')]
     club = SelectField('University', choices=choices, validators=[NoneOf(['none'], message='Please select a university.')])
     submit = SubmitField('Add Team')

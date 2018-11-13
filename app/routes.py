@@ -131,7 +131,7 @@ def create_tournament():
 @login_required
 def create_event(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
-    if is_to_of_tournament(current_user, tournament) is False:
+    if is_to_of_tournament(current_user, tournament) == False:
         return redirect(url_for('index'))
     form = CreateEventForm()
     if form.validate_on_submit():
@@ -181,7 +181,7 @@ def pool_results(event_id):
     teams = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
-        WHERE t.is_checked_in IS 1 AND t.Event = {}
+        WHERE t.is_checked_in = 1 AND t.Event = {}
         ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;
         """.format(event_id))
     teams = [[Team.query.get(i), j, ''] for (i, j) in teams]
@@ -222,7 +222,7 @@ def public_pools(event_id):
     results = {}
     teams = {}
     for pool in pools:
-        if pool.pool_letter is 'O':
+        if pool.pool_letter == 'O':
             teams[pool.poolNum] = pool.teams.order_by(Team.num_in_pool.asc())
             results[pool.poolNum] = {}
             for result in pool.results:
@@ -378,13 +378,14 @@ def edit_pools(event_id):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     pools = event.pools
-    all_pools_done = True
-    for pool in pools:
-        if pool.state is 0 and pool.pool_letter is not 'O':
-            all_pools_done = False
-    if all_pools_done:
-        event.advance_stage(Stage.DES)
-        db.session.commit()
+    if event.stage == Stage.POOLS:  # check if all pools done to advance
+        all_pools_done = True
+        for pool in pools:
+            if pool.state == 0 and pool.pool_letter != 'O':
+                all_pools_done = False
+        if all_pools_done:
+            event.advance_stage(Stage.DES)
+            db.session.commit()
     return render_template('edit-pools-teams.html', event=event, pools=pools)
 
 
@@ -397,10 +398,10 @@ def edit_pool(event_id, pool_id):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     if request.method == "POST":
-        if not validate_scores(request.form):
-            flash('Invalid score.')
-            return redirect(
-                url_for('edit_pool', event_id=event_id, pool_id=pool_id))
+        #if not validate_scores(request.form):
+        #    flash('Invalid score.')
+        #    return redirect(
+        #        url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
             if value == 'v':
@@ -413,7 +414,7 @@ def edit_pool(event_id, pool_id):
                 pool_id=pool.id,
                 fencer=fencer.id,
                 team=fencer.team,
-                fencer_score=value[1:],
+                fencer_score=int(value[1:]),
                 opponent=opponent.id,
                 opponent_team=opponent.team,
                 fencer_win=(value[0].upper() == 'V'))
@@ -422,10 +423,14 @@ def edit_pool(event_id, pool_id):
             fencer.indicator = Fencer.indicator + result.fencer_score
             opponent.touches_recieved = Fencer.touches_recieved + result.fencer_score
             opponent.indicator = Fencer.indicator - result.fencer_score
-            fencer.team.touches_scored = Team.touches_scored + result.fencer_score
-            fencer.team.indicator = Team.indicator + result.fencer_score
-            opponent.team.touches_recieved = Team.touches_recieved + result.fencer_score
-            opponent.team.indicator = Team.indicator - result.fencer_score
+            fencer_team_touches_scored = fencer.team.touches_scored + result.fencer_score
+            fencer.team.touches_scored = fencer_team_touches_scored
+            fencer_team_indicator = fencer.team.indicator + result.fencer_score
+            fencer.team.indicator = fencer_team_indicator
+            opponent_team_touches_recieved = opponent.team.touches_recieved + result.fencer_score
+            opponent.team.touches_recieved = opponent_team_touches_recieved
+            opponent_team_indicator = opponent.team.indicator - result.fencer_score
+            opponent.team.indicator = opponent_team_indicator
             team_result = Result.query.filter_by(
                 pool_id=fencer.team.pool.id,
                 team=fencer.team,
@@ -500,7 +505,7 @@ def generate_bracket(event_id):
             des = de.event.des.filter_by(is_third=False)\
                 .order_by(DE.id.asc()).all()
             next_de = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
-            if (des.index(de) + 1) % 2 is 0:
+            if (des.index(de) + 1) % 2 == 0:
                 next_de.team1 = de.team1
             else:
                 next_de.team2 = de.team1
@@ -520,7 +525,7 @@ def generate_bracket(event_id):
         int(math.log(len(tableau['teams'])*2, 2)))]
     i = 1
     for round in range(int(math.log(len(tableau['teams'])*2, 2))):
-        if round is 0:
+        if round == 0:
             tableau['results'][round] = [[] for _ in range(2)]
             tableau['results'][round][1] = [None, None, 'third']
         else:
@@ -544,7 +549,7 @@ def submit_DE(de_id):
         return redirect(url_for('index'))
     de.fencer1_score = int(request.form['fencer1'])
     de.fencer2_score = int(request.form['fencer2'])
-    if de.fencer1_score is de.fencer2_score:
+    if de.fencer1_score == de.fencer2_score:
         de.fencer1_win = request.form['fencer1_win']
     else:
         de.fencer1_win = True if de.fencer1_score > de.fencer2_score else False
@@ -561,7 +566,7 @@ def submit_DE(de_id):
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
         de.event.tableau_json = json.dumps(tableau)
         next_de = des[int(((des.index(de) + 1) & ~(1 << 0))/2) - 1]
-        if (des.index(de) + 1) % 2 is 0:
+        if (des.index(de) + 1) % 2 == 0:
             if de.fencer1_win:
                 next_de.team1 = de.team1
                 de.team2.round_eliminated_in = de.round
@@ -582,10 +587,10 @@ def submit_DE(de_id):
             round_eliminated_in=(round+1), event_id=de.event.id).count()
         byes = DE.query.filter_by(
             event_id=de.event.id, team2_id=None, state=3).count()
-        if ((round is 0
-                and num_eliminated is (int(len(tableau['teams'])/2**round) - byes))
+        if ((round == 0
+                and num_eliminated == (int(len(tableau['teams'])/2**round) - byes))
             or (round > 0
-                and num_eliminated is int(len(tableau['teams'])/2**round))):
+                and num_eliminated == int(len(tableau['teams'])/2**round))):
             q = db.engine.execute(
                 """SELECT d.id, abs(d.fencer1_score - d.fencer2_score) AS score
                 FROM de d
@@ -593,7 +598,7 @@ def submit_DE(de_id):
                 AND d.team2_id != NULL
                 ORDER BY score DESC;""".format(de.event.id, round+1))
             des_in_round = [DE.query.get(id) for (id, _) in q]
-            if round is 0:
+            if round == 0:
                 place1 = Team.query.filter_by(
                     event_id=de.event.id, is_checked_in=True).count()
             else:
@@ -603,14 +608,14 @@ def submit_DE(de_id):
                 loser_team.final_place = place1 - i
     elif not de.is_third and des.index(de) in [1, 2]:  # semifinal
         third = event.des.filter_by(is_third=True).first()
-        if (des.index(de) + 1) % 2 is 0:
+        if (des.index(de) + 1) % 2 == 0:
             third.team1 = de.team2 if de.fencer1_win else de.team1
         else:
             third.team2 = de.team2 if de.fencer1_win else de.team1
         if third.team1 is not None and third.team2 is not None:
             third.state = 0
         final = des[0]
-        if (des.index(de) + 1) % 2 is 0:
+        if (des.index(de) + 1) % 2 == 0:
             final.team1 = de.team1 if de.fencer1_win else de.team2
         else:
             final.team2 = de.team1 if de.fencer1_win else de.team2
@@ -630,7 +635,7 @@ def submit_DE(de_id):
         de.team2.round_eliminated_in = de.round
         de.team1.final_place = 3 if de.fencer1_win else 4
         de.team2.final_place = 4 if de.fencer1_win else 3
-    elif des.index(de) is 0:  # final
+    elif des.index(de) == 0:  # final
         round = int(math.log(len(tableau['teams']), 2))
         match = tableau['results'][round].index([None, None, 'match1'])
         tableau['results'][round][match] = [de.fencer1_score, de.fencer2_score]
@@ -641,7 +646,7 @@ def submit_DE(de_id):
         de.team2.final_place = 2 if de.fencer1_win else 1
     # check if all DEs finished
     des_not_finished = de.event.des.filter_by(state=0).count()
-    if des_not_finished is 0:
+    if des_not_finished == 0:
         de.event.advance_stage(Stage.DONE)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=de.event.id))
@@ -718,13 +723,13 @@ def edit_team(event_id, team_id):
     form = AddTeamForm()
     if form.validate_on_submit():
         team.name = form.teamName.data
-        if form.fencer_a.data is not fencer_a.first_name + ' ' + fencer_a.last_name:
+        if form.fencer_a.data != fencer_a.first_name + ' ' + fencer_a.last_name:
             fencer_a.first_name = form.fencer_a.data.split()[0].title()
             fencer_a.last_name = form.fencer_a.data.split()[1].title()
-        if form.fencer_b.data is not fencer_b.first_name + ' ' + fencer_b.last_name:
+        if form.fencer_b.data != fencer_b.first_name + ' ' + fencer_b.last_name:
             fencer_b.first_name = form.fencer_b.data.split()[0].title()
             fencer_b.last_name = form.fencer_b.data.split()[1].title()
-        if form.fencer_c.data is not fencer_c.first_name + ' ' + fencer_c.last_name:
+        if form.fencer_c.data != fencer_c.first_name + ' ' + fencer_c.last_name:
             name = form.fencer_c.data
             if name != '':
                 fencer_c.first_name = form.fencer_c.data.split()[0].title()
@@ -732,7 +737,7 @@ def edit_team(event_id, team_id):
             else:
                 fencer_c.first_name = ''
                 fencer_c.last_name = ''
-        if form.fencer_d.data is not fencer_d.first_name + ' ' + fencer_d.last_name:
+        if form.fencer_d.data != fencer_d.first_name + ' ' + fencer_d.last_name:
             name = form.fencer_d.data
             if name != '':
                 fencer_d.first_name = form.fencer_d.data.split()[0].title()
@@ -740,7 +745,7 @@ def edit_team(event_id, team_id):
             else:
                 fencer_d.first_name = ''
                 fencer_d.last_name = ''
-        if form.club.data is not team.club.name:
+        if form.club.data != team.club.name:
             old_club.teams.remove(team)
             club = Club.query.filter_by(name=form.club.data).first()
             if club is None:

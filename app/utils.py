@@ -58,21 +58,26 @@ def quicksort(x):  # descending sort
         return quicksort(greater) + [pivot] + quicksort(less)
 
 
+def validate_score_pair(score1, score2):
+    if ((score1 == '') ^ (score2 == '')):
+        return False
+    #elif not (score1 == '') and (score2 == ''):
+    #    return False
+    if score1[0].upper() not in ['V', 'D']:
+        return False
+    if int(score1[1]) > int(score2[1]) and score1[0].upper() == 'D':
+        return False
+    if int(score2[1]) > int(score1[1]) and score2[0].upper() == 'D':
+        return False
+    if int(score1[1]) < int(score2[1]) and score1[0].upper() == 'V':
+        return False
+    if int(score2[1]) < int(score1[1]) and score2[0].upper() == 'V':
+        return False
+
+
 def validate_scores(form):  # TODO: only check upper right triangle; accept same score ties as long as one is a victory
     for key, score in form.items():
-        if ((score == '') ^ (form['result'+key[7]+key[6]] == '')):
-            return False
-        elif score == '' and form['result'+key[7]+key[6]] == '':
-            continue
-
-        if score[0].upper() not in ['V', 'D']:
-            return False
-        elif score[0].upper() == 'V' and form['result'+key[7]+key[6]].upper() == 'V':
-            return False
-        elif score[0].upper() == 'D' and form['result'+key[7]+key[6]].upper() == 'D':
-            return False
-        elif score[0].upper() == 'V' and score[1] < form['result'+key[7]+key[6]][1]:
-            return False
-        elif score[0].upper() == 'D' and score[1] > form['result'+key[7]+key[6]][1]:
-            return False
+        score1 = score
+        score2 = form['result'+key[7]+key[6]]
+        
     return True
