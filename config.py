@@ -16,6 +16,7 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['fencingtournamenttool@gmail.com']
     UNIVERSITIES = [
+		'Baylor',
         'Rice',
         'St. Thomas',
         'TAMU',
