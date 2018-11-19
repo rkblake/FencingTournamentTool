@@ -110,6 +110,7 @@ class AddTeamForm(FlaskForm):
     fencer_d = StringField('Fencer D (Alt)', validators=[Optional(), Length(max=64), validate_name])
     choices = [
         ('none', 'Choose a university'),
+		('Baylor', 'Baylor'),
         ('Rice', 'Rice'),
         ('St. Thomas', 'St. Thomas'),
         ('TAMU', 'TAMU'),

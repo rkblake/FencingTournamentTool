@@ -468,6 +468,18 @@ def edit_pool(event_id, pool_id):
         return render_template(
             'edit-pool.html', event=pool.event, pool=pool, fencers=fencers)
 
+			
+@app.route('/event/<int:event_id>/edit-pool-assignment')
+@login_required
+def edit_pool_assignment(event_id):
+	event = Event.query.get_or_404(event_id)
+	pools = event.pools
+	if request.method == 'POST':
+		print(request.form)
+	elif request.method == 'GET':
+		pass
+	return render_template('edit-pool-assignment.html', event=event, pools=pools)
+
 
 @app.route('/event/<int:event_id>/generate-bracket')
 @login_required

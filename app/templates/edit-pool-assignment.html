@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+    <style>
+		#sortable {
+			border: 1px solid #eee;
+			width: 142px;
+			min-height: 20px;
+			list-style-type: none;
+			margin: 0;
+			padding: 5px 0 0 0;
+			float: left;
+			margin-right: 10px;
+		}
+		#sortable li {
+			margin: 0 5px 5px 5px;
+			padding: 5px;
+			font-size: 1.2em;
+			width: 120px;
+		}
+    </style>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='edit-pool-assignment.js') }}"></script>
+	{{ super() }}
+{% endblock %}
+
+{% block app_content %}
+	{% for pool in pools %}
+		{% if pool.pool_letter == 'O' %}
+		<h3>{{ pool.poolNum }}</h3>
+		<ul id="sortable" class="connectedSortable">
+			{% for team in pool.teams %}
+			<li class="ui-state-default">{{ team.name }}</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+	{% endfor %}
+	<br>
+	<button onclick="randomizeInPools()">Randomize within pools</button>
+	<button onclick="randomizeAllPools()">Randomize across pools</button>
+	<form action="#" method="post">
+        <input type="submit" name="submit" value="Submit results"/>
+    </form>
+
+{% endblock %}
