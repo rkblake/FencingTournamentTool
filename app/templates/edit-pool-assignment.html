@@ -28,12 +28,14 @@
 {% endblock %}
 
 {% block app_content %}
+	
+	
 	{% for pool in pools %}
 		{% if pool.pool_letter == 'O' %}
 		<h3>{{ pool.poolNum }}</h3>
 		<ul id="sortable" class="connectedSortable">
 			{% for team in pool.teams %}
-			<li class="ui-state-default">{{ team.name }}</li>
+			<li id="{{ team.id }}" class="ui-state-default">{{ team.name }}</li>
 			{% endfor %}
 		</ul>
 		{% endif %}
@@ -41,8 +43,8 @@
 	<br>
 	<button onclick="randomizeInPools()">Randomize within pools</button>
 	<button onclick="randomizeAllPools()">Randomize across pools</button>
-	<form action="#" method="post">
+	<form id="form" method="post">
         <input type="submit" name="submit" value="Submit results"/>
     </form>
-
+	
 {% endblock %}
