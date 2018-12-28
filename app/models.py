@@ -7,13 +7,17 @@ import jwt
 from enum import Enum
 
 class Stage(Enum):
-    PREREGISTRATION = 0
-    REGISTRATION_OPEN = 1
-    REGISTRATION_CLOSE = 2
-    POOLS = 3
-    POOLS_DONE = 4
-    DES = 5
-    DONE = 6
+	EVENT_CREATED = 0
+    PREREGISTRATION_OPEN = 1
+	PREREGISTRATION_CLOSED = 2
+    REGISTRATION_OPEN = 3
+    REGISTRATION_CLOSED = 4
+	INITIAL_SEEDING = 5
+	POOL_ASSIGNMENTS = 6
+    POOLS = 7
+    POOL_RESULTS = 8
+    DES = 9
+    EVENT_FINISHED = 10
 
 Base = declarative_base()
 
@@ -79,7 +83,7 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     date = db.Column(db.Date, index=True)
-    stage = db.Column(db.Integer, default=0) #0 = prereg, 1 = reg open, 2 = reg closed, 3 = pools, 4 = pools finished, 5 = des, 6 = done
+    stage = db.Column(db.Integer, default=0)  # see stage enum
     num_fencers = db.Column(db.Integer, default=0)
     num_fencers_checked_in = db.Column(db.Integer, default=0)
     tableau_json = db.Column(db.String(1024))
@@ -93,7 +97,7 @@ class Event(db.Model):
         return '<Event {}>'.format(self.name)
 
     def advance_stage(self, next_stage):
-        self.stage = next_stage.value if next_stage.value > self.stage else self.stage
+        self.stage = next_stage.value if next_stage.value == self.stage+1 else self.stage
 
 class Club(db.Model): #also university
     id = db.Column(db.Integer, primary_key=True)
