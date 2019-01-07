@@ -11,7 +11,7 @@
 
 	<h1>{{ event.name }}</h1>
 
-	{% if event.stage == 1 %}
+	{% if event.stage == 3 %}
 	<div class="row">
 		<div class="col-md-4">
 			{{ wtf.quick_form(form) }}
@@ -21,10 +21,10 @@
 
 	<hr>
 
-	{% if event.stage == 0 or event.stage == 2 %}
+	{% if event.stage == 2 or event.stage == 4 %}
 		<a class="btn btn-primary padded" href="{{ url_for('open_registration', event_id=event.id) }}" role="button">Open Registration</a>
 		<a class="btn btn-danger disabled padded" role="button" aria-disabled="true">Close Registration</a>
-		{% if event.stage == 2 %}
+		{% if event.stage == 4 %}
 			<a class="btn btn-success padded confirmation" role="button" href="{{ url_for('create_pools', event_id=event.id) }}">Create Pools</a>
 			<script type="text/javascript">
 				var allCheckedIn = {% if allCheckedIn %}true{% else %}false{% endif %}

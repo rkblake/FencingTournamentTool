@@ -2,6 +2,9 @@
 
 {% block head %}
 	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='tournament.css') }}">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='tournament.js') }}"></script>
 	<style>
 		.fill {
 			height: 200px;

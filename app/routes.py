@@ -121,7 +121,7 @@ def create_tournament():
         db.session.add(tournament)
         db.session.commit()
         flash('Created new tournament.')
-        return redirect(url_for('edit_tournament', tournament_id=tournament.id))
+        return redirect(url_for('personal_user', username=current_user.username))
     return render_template(
         'create-tournament.html', title='Create Tournament', form=form)
 
@@ -131,7 +131,7 @@ def create_tournament():
 @login_required
 def create_event(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
-    if is_to_of_tournament(current_user, tournament) == False:
+    if not is_to_of_tournament(current_user, tournament):
         return redirect(url_for('index'))
     form = CreateEventForm()
     if form.validate_on_submit():
@@ -145,7 +145,7 @@ def create_event(tournament_id):
         db.session.add(event)
         db.session.commit()
         flash('Created new event.')
-        return redirect(url_for('edit_tournament', tournament_id=tournament_id))
+        return redirect(url_for('personal_user', username=current_user.username))
     return render_template(
         'create-event.html', tournament=tournament, form=form)
 
@@ -378,15 +378,13 @@ def edit_pools(event_id):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     pools = event.pools
+    all_pools_done = False
     if event.stage == Stage.POOLS:  # check if all pools done to advance
         all_pools_done = True
         for pool in pools:
             if pool.state == 0 and pool.pool_letter != 'O':
                 all_pools_done = False
-        if all_pools_done:
-            event.advance_stage(Stage.DES)
-            db.session.commit()
-    return render_template('edit-pools-teams.html', event=event, pools=pools)
+    return render_template('edit-pools-teams.html', event=event, pools=pools, all_pools_done=all_pools_done)
 
 
 @app.route(
@@ -455,7 +453,7 @@ def edit_pool(event_id, pool_id):
                 for individual_result in individual_results:
                     if individual_result.fencer_win:
                         wins += 1
-                if wins == 2:
+                if wins >= 2:
                     team_result.fencer_win = True
                     fencer.team.victories = Team.victories + 1
             pool.results.append(result)
@@ -468,18 +466,37 @@ def edit_pool(event_id, pool_id):
         return render_template(
             'edit-pool.html', event=pool.event, pool=pool, fencers=fencers)
 
-			
+            
 @app.route('/event/<int:event_id>/edit-pool-assignment')
 @login_required
 def edit_pool_assignment(event_id):
-	event = Event.query.get_or_404(event_id)
-	pools = event.pools
-	if request.method == 'POST':
-		print(request.form)
-	elif request.method == 'GET':
-		pass
-	return render_template('edit-pool-assignment.html', event=event, pools=pools)
-
+    event = Event.query.get_or_404(event_id)
+    pools = event.pools
+    if request.method == 'POST':
+        print(request.form)
+    elif request.method == 'GET':
+        pass
+    return render_template('edit-pool-assignment.html', event=event, pools=pools)
+    
+    
+@app.route('/event/<int:event_id>/submit-pools')
+@login.required
+def submit_pools(event_id):
+    event = event.query.get_or_404(event_id)
+    if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
+        return redirect(url_for('index'))
+    pools = event.pools
+    all_pools_done = False
+    if event.stage == Stage.POOLS:  # check if all pools done to advance
+        all_pools_done = True
+        for pool in pools:
+            if pool.state == 0 and pool.pool_letter != 'O':
+                all_pools_done = False
+    if all_pools_done:
+        event.advance_stage(Stage.POOL_RESULTS)
+        return redirect(url_for('
+ 
 
 @app.route('/event/<int:event_id>/generate-bracket')
 @login_required
@@ -822,7 +839,7 @@ def close_registration(event_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    event.advance_stage(Stage.REGISTRATION_CLOSE)
+    event.advance_stage(Stage.REGISTRATION_CLOSED)
     db.session.commit()
     return redirect(url_for('edit_registration', event_id=event_id))
 
@@ -873,7 +890,7 @@ def create_pools(event_id):
                 fencers[j].pool = pools[i % len(pools)][j]
             pool_num[i % len(pools)] += 1
 
-        event.advance_stage(Stage.POOLS)
+        event.advance_stage(Stage.INITIAL_SEEDING)
         db.session.commit()
         return redirect(url_for('edit_pools', event_id=event_id))
     return render_template(

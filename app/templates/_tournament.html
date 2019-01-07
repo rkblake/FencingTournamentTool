@@ -1,7 +1,75 @@
-<p>
-	{% if public %}
-		<a href="{{ url_for('public_tournament', tournament_id=tournament.id) }}">{{ tournament.name }}</a>
-	{% else %}
-		<a href="{{ url_for('edit_tournament', tournament_id=tournament.id) }}">{{ tournament.name }}</a>
-	{% endif %}
-</p>
+<div class="tournament-container">
+	<span id="tournament-name"><b>{{ tournament.name }}</b></span>
+	<span style="float:right" id="num-events">{{ tournament.events.count() }} Event{% if tournament.events.count() > 1 %}s{% endif %} {% if not public %}<a href="{{ url_for('create_event', tournament_id=tournament.id) }}">Add Event</a>{% endif %}</span>
+	{% for event in tournament.events %}
+		<div class="event-header">&#9654; {{ event.name }} {{ event.date }} {{ event.stage }}</div>
+		<div class="event-sub">
+			{{ event.num_registered }} Fencers Registered / {{ event.num_checked_in }} Checked In
+			<ul>
+				<li>
+					{% if event.stage >= 2 and public %}
+						<a href="{{ url_for('registration', event_id=event.id) }}">Registration</a>
+					{% elif event.stage >= 2 and not public %}
+						<a href="{{ url_for('edit_registration', event_id=event.id) }}">Registration</a>
+					{% else %}
+						Registration
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage >= 5 %}
+						<a href="{{ url_for('initial_seeding', event_id=event.id) }}">Initial Seeding</a>
+					{% else %}
+						Initial Seeding
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage >= 6 and public %}
+						<a href="{{ url_for('pool_assignment', event_id=event.id) }}">Pool Assignment</a>
+					{% elif event.stage >= 6 and not public %}
+						Pool Assignment
+					{% elif event.stage >= 5 and public %}
+						Pool Assignment
+					{% elif event.stage >= 5 and not public %}
+						<a href="{{ url_for('edit_pool_assignment', event_id=event.id) }}">Pool Assignment</a>
+					{% else %}
+						Pool Assignment
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage >= 8 and public %}
+						<a href="{{ url_for('public_pools', event_id=event.id) }}">Pools</a>
+					{% elif event.stage >= 8 and not public %}
+						<a href="{{ url_for('public_pools', event_id=event.id) }}">Pools</a>
+					{% elif event.stage >= 7 and public %}
+						Pools
+					{% elif event.stage >= 7 and not public %}
+						<a href="{{ url_for('edit_pools', event_id=event.id) }}">Pools</a>
+					{% else %}
+						Pools
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage >= 8 %}
+						<a href="{{ url_for('pool_results', event_id=event.id) }}">Pool Results</a>
+					{% else %}
+						Pool Results
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage >= 9 %}
+						<a href="{% if public %}{{ url_for('public_de', event_id=event.id) }}{% else %}{{ url_for('edit_DE', event_id=event.id) }}{% endif %}">DEs</a>
+					{% else %}
+						DEs
+					{% endif %}
+				</li>
+				<li>
+					{% if event.stage == 10 %}
+						<a href="{{ url_for('public_final', event_id=event.id) }}">Final Results</a>
+					{% else %}
+						Final Results
+					{% endif %}
+				</li>
+			</ul>
+		</div>
+	{% endfor %}
+</div>

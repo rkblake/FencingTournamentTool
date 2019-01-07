@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-    {% if event.stage >= 4 %}
-        <p>
-            <a href="{{ url_for('public_pools', event_id=event.id) }}">Go to pool results</a><br>
-            <a href="{{ url_for('generate_bracket', event_id=event.id)}}">Generate DEs</a>
-        </p>
-    {% endif %}
+    
+	{% if all_pools_done %}
+		<a class="btn btn-primary" href="{{ url_for('generate_bracket', event_id=event.id) }}" role="button">Generate DEs</a>
+	{% else %}
+		<a class="btn btn-primary disabled padded" role="button" aria-disabled="true">Generate DEs</a>
+	{% endif %}
+	
+	<h1>{{ event.name }}</h1>	
+	
     {% for pool in pools %}
         {% if pool.state == 0 and pool.pool_letter != 'O' %}
         <p>
             <a href="{{ url_for('edit_pool', event_id=event.id, pool_id=pool.id) }}">Pool {{ pool.poolNum }} {{ pool.pool_letter }}</a>
         </p>
         {% elif pool.pool_letter == 'O' %}
-        <p>
-            Pool {{ pool.poolNum }} <span style="color: green;">Overall Team Pool</span>
-        </p>
+			<br>
         {% else %}
         <p>
             Pool {{ pool.poolNum }} {{ pool.pool_letter }} <span style="color: green;">Complete</span>

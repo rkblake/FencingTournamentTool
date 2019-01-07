@@ -7,13 +7,13 @@ import jwt
 from enum import Enum
 
 class Stage(Enum):
-	EVENT_CREATED = 0
+    EVENT_CREATED = 0
     PREREGISTRATION_OPEN = 1
-	PREREGISTRATION_CLOSED = 2
+    PREREGISTRATION_CLOSED = 2
     REGISTRATION_OPEN = 3
     REGISTRATION_CLOSED = 4
-	INITIAL_SEEDING = 5
-	POOL_ASSIGNMENTS = 6
+    INITIAL_SEEDING = 5
+    POOL_ASSIGNMENTS = 6
     POOLS = 7
     POOL_RESULTS = 8
     DES = 9
@@ -83,7 +83,7 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     date = db.Column(db.Date, index=True)
-    stage = db.Column(db.Integer, default=0)  # see stage enum
+    stage = db.Column(db.Integer, default=3)  # see stage enum
     num_fencers = db.Column(db.Integer, default=0)
     num_fencers_checked_in = db.Column(db.Integer, default=0)
     tableau_json = db.Column(db.String(1024))

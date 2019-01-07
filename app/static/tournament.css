@@ -1,0 +1,43 @@
+.tournament-container {
+  margin-top: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 2%;
+  padding-right: 2%;
+  border: 2px solid #4588ee;
+  border-radius: 10px;
+  background-color: #bfdfff;
+  width: 800px;
+  line-height: 2;
+  display: inline-block;
+  white-space: nowrap;
+  text-align: left;
+}
+
+#tournament-list {
+  text-align: center;
+}
+
+.event-header {
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.event-sub {
+  display: none;
+  text-indent: 20px;
+}
+
+#tournament-name {
+  font-size: 20px;
+}
+
+#num-events {
+  font-size: 20px;
+}
+
+ul {
+  line-height: 1.5;
+  margin: 0;
+  text-indent: 0;
+}
