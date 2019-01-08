@@ -30,25 +30,35 @@
 {% block app_content %}
 	
 	<h1>
-		Edit Pools for {{ event.name }}
+		Edit Pool Assignments for {{ event.name }}
 	</h1>
 	<p>
 		Drag teams between pools to move. Pool assignments will be posted when this page is submitted.
 	</p>
-	{% for pool in pools %}
-		{% if pool.pool_letter == 'O' %}
-		<h3>{{ pool.poolNum }}</h3>
-		<ul id="sortable" class="connectedSortable">
-			{% for team in pool.teams %}
-			<li id="{{ team.id }}" class="ui-state-default">{{ team.name }}</li>
+	<table>
+		<tr>
+			{% for pool in pools if pool.pool_letter == 'O' %}
+				<td>
+					<center>Pool {{ pool.poolNum }}</center>
+				</td>
 			{% endfor %}
-		</ul>
-		{% endif %}
-	{% endfor %}
+		</tr>
+		<tr>
+			{% for pool in pools if pool.pool_letter == 'O' %}
+				<td>
+					<ul id="sortable" class="connectedSortable">
+					{% for team in pool.teams %}
+					<li id="{{ team.id }}" class="ui-state-default">{{ team.name }}</li>
+					{% endfor %}
+					</ul>
+				</td>
+			{% endfor %}
+		</tr>
+	</table>
 	<br>
 	<button onclick="randomizeInPools()">Randomize within pools</button>
 	<button onclick="randomizeAllPools()">Randomize across pools</button>
-	<form id="form" method="post">
+	<form id="form" action="{{ url_for('submit_pool_assignment', event_id=event.id) }}" method="post">
         <input type="submit" name="submit" value="Confirm Pool Assignments"/>
     </form>
 	

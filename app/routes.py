@@ -479,10 +479,10 @@ def edit_pool_assignment(event_id):
     return render_template('edit-pool-assignment.html', event=event, pools=pools)
     
     
-@app.route('/event/<int:event_id>/submit-pools')
-@login.required
+@app.route('/event/<int:event_id>/submit-pools', methods=['POST'])
+@login_required
 def submit_pools(event_id):
-    event = event.query.get_or_404(event_id)
+    event = Event.query.get_or_404(event_id)
     if not is_to_of_tournament(current_user, event.tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
@@ -495,7 +495,19 @@ def submit_pools(event_id):
                 all_pools_done = False
     if all_pools_done:
         event.advance_stage(Stage.POOL_RESULTS)
-        return redirect(url_for('
+    return redirect(url_for('edit_pools', event_id=event.id))
+    
+    
+@app.route('/event/<int:event_id>/submit-pool-assignment', methods=['POST'])
+@login_required
+def submit_pool_assignment(event_id):
+    event = Event.query.get_or_404(event_id)
+    if not is_to_of_tournament(current_user, event.tournament):
+        flash('You do not have permission to access this tournament.')
+        return redirect(url_for('index'))
+    pools = event.pools
+    content = request.get_json(silent=True)
+    return "not implemented yet"
  
 
 @app.route('/event/<int:event_id>/generate-bracket')

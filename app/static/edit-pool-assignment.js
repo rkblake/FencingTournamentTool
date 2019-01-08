@@ -24,7 +24,7 @@ $( function() {
 } );
     
 function randomizeInPools() {
-  $('ul').each(function(){
+  $('ul.connectedSortable').each(function(){
     var $ul = $(this);
     var $liArr = $ul.children('li');
     $liArr = shuffle($liArr);
@@ -36,7 +36,7 @@ function randomizeAllPools() {
   var $allLi = [];
   var liSize = [];
   var i = 0;
-  $('ul').each(function() {
+  $('ul.connectedSortable').each(function() {
     var $this = $(this);
     var $children = $this.children('li');
     $allLi = $allLi.concat($children.toArray());
@@ -45,14 +45,14 @@ function randomizeAllPools() {
   $allLi = shuffle($allLi);
 
   i = 0;
-  $('ul').each(function(i2, v) {
+  $('ul.connectedSortable').each(function(i2, v) {
     $(this).append($allLi.slice(i, i+liSize[i2]));
     i += liSize[i2];
   });
 }
 
 $(function() {
-    var form = document.getElementById('form1');
+    var form = document.forms[0];
 
     form.onsubmit = function (e) {
     // stop the regular form submission
@@ -60,7 +60,7 @@ $(function() {
 
     // collect the form data while iterating over the inputs
     var data = {};
-    $('ul').each(function(i, v) {
+    $('ul.connectedSortable').each(function(i, v) {
         var $this = $(this);
         data[i] = $this.find('.ui-state-default').map(function() {return $(this).text()}).toArray();
     });
@@ -71,7 +71,6 @@ $(function() {
     xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 
     // send the collected data as JSON
-    console.log(JSON.stringify(data));
     xhr.send(JSON.stringify(data));
 
     xhr.onloadend = function () {
