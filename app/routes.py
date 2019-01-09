@@ -507,7 +507,18 @@ def submit_pool_assignment(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     content = request.get_json(silent=True)
-    return "not implemented yet"
+    print(content)
+    for _pool, teams in content.items():
+        for num_in_pool, _team in enumerate(teams):
+            team = Team.query.filter_by(name=_team).first()
+            old_pool = team.pool
+            old_pool.teams.remove(team)
+            team.num_in_pool = num_in_pool
+            pool = Pool.query.filter_by(poolNum=_pool).first()
+            team.pool_id = pool.id
+            team.pool = pool
+            pool.append(team)
+    return redirect(url_for('edit_pool_assignment', event_id=event_id))
  
 
 @app.route('/event/<int:event_id>/generate-bracket')
