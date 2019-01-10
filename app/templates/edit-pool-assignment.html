@@ -37,17 +37,17 @@
 	</p>
 	<table>
 		<tr>
-			{% for pool in pools if pool.pool_letter == 'O' %}
+			{% for pool, _ in pools.items() %}
 				<td>
 					<center>Pool {{ pool.poolNum }}</center>
 				</td>
 			{% endfor %}
 		</tr>
 		<tr>
-			{% for pool in pools if pool.pool_letter == 'O' %}
+			{% for _, teams in pools.items() %}
 				<td>
 					<ul id="sortable" class="connectedSortable">
-					{% for team in pool.teams %}
+					{% for team in teams %}
 					<li id="{{ team.id }}" class="ui-state-default">{{ team.name }}</li>
 					{% endfor %}
 					</ul>

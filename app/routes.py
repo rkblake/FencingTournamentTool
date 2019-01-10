@@ -471,11 +471,12 @@ def edit_pool(event_id, pool_id):
 @login_required
 def edit_pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
-    pools = event.pools
-    if request.method == 'POST':
-        print(request.form)
-    elif request.method == 'GET':
-        pass
+    _pools = event.pools
+    pools = {}
+    for i, pool in enumerate(_pools):
+        if pool.pool_letter == 'O':
+            pools[pool] = Team.query.filter_by(event_id=event_id, pool_id=pool.id).order_by(Team.num_in_pool).all()
+    print(pools)
     return render_template('edit-pool-assignment.html', event=event, pools=pools)
     
     
@@ -514,10 +515,19 @@ def submit_pool_assignment(event_id):
             old_pool = team.pool
             old_pool.teams.remove(team)
             team.num_in_pool = num_in_pool
-            pool = Pool.query.filter_by(poolNum=_pool).first()
+            for fencer in team.fencers:
+                if fencer.team_position == 'D':
+                    continue
+                fencer.num_in_pool = num_in_pool
+                fencer_pool = fencer.pool
+                fencer_pool.fencers.remove(fencer)
+                new_pool = Pool.query.filter_by(event_id=event.id, pool_letter=fencer.team_position).first()
+                new_pool.fencers.append(fencer)
+            pool = Pool.query.filter_by(poolNum=int(_pool)+1, pool_letter='O').first()
             team.pool_id = pool.id
             team.pool = pool
-            pool.append(team)
+            pool.teams.append(team)
+    db.session.commit()
     return redirect(url_for('edit_pool_assignment', event_id=event_id))
  
 
