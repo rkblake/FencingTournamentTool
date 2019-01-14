@@ -466,20 +466,20 @@ def edit_pool(event_id, pool_id):
         return render_template(
             'edit-pool.html', event=pool.event, pool=pool, fencers=fencers)
 
-            
+
 @app.route('/event/<int:event_id>/edit-pool-assignment')
 @login_required
 def edit_pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
     _pools = event.pools
     pools = {}
-    for i, pool in enumerate(_pools):
+    for pool in _pools:
         if pool.pool_letter == 'O':
             pools[pool] = Team.query.filter_by(event_id=event_id, pool_id=pool.id).order_by(Team.num_in_pool).all()
     print(pools)
     return render_template('edit-pool-assignment.html', event=event, pools=pools)
-    
-    
+
+
 @app.route('/event/<int:event_id>/submit-pools', methods=['POST'])
 @login_required
 def submit_pools(event_id):
@@ -497,8 +497,8 @@ def submit_pools(event_id):
     if all_pools_done:
         event.advance_stage(Stage.POOL_RESULTS)
     return redirect(url_for('edit_pools', event_id=event.id))
-    
-    
+
+
 @app.route('/event/<int:event_id>/submit-pool-assignment', methods=['POST'])
 @login_required
 def submit_pool_assignment(event_id):
@@ -508,7 +508,6 @@ def submit_pool_assignment(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     content = request.get_json(silent=True)
-    print(content)
     for _pool, teams in content.items():
         for num_in_pool, _team in enumerate(teams):
             team = Team.query.filter_by(name=_team).first()
@@ -521,15 +520,19 @@ def submit_pool_assignment(event_id):
                 fencer.num_in_pool = num_in_pool
                 fencer_pool = fencer.pool
                 fencer_pool.fencers.remove(fencer)
-                new_pool = Pool.query.filter_by(event_id=event.id, pool_letter=fencer.team_position).first()
+                new_pool = Pool.query.filter_by(event_id=event_id, pool_letter=fencer.team_position).first()
                 new_pool.fencers.append(fencer)
-            pool = Pool.query.filter_by(poolNum=int(_pool)+1, pool_letter='O').first()
+            pool = Pool.query.filter_by(event_id=event_id, poolNum=int(_pool)+1, pool_letter='O').first()
             team.pool_id = pool.id
             team.pool = pool
             pool.teams.append(team)
+    for pool in pools:
+        pool.num_fencers = pool.fencers.count() if pool.pool_letter != 'O' else pool.teams.count()
+    event.advance_stage(Stage.POOL_ASSIGNMENTS)
+    event.advance_stage(Stage.POOLS)
     db.session.commit()
-    return redirect(url_for('edit_pool_assignment', event_id=event_id))
- 
+    return redirect(url_for('edit_pools', event_id=event_id))
+
 
 @app.route('/event/<int:event_id>/generate-bracket')
 @login_required
@@ -925,7 +928,7 @@ def create_pools(event_id):
 
         event.advance_stage(Stage.INITIAL_SEEDING)
         db.session.commit()
-        return redirect(url_for('edit_pools', event_id=event_id))
+        return redirect(url_for('initial_seeding', event_id=event_id))
     return render_template(
         'create-pools.html',
         form=form,

@@ -26,10 +26,10 @@
 			{% if fencer.team_position == 'B' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
 			{% endfor %}
 			{% for fencer in team.fencers %}
-			{% if fencer.team_position == 'C' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
+			{% if fencer.team_position == 'C' %}{% if fencer.first_name != '' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% else %}<td></td>{% endif %}{% endif %}
 			{% endfor %}
 			{% for fencer in team.fencers %}
-			{% if fencer.team_position == 'D' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% endif %}
+			{% if fencer.team_position == 'D' %}{% if fencer.first_name != '' %}<td>{{ fencer.last_name }}, {{ fencer.first_name }}</td>{% else %}<td></td>{% endif %}{% endif %}
 			{% endfor %}
 			{% if team.fencers.count() == 3 %}<td></td>{% endif %}
 			{% if team.fencers.count() == 2 %}<td></td><td></td>{% endif %}
