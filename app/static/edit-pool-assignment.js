@@ -17,7 +17,7 @@ function shuffle(array) {
   return array;
 }
     
-$( function() {
+$(document).ready( function() {
   $( ".connectedSortable" ).sortable({
     connectWith: ".connectedSortable"
   }).disableSelection();

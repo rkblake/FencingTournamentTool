@@ -2,6 +2,7 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block head %}
+    
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
     <style>
 		#sortable {
@@ -21,14 +22,11 @@
 			width: 120px;
 		}
     </style>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="{{ url_for('static', filename='edit-pool-assignment.js') }}"></script>
+    
 	{{ super() }}
 {% endblock %}
 
 {% block app_content %}
-
 	<h1>
 		Edit Pool Assignments for {{ event.name }}
 	</h1>
@@ -61,5 +59,12 @@
 	<form id="form" action="{{ url_for('submit_pool_assignment', event_id=event.id) }}" method="post">
         <input type="submit" name="submit" value="Confirm Pool Assignments"/>
     </form>
+    
+{% endblock %}
 
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='edit-pool-assignment.js') }}"></script>
 {% endblock %}

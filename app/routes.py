@@ -527,7 +527,7 @@ def submit_pool_assignment(event_id):
             team.pool = pool
             pool.teams.append(team)
     for pool in pools:
-        pool.num_fencers = pool.fencers.count() if pool.pool_letter != 'O' else pool.teams.count()
+        pool.num_fencers = pool.teams.count() if pool.pool_letter != 'O' else pool.fencers.count()
     event.advance_stage(Stage.POOL_ASSIGNMENTS)
     event.advance_stage(Stage.POOLS)
     db.session.commit()
