@@ -1,6 +1,18 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <style>
+        @media print {
+            a.btn {
+                display: none;
+            }
+        }
+    </style>
+    {{ super() }}
+{% endblock %}
+
 {% block app_content %}
+    <a class="btn btn-primary" href="{{ url_for('edit_pool_assignment', event_id=event.id) }}" role="button">Edit Pool Assignment</a>
     <h1>Initial Seed for {{ event.name }}</h1>
     <hr>
     <table class="table table-striped">

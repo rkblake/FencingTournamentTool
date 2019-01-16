@@ -2,7 +2,7 @@
 	<span id="tournament-name"><b>{{ tournament.name }}</b></span>
 	<span style="float:right" id="num-events">{{ tournament.events.count() }} Event{% if tournament.events.count() > 1 %}s{% endif %} {% if not public %}<a href="{{ url_for('create_event', tournament_id=tournament.id) }}">Add Event</a>{% endif %}</span>
 	{% for event in tournament.events %}
-		<div class="event-header">&#9654; {{ event.name }} {{ event.date }} {{ event.stage }}</div>
+		<div class="event-header">&#9654; {{ event.name }} ({{ event.date }}) {{ event.stage }}</div>
 		<div class="event-sub">
 			{{ event.num_registered }} Fencers Registered / {{ event.num_checked_in }} Checked In
 			<ul>

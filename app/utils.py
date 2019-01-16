@@ -58,26 +58,31 @@ def quicksort(x):  # descending sort
         return quicksort(greater) + [pivot] + quicksort(less)
 
 
-def validate_score_pair(score1, score2):
-    if ((score1 == '') ^ (score2 == '')):
-        return False
-    #elif not (score1 == '') and (score2 == ''):
-    #    return False
-    if score1[0].upper() not in ['V', 'D']:
-        return False
-    if int(score1[1]) > int(score2[1]) and score1[0].upper() == 'D':
-        return False
-    if int(score2[1]) > int(score1[1]) and score2[0].upper() == 'D':
-        return False
-    if int(score1[1]) < int(score2[1]) and score1[0].upper() == 'V':
-        return False
-    if int(score2[1]) < int(score1[1]) and score2[0].upper() == 'V':
-        return False
-
-
-def validate_scores(form):  # TODO: only check upper right triangle; accept same score ties as long as one is a victory
-    for key, score in form.items():
-        score1 = score
-        score2 = form['result'+key[7]+key[6]]
+class Score():
+    
+    def __init__(self, score):
+        self.__letter = score[0]
+        self.__score = int(score[1])
         
+    def is_winner(self):
+        return self.__letter == 'V'
+        
+    def __lt__(self, other):
+        return self.__score < other.__score
+        
+        
+def is_valid_pair(first, second):
+    if first.is_winner() ^ second.is_winner() == False:
+        return False
+    (winner, loser) = (first, second) if first.is_winner() else (second, first)
+    if winner < loser:
+        return False
+    return True
+    
+    
+def validate_scores(scores):
+    for i, row in enumerate(scores):
+        for j in row[i+1:]:
+            if not is_valid_pair(Score(i), Score(j)):
+                return False
     return True

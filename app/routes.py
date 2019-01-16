@@ -476,7 +476,6 @@ def edit_pool_assignment(event_id):
     for pool in _pools:
         if pool.pool_letter == 'O':
             pools[pool] = Team.query.filter_by(event_id=event_id, pool_id=pool.id).order_by(Team.num_in_pool).all()
-    print(pools)
     return render_template('edit-pool-assignment.html', event=event, pools=pools)
 
 
@@ -496,6 +495,7 @@ def submit_pools(event_id):
                 all_pools_done = False
     if all_pools_done:
         event.advance_stage(Stage.POOL_RESULTS)
+    db.session.commit()
     return redirect(url_for('edit_pools', event_id=event.id))
 
 
@@ -508,16 +508,18 @@ def submit_pool_assignment(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     content = request.get_json(silent=True)
-    for _pool, teams in content.items():
+    for pool, teams in content.items():
+        pool = Pool.query.filter_by(event=event, pool_letter='O', poolNum = int(pool)).first()
+    '''for _pool, teams in content.items():
         for num_in_pool, _team in enumerate(teams):
             team = Team.query.filter_by(name=_team).first()
             old_pool = team.pool
             old_pool.teams.remove(team)
-            team.num_in_pool = num_in_pool
+            team.num_in_pool = num_in_pool + 1
             for fencer in team.fencers:
                 if fencer.team_position == 'D':
                     continue
-                fencer.num_in_pool = num_in_pool
+                fencer.num_in_pool = num_in_pool + 1
                 fencer_pool = fencer.pool
                 fencer_pool.fencers.remove(fencer)
                 new_pool = Pool.query.filter_by(event_id=event_id, pool_letter=fencer.team_position).first()
@@ -526,11 +528,12 @@ def submit_pool_assignment(event_id):
             team.pool_id = pool.id
             team.pool = pool
             pool.teams.append(team)
+    db.session.commit()
     for pool in pools:
         pool.num_fencers = pool.teams.count() if pool.pool_letter != 'O' else pool.fencers.count()
     event.advance_stage(Stage.POOL_ASSIGNMENTS)
     event.advance_stage(Stage.POOLS)
-    db.session.commit()
+    db.session.commit()'''
     return redirect(url_for('edit_pools', event_id=event_id))
 
 
