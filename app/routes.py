@@ -320,7 +320,8 @@ def edit_registration(event_id):
         def add_fencer(name, position):
             return Fencer(first_name=name.split()[0].title(),
                           last_name=name.split()[1].title(),
-                          team_position=position)
+                          team_position=position,
+                          event=event)
 
         club = Club.query.filter_by(name=form.club.data).first()
         if club is None:
@@ -508,32 +509,34 @@ def submit_pool_assignment(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     content = request.get_json(silent=True)
-    for pool, teams in content.items():
-        pool = Pool.query.filter_by(event=event, pool_letter='O', poolNum = int(pool)).first()
-    '''for _pool, teams in content.items():
+    for _pool, teams in content.items():
         for num_in_pool, _team in enumerate(teams):
-            team = Team.query.filter_by(name=_team).first()
-            old_pool = team.pool
-            old_pool.teams.remove(team)
+            team = Team.query.filter_by(name=_team, event=event).first()
+            print(team, _team)
+            team.pool.num_fencers = Pool.num_fencers - 1
+            team.pool.teams.remove(team)
             team.num_in_pool = num_in_pool + 1
             for fencer in team.fencers:
                 if fencer.team_position == 'D':
                     continue
                 fencer.num_in_pool = num_in_pool + 1
-                fencer_pool = fencer.pool
-                fencer_pool.fencers.remove(fencer)
-                new_pool = Pool.query.filter_by(event_id=event_id, pool_letter=fencer.team_position).first()
+                fencer.pool.num_fencers = Pool.num_fencers - 1
+                fencer.pool.fencers.remove(fencer)
+                
+                new_pool = Pool.query.filter_by(event_id=event_id, pool_letter=fencer.team_position, poolNum=int(_pool)+1).first()
                 new_pool.fencers.append(fencer)
+                new_pool.num_fencers = Pool.num_fencers + 1
             pool = Pool.query.filter_by(event_id=event_id, poolNum=int(_pool)+1, pool_letter='O').first()
             team.pool_id = pool.id
             team.pool = pool
             pool.teams.append(team)
-    db.session.commit()
+            pool.num_fencers = Pool.num_fencers + 1
     for pool in pools:
-        pool.num_fencers = pool.teams.count() if pool.pool_letter != 'O' else pool.fencers.count()
+        #pool.num_fencers = pool.teams.count() if pool.pool_letter != 'O' else pool.fencers.count()
+        print(pool, pool.num_fencers, pool.teams.count(), pool.fencers.count())
     event.advance_stage(Stage.POOL_ASSIGNMENTS)
     event.advance_stage(Stage.POOLS)
-    db.session.commit()'''
+    db.session.commit()
     return redirect(url_for('edit_pools', event_id=event_id))
 
 
@@ -715,7 +718,7 @@ def submit_DE(de_id):
     # check if all DEs finished
     des_not_finished = de.event.des.filter_by(state=0).count()
     if des_not_finished == 0:
-        de.event.advance_stage(Stage.DONE)
+        de.event.advance_stage(Stage.EVENT_FINISHED)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=de.event.id))
 
