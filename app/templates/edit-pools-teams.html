@@ -3,9 +3,9 @@
 {% block app_content %}
     
 	{% if all_pools_done %}
-		<a class="btn btn-primary" href="{{ url_for('generate_bracket', event_id=event.id) }}" role="button">Generate DEs</a>
+		<a class="btn btn-primary" href="{{ url_for('submit_pools', event_id=event.id) }}" role="button">Submit Pools</a>
 	{% else %}
-		<a class="btn btn-primary disabled padded" role="button" aria-disabled="true">Generate DEs</a>
+		<a class="btn btn-primary disabled" role="button" aria-disabled="true">Submit Pools</a>
 	{% endif %}
 	
 	<h1>{{ event.name }}</h1>	

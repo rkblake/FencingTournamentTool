@@ -98,6 +98,9 @@ class Event(db.Model):
 
     def advance_stage(self, next_stage):
         self.stage = next_stage.value if next_stage.value == self.stage+1 else self.stage
+        
+    def is_stage(self, stage):
+        return self.stage == stage.value
 
 class Club(db.Model): #also university
     id = db.Column(db.Integer, primary_key=True)
@@ -142,9 +145,9 @@ class Pool(db.Model):
     #teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):
-        return ('<Pool {}, {} teams>'.format(self.poolNum, self.num_fencers) if
+        return ('<Pool {}, {} teams {}>'.format(self.poolNum, self.num_fencers, self.state) if
             self.pool_letter == 'O' else
-            '<Pool {}, {} fencers>'.format(self.poolNum, self.num_fencers))
+            '<Pool {}, {} fencers {}>'.format(self.poolNum, self.num_fencers, self.state))
 
 class DE(db.Model):
     __tablename__ = 'de'

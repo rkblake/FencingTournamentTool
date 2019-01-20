@@ -178,6 +178,9 @@ def initial_seeding(event_id):
 @cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
+    public = True
+    if is_to_of_tournament(current_user, event.tournament):
+        public = False
     teams = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
@@ -211,7 +214,8 @@ def pool_results(event_id):
         'pool-results-teams.html',
         title='Pool Results',
         event=event,
-        teams=teams)
+        teams=teams,
+        public=public)
 
 
 @app.route('/event/<int:event_id>/pools')
@@ -244,12 +248,16 @@ def public_pools(event_id):
 @cache.cached(timeout=60)
 def pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
+    public = True
+    if is_to_of_tournament(current_user, event.tournament):
+        public = False
     pools = event.pools
     return render_template(
         'pool-assignments-teams.html',
         title='Pool Assignments',
         event=event,
-        pools=pools)
+        pools=pools,
+        public=public)
 
 
 @app.route('/event/<int:event_id>/de')
@@ -380,7 +388,7 @@ def edit_pools(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     all_pools_done = False
-    if event.stage == Stage.POOLS:  # check if all pools done to advance
+    if event.is_stage(Stage.POOLS):  # check if all pools done to advance
         all_pools_done = True
         for pool in pools:
             if pool.state == 0 and pool.pool_letter != 'O':
@@ -480,7 +488,7 @@ def edit_pool_assignment(event_id):
     return render_template('edit-pool-assignment.html', event=event, pools=pools)
 
 
-@app.route('/event/<int:event_id>/submit-pools', methods=['POST'])
+@app.route('/event/<int:event_id>/submit-pools', methods=['GET'])
 @login_required
 def submit_pools(event_id):
     event = Event.query.get_or_404(event_id)
@@ -489,7 +497,7 @@ def submit_pools(event_id):
         return redirect(url_for('index'))
     pools = event.pools
     all_pools_done = False
-    if event.stage == Stage.POOLS:  # check if all pools done to advance
+    if event.is_stage(Stage.POOLS):  # check if all pools done to advance
         all_pools_done = True
         for pool in pools:
             if pool.state == 0 and pool.pool_letter != 'O':
@@ -497,7 +505,7 @@ def submit_pools(event_id):
     if all_pools_done:
         event.advance_stage(Stage.POOL_RESULTS)
     db.session.commit()
-    return redirect(url_for('edit_pools', event_id=event.id))
+    return redirect(url_for('pool_results', event_id=event.id))
 
 
 @app.route('/event/<int:event_id>/submit-pool-assignment', methods=['POST'])
@@ -531,9 +539,6 @@ def submit_pool_assignment(event_id):
             team.pool = pool
             pool.teams.append(team)
             pool.num_fencers = Pool.num_fencers + 1
-    for pool in pools:
-        #pool.num_fencers = pool.teams.count() if pool.pool_letter != 'O' else pool.fencers.count()
-        print(pool, pool.num_fencers, pool.teams.count(), pool.fencers.count())
     event.advance_stage(Stage.POOL_ASSIGNMENTS)
     event.advance_stage(Stage.POOLS)
     db.session.commit()

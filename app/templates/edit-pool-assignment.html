@@ -27,6 +27,13 @@
 {% endblock %}
 
 {% block app_content %}
+
+    {% if event.stage == 7 %}
+		<a class="btn btn-primary" href="{{ url_for('pool_assignment', event_id=event.id) }}" role="button">Go to Pool Assignment</a>
+	{% else %}
+		<a class="btn btn-primary disabled" role="button" aria-disabled="true">Go to Pool Assignment</a>
+	{% endif %}
+
 	<h1>
 		Edit Pool Assignments for {{ event.name }}
 	</h1>

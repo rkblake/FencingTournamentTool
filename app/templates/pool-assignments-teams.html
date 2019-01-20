@@ -8,11 +8,25 @@
 		ul {
 			list-style-type: none;
 		}
+        @media print {
+            a.btn {
+                display: none;
+            }
+        }
 	</style>
 	{{ super() }}
 {% endblock %}
 
 {% block app_content %}
+
+    {% if not public %}
+        {% if event.stage == 7 %}
+            <a class="btn btn-primary" href="{{ url_for('edit_pools', event_id=event.id) }}" role="button">Go to Pools</a>
+        {% else %}
+            <a class="btn btn-primary disabled" role="button" aria-disabled="true">Go to Pools</a>
+        {% endif %}
+    {% endif %}
+
 	<h1>{{ event.name }}</h1>
 
 	{% for pool in pools %}
