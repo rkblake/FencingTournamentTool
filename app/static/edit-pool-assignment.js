@@ -74,7 +74,7 @@ $(function() {
     xhr.send(JSON.stringify(data));
 
     xhr.onloadend = function () {
-      // done
+      location.reload()
     };
   };
 });

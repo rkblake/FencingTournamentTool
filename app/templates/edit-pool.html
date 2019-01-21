@@ -1,14 +1,36 @@
 {% extends 'base.html' %}
 
+{% block  head %}
+    {{ super() }}
+    <script>
+        function validateForm() {
+            
+        }
+    </script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}" media="screen, print">
+    <style>
+        @media print {
+            .btn {
+                display: none;
+            }
+            * { 
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+    </style>
+    
+{% endblock %}
+
 {% block app_content %}
-    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='pool.css') }}">
+    
     <h1>Pool {{ pool.poolNum }} for {{ event.name }}</h1>
     <p>
         Pool results must have a V or D followed by the score. ex. V5, D2
     </p>
     <hr>
     <div>
-        <form action="" method="post">
+        <form action="" method="post" onsubmit="return validateForm()" id=pool-form>
         <table class="results">
             <thead>
                 <tr>

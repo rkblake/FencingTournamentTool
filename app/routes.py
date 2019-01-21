@@ -405,10 +405,10 @@ def edit_pool(event_id, pool_id):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     if request.method == "POST":
-        #if not validate_scores(request.form):
-        #    flash('Invalid score.')
-        #    return redirect(
-        #        url_for('edit_pool', event_id=event_id, pool_id=pool_id))
+        if not validate_scores(request.form):
+            flash('Invalid score.')
+            return redirect(
+                url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
             if value == 'v':
@@ -520,7 +520,6 @@ def submit_pool_assignment(event_id):
     for _pool, teams in content.items():
         for num_in_pool, _team in enumerate(teams):
             team = Team.query.filter_by(name=_team, event=event).first()
-            print(team, _team)
             team.pool.num_fencers = Pool.num_fencers - 1
             team.pool.teams.remove(team)
             team.num_in_pool = num_in_pool + 1

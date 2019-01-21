@@ -83,6 +83,16 @@ def is_valid_pair(first, second):
 def validate_scores(scores):
     for i, row in enumerate(scores):
         for j in row[i+1:]:
-            if not is_valid_pair(Score(i), Score(j)):
+            if scores[i][j] == '' ^ scores[j][i] == '':
+                return False
+            if scores[i][j][0].upper() not in ['V','D']:
+                return False
+            if scores[j][i][0].upper() not in ['V','D']:
+                return False
+            if scores[i][j][1] < 0 or scores[i][j][1] > 5:
+                return False
+            if scores[j][i][1] < 0 or scores[i][j][1] > 5:
+                return False
+            if not is_valid_pair(Score(scores[i][j]), Score(scores[j][i])):
                 return False
     return True
