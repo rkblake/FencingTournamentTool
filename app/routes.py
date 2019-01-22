@@ -14,7 +14,7 @@ import flask_profiler
 
 from app.forms import *
 from app.models import *
-from app.utils import generate_tournament, quicksort, validate_scores
+from app.utils import generate_tournament, quicksort, Score, is_valid_pair
 from app.email import send_password_reset_email, send_prereg_email
 
 
@@ -405,14 +405,14 @@ def edit_pool(event_id, pool_id):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     if request.method == "POST":
-        if not validate_scores(request.form):
-            flash('Invalid score.')
-            return redirect(
-                url_for('edit_pool', event_id=event_id, pool_id=pool_id))
         for key, value in request.form.items():
             key = key.strip('result')
             if value == 'v':
                 value = 'v5'
+            if not is_valid_pair(Score(value), Score(request.form['result'+str(key[1])+str(key[0])])):
+                flash('Invalid score.')
+                return redirect(
+                    url_for('edit_pool', event_id=event_id, pool_id=pool_id))
             fencer = Fencer.query.filter_by(
                 pool_id=pool_id, num_in_pool=key[0]).first()
             opponent = Fencer.query.filter_by(

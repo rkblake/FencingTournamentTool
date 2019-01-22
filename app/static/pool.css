@@ -51,11 +51,11 @@
   font-family: 'consolas', monospace;
 }
 .results .defeat {
-  background-color: #cc3333;
+  background-color: #cc3333 !important;
   color: #ee8888;
 }
 .results .victory {
-  background-color: #66cc66;
+  background-color: #66cc66 !important;
   color: #336633;
 }
 

@@ -1,6 +1,24 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    {{ super() }}
+    <style>
+        @media print {
+            .btn {
+                display: none;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block app_content %}
+    {% if not public %}
+        {% if event.stage == 8 %}
+            <a class="btn btn-primary" href="{{ url_for('generate_bracket', event_id=event.id) }}" role="button">Generate DEs</a>
+        {% else %}
+            <a class="btn btn-primary disabled" role="button" aria-disabled="true">Generate DEs</a>
+        {% endif %}
+    {% endif %}
     <h1>Pool Results for {{ event.name }}</h1>
     <hr>
     <table class="table table-striped">

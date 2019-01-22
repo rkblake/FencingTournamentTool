@@ -61,7 +61,7 @@ def quicksort(x):  # descending sort
 class Score():
     
     def __init__(self, score):
-        self.__letter = score[0]
+        self.__letter = score[0].upper()
         self.__score = int(score[1])
         
     def is_winner(self):
@@ -83,6 +83,8 @@ def is_valid_pair(first, second):
 def validate_scores(scores):
     for i, row in enumerate(scores):
         for j in row[i+1:]:
+            if i == j:
+                continue
             if scores[i][j] == '' ^ scores[j][i] == '':
                 return False
             if scores[i][j][0].upper() not in ['V','D']:
