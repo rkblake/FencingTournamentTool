@@ -64,7 +64,7 @@
 		<tr>
 			<td>
 				<a class="btn btn-warning btn-sm padded" role="button" href="{{ url_for('edit_team', event_id=event.id, team_id=team.id) }}">&#9998;</a>
-				{% if event.stage >= 3 %}
+				{% if event.stage >= 4 %}
 					<a class="btn btn-danger btn-sm padded disabled" role="button" aria-disabled="true">&#x2421;</a>
 					<a class="btn btn-success btn-sm disabled padded" role="button" aria-disabled="true">&#10004;</a>
 					<a class="btn btn-danger btn-sm disabled padded" role="button" aria-disabled="true">&#128683;</a>
@@ -73,13 +73,16 @@
 					{% if team.is_checked_in %}
 						<a class="btn btn-success btn-sm disabled padded" role="button" aria-disabled="true">&#10004;</a>
 						<a class="btn btn-danger btn-sm padded" role="button" href="{{ url_for('make_team_absent', event_id=event.id, team_id=team.id) }}">&#128683;</a>
-						<span style="color: green;">Checked In</span>
 					{% else %}
 						<a class="btn btn-success btn-sm padded" role="button" href="{{ url_for('check_in_team', event_id=event.id, team_id=team.id) }}">&#10004;</a>
 						<a class="btn btn-danger btn-sm disabled padded" role="button" aria-disabled="true">&#128683;</a>
-						<span style="color: red;">Absent</span>
 					{% endif %}
 				{% endif %}
+                {% if team.is_checked_in %}
+                    <span style="color: green;">Checked In</span>
+                {% else %}
+                    <span style="color: red;">Absent</span>
+                {% endif %}
 			</td>
 			<td>{{ team.name }}</td>
 			<td>{{ team.club.name }}</td>

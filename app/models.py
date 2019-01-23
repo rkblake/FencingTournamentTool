@@ -185,6 +185,8 @@ class Result(db.Model):
     opponent_team = db.relationship('Team', foreign_keys=[opponent_team_id])
     fencer_score = db.Column(db.Integer)
     fencer_win = db.Column(db.Boolean)
+    team_victories = db.Column(db.Integer, default=0)
+    
 
 class Fencer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
