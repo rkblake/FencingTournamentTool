@@ -442,9 +442,10 @@ def edit_pool(event_id, pool_id):
                 pool_id=fencer.team.pool.id,
                 team=fencer.team,
                 opponent_team=opponent.team).first()
+            pool.results.append(result)
+            db.session.add(result)
             if team_result is not None:
                 team_result.fencer_score = Result.fencer_score + result.fencer_score
-                team_result.fencer_win = fencer.team.victories > opponent.team.victories
             else:
                 team_result = Result(
                     pool_id=fencer.team.pool.id,
@@ -456,17 +457,12 @@ def edit_pool(event_id, pool_id):
             individual_results = db.session.query(Result).filter(
                 Result.team_id == fencer.team.id,
                 Result.opponent_team_id == opponent.team.id,
-                Result.pool_id != fencer.team.pool.id).all()
-            if len(individual_results) >= 2:
-                wins = 0
-                for individual_result in individual_results:
-                    if individual_result.fencer_win:
-                        wins += 1
-                if wins >= 2:
-                    team_result.fencer_win = True
-                    fencer.team.victories = Team.victories + 1
-            pool.results.append(result)
-            db.session.add(result)
+                Result.pool_id != fencer.team.pool.id,
+                Result.fencer_win == True).all()
+            if len(individual_results) >= 2 and not team_result.fencer_win:
+                team_result.fencer_win = True
+                fencer.team.victories = Team.victories + 1
+            
         pool.state = 1
         db.session.commit()
         return redirect(url_for('edit_pools', event_id=event_id))
@@ -752,7 +748,7 @@ def check_in_team(event_id, team_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    if event.stage >= 3:
+    if event.stage >= 4:
         flash('Checking in teams is not allowed after pools have been created.')
         return redirect(url_for('edit_registration', event_id=event_id))
     team = Team.query.get(team_id)
@@ -770,7 +766,7 @@ def make_team_absent(event_id, team_id):
     if not is_to_of_tournament(current_user, tournament):
         flash('You do not have permission to access this tournament.')
         return redirect(url_for('index'))
-    if event.stage >= 3:
+    if event.stage >= 4:
         flash('Making teams absent is not allowed after pools have been created.')
         return redirect(url_for('edit_registration', event_id=event_id))
     team = Team.query.get(team_id)
@@ -1008,7 +1004,6 @@ def preregister(token):
                 team.fencers.append(fencer)
                 db.session.add(fencer)
 
-        #print(request.form)
         if request.form.get('Foil_A_slider'):
             team_name = club.name + " Foil "
             if request.form.get('Foil_B_slider'):

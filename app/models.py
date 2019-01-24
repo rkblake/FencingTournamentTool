@@ -142,7 +142,6 @@ class Pool(db.Model):
     pool_letter = db.Column(db.String(1))
     results = db.relationship('Result', backref='results', lazy='dynamic')
     fencers = db.relationship('Fencer', backref='fencers', lazy='dynamic')
-    #teams = db.relationship('Team', backref='teams', lazy='dynamic')
 
     def __repr__(self):
         return ('<Pool {}, {} teams {}>'.format(self.poolNum, self.num_fencers, self.state) if
@@ -184,8 +183,13 @@ class Result(db.Model):
     team = db.relationship('Team', foreign_keys=[team_id])
     opponent_team = db.relationship('Team', foreign_keys=[opponent_team_id])
     fencer_score = db.Column(db.Integer)
-    fencer_win = db.Column(db.Boolean)
-    team_victories = db.Column(db.Integer, default=0)
+    fencer_win = db.Column(db.Boolean, default=False)
+    
+    def __repr__(self):
+        if self.fencer is not None:
+            return '<Result {} vs {} {} touches {}>'.format(self.fencer, self.opponent, self.fencer_score, self.fencer_win)
+        else:
+            return '<Result {} vs {} {} touches {}>'.format(self.team, self.opponent_team, self.fencer_score, self.fencer_win)
     
 
 class Fencer(db.Model):
