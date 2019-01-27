@@ -174,6 +174,7 @@ def initial_seeding(event_id):
         'initial-seed-teams.html', event=event, teams=teams)
 
 
+#TODO cross off teams after 12th place
 @app.route('/event/<int:event_id>/pool-results')
 @cache.cached(timeout=60)
 def pool_results(event_id):
@@ -462,7 +463,7 @@ def edit_pool(event_id, pool_id):
             if len(individual_results) >= 2 and not team_result.fencer_win:
                 team_result.fencer_win = True
                 fencer.team.victories = Team.victories + 1
-            
+
         pool.state = 1
         db.session.commit()
         return redirect(url_for('edit_pools', event_id=event_id))
@@ -525,7 +526,7 @@ def submit_pool_assignment(event_id):
                 fencer.num_in_pool = num_in_pool + 1
                 fencer.pool.num_fencers = Pool.num_fencers - 1
                 fencer.pool.fencers.remove(fencer)
-                
+
                 new_pool = Pool.query.filter_by(event_id=event_id, pool_letter=fencer.team_position, poolNum=int(_pool)+1).first()
                 new_pool.fencers.append(fencer)
                 new_pool.num_fencers = Pool.num_fencers + 1
@@ -551,7 +552,7 @@ def generate_bracket(event_id):
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in = 1 AND t.Event = {}
-        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC;""".format(event_id))
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC LIMIT 12;""".format(event_id))
     teams = [Team.query.get(id) for (id, _) in q]
     fencer_names = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
     bracket = generate_tournament(teams)
