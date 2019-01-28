@@ -16,7 +16,7 @@
 					{% endif %}
 				</li>
 				<li>
-					{% if event.stage >= 5 %}
+					{% if event.stage >= 4 %}
 						<a href="{{ url_for('initial_seeding', event_id=event.id) }}">Initial Seeding</a>
 					{% else %}
 						Initial Seeding

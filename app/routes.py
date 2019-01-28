@@ -171,7 +171,8 @@ def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True)
     return render_template(
-        'initial-seed-teams.html', event=event, teams=teams)
+        'initial-seed-teams.html', event=event, teams=teams,
+        public=is_to_of_tournament(current_user, event.tournament)
 
 
 #TODO cross off teams after 12th place
@@ -408,12 +409,12 @@ def edit_pool(event_id, pool_id):
     if request.method == "POST":
         for key, value in request.form.items():
             key = key.strip('result')
-            if value == 'v':
-                value = 'v5'
-            if not is_valid_pair(Score(value), Score(request.form['result'+str(key[1])+str(key[0])])):
+            score1 = Score(value)
+            score2 = Score(request.form['result'+str(key[1])+str(key[0])])
+            if not (score1 and score2 and is_valid_pair(score1, score2)):
                 flash('Invalid score.')
                 return redirect(
-                    url_for('edit_pool', event_id=event_id, pool_id=pool_id))
+                    url_for('edit_pool', event_id=event_id, pool_id=pool_id))   
             fencer = Fencer.query.filter_by(
                 pool_id=pool_id, num_in_pool=key[0]).first()
             opponent = Fencer.query.filter_by(
@@ -422,7 +423,7 @@ def edit_pool(event_id, pool_id):
                 pool_id=pool.id,
                 fencer=fencer.id,
                 team=fencer.team,
-                fencer_score=int(value[1:]),
+                fencer_score=score1.__score,
                 opponent=opponent.id,
                 opponent_team=opponent.team,
                 fencer_win=(value[0].upper() == 'V'))
@@ -607,6 +608,7 @@ def generate_bracket(event_id):
             i += 1
     tableau['results'] = tableau['results'][::-1]
     event.tableau_json = json.dumps(tableau)
+    event.advance_stage(Stage.DES)
     db.session.commit()
     return redirect(url_for('edit_DE', event_id=event_id))
 

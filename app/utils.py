@@ -60,41 +60,35 @@ def quicksort(x):  # descending sort
 
 class Score():
     
-    def __init__(self, score):
-        self.__letter = score[0].upper()
-        self.__score = int(score[1])
-        
+    def __new__(self, score):
+        if len(score) == 0:
+            
+        elif len(score) == 1:
+            if score.upper() == 'V':
+                self.letter = 'V'
+                self.touches = 5
+            elif score in [str(i) for i in range(1,6)]:
+                self.letter = 'D'
+                self.touches = int(score)
+            else:
+                return False
+        elif len(score) == 2:
+            self.letter = score[0].upper()
+            self.touches = int(score[1])
+        else:
+            return False
+
     def is_winner(self):
-        return self.__letter == 'V'
-        
+        return self.letter == 'V'
+
     def __lt__(self, other):
-        return self.__score < other.__score
-        
-        
+        return self.touches < other.touches
+
+
 def is_valid_pair(first, second):
     if first.is_winner() ^ second.is_winner() == False:
         return False
     (winner, loser) = (first, second) if first.is_winner() else (second, first)
     if winner < loser:
         return False
-    return True
-    
-    
-def validate_scores(scores):
-    for i, row in enumerate(scores):
-        for j in row[i+1:]:
-            if i == j:
-                continue
-            if scores[i][j] == '' ^ scores[j][i] == '':
-                return False
-            if scores[i][j][0].upper() not in ['V','D']:
-                return False
-            if scores[j][i][0].upper() not in ['V','D']:
-                return False
-            if scores[i][j][1] < 0 or scores[i][j][1] > 5:
-                return False
-            if scores[j][i][1] < 0 or scores[i][j][1] > 5:
-                return False
-            if not is_valid_pair(Score(scores[i][j]), Score(scores[j][i])):
-                return False
     return True
