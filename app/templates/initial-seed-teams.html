@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block app_content %}
-    {% if not public and event.stage == 4 %}
+    {% if not public and event.stage == 5 %}
         <a class="btn btn-primary" href="{{ url_for('edit_pool_assignment', event_id=event.id) }}" role="button">Edit Pool Assignment</a>
     {% endif %}
     <h1>Initial Seed for {{ event.name }}</h1>

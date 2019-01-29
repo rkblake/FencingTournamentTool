@@ -60,23 +60,26 @@ def quicksort(x):  # descending sort
 
 class Score():
     
-    def __new__(self, score):
-        if len(score) == 0:
-            
+    def __init__(self, score):
+        self.bout_fenced = True
+        if len(score) == 0:  # bout not fenced/no input
+            self.touches = 0
+            self.letter = 'D'
+            self.bout_fenced = False
         elif len(score) == 1:
             if score.upper() == 'V':
                 self.letter = 'V'
                 self.touches = 5
-            elif score in [str(i) for i in range(1,6)]:
+            elif score in [str(i) for i in range(0,6)]:
                 self.letter = 'D'
                 self.touches = int(score)
             else:
-                return False
+                self.touches = -1
         elif len(score) == 2:
             self.letter = score[0].upper()
             self.touches = int(score[1])
         else:
-            return False
+            self.touches = 1
 
     def is_winner(self):
         return self.letter == 'V'
@@ -84,9 +87,14 @@ class Score():
     def __lt__(self, other):
         return self.touches < other.touches
 
+    def __bool_(self):
+        return self.touches != -1
+
 
 def is_valid_pair(first, second):
-    if first.is_winner() ^ second.is_winner() == False:
+    if not first.bout_fenced and not second.bout_fenced:
+        return True
+    if first.is_winner() ^ second.is_winner() == False:  # winner is mutually exclusive, can't be both, can't be neither
         return False
     (winner, loser) = (first, second) if first.is_winner() else (second, first)
     if winner < loser:

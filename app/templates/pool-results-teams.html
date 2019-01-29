@@ -33,7 +33,13 @@
 		{% for team in teams %}
 		<tr>
             <td>{{ team[2] }}</td>
-			<td>{{ team[0].name }}</td>
+			<td>
+                {% if loop.index > 12 %}
+                    <strike>{{ team[0].name }}</strike>
+                {% else %}
+                    {{ team[0].name }}
+                {% endif %}
+            </td>
             <td>{{ "%.2f"|format(team[1]) }}</td>
             <td>{{ team[0].victories }}</td>
             <td>{% if team[0].indicator > 0 %}+{% endif %}{{ team[0].indicator }}</td>

@@ -166,18 +166,17 @@ def registration(event_id):
 
 
 @app.route('/event/<int:event_id>/initial-seeding')
-@cache.cached(timeout=60)
 def initial_seeding(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True)
+    public = not is_to_of_tournament(current_user, event.tournament)
     return render_template(
         'initial-seed-teams.html', event=event, teams=teams,
-        public=is_to_of_tournament(current_user, event.tournament)
+        public=public)
 
 
 #TODO cross off teams after 12th place
 @app.route('/event/<int:event_id>/pool-results')
-@cache.cached(timeout=60)
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
     public = True
@@ -423,10 +422,10 @@ def edit_pool(event_id, pool_id):
                 pool_id=pool.id,
                 fencer=fencer.id,
                 team=fencer.team,
-                fencer_score=score1.__score,
+                fencer_score=score1.touches,
                 opponent=opponent.id,
                 opponent_team=opponent.team,
-                fencer_win=(value[0].upper() == 'V'))
+                fencer_win=score1.is_winner())
             fencer.victories = Fencer.victories + (1 if result.fencer_win else 0)
             fencer.touches_scored = Fencer.touches_scored + result.fencer_score
             fencer.indicator = Fencer.indicator + result.fencer_score
@@ -548,6 +547,9 @@ def generate_bracket(event_id):
     event = Event.query.get_or_404(event_id)
     if not is_to_of_tournament(current_user, event.tournament):
         flash('You do not have permission to access this tournament.')
+        return redirect(url_for('index'))
+    if event.stage != 8:
+        flash('DEs cannot be generated at this stage')
         return redirect(url_for('index'))
     q = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
