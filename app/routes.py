@@ -175,7 +175,6 @@ def initial_seeding(event_id):
         public=public)
 
 
-#TODO cross off teams after 12th place
 @app.route('/event/<int:event_id>/pool-results')
 def pool_results(event_id):
     event = Event.query.get_or_404(event_id)
@@ -413,7 +412,7 @@ def edit_pool(event_id, pool_id):
             if not (score1 and score2 and is_valid_pair(score1, score2)):
                 flash('Invalid score.')
                 return redirect(
-                    url_for('edit_pool', event_id=event_id, pool_id=pool_id))   
+                    url_for('edit_pool', event_id=event_id, pool_id=pool_id))
             fencer = Fencer.query.filter_by(
                 pool_id=pool_id, num_in_pool=key[0]).first()
             opponent = Fencer.query.filter_by(
@@ -559,18 +558,22 @@ def generate_bracket(event_id):
     teams = [Team.query.get(id) for (id, _) in q]
     fencer_names = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
     bracket = generate_tournament(teams)
-    for i in range(int((1 - 2 ** math.log(len(bracket), 2))/(1 - 2))):
-        de = DE(
-            state=4,
-            event_id=event.id,
-            round=int(len(bracket)/2 - int(math.log(i+1, 2))))
-        db.session.add(de)
-        event.des.append(de)
+    num_rounds = int(math.log(len(bracket)*2, 2))
+    j = num_rounds
+    for i in range(num_rounds):
+        for _ in range(i):
+            de = DE(
+                state=4,
+                event_id=event.id,
+                round=j)
+            db.session.add(de)
+            event.des.append(de)
+        j -= 1
     third = DE(
         state=4,
         is_third=True,
         event_id=event.id,
-        round=int(math.log(len(bracket), 2)))
+        round=int(math.log(len(bracket)*2, 2)))
     db.session.add(third)
     event.des.append(de)
     for fencer1, fencer2 in bracket:
