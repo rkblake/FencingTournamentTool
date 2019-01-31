@@ -560,7 +560,7 @@ def generate_bracket(event_id):
     bracket = generate_tournament(teams)
     num_rounds = int(math.log(len(bracket)*2, 2))
     j = num_rounds
-    for i in range(num_rounds):
+    for i in [2**i for i in range(num_rounds-1)]:
         for _ in range(i):
             de = DE(
                 state=4,
@@ -674,8 +674,8 @@ def submit_DE(de_id):
                 """SELECT d.id, abs(d.fencer1_score - d.fencer2_score) AS score
                 FROM de d
                 WHERE d.event_id = {} AND d.round = {}
-                AND d.team2_id != NULL
-                ORDER BY score DESC;""".format(de.event.id, round+1))
+                AND d.team2_id IS NOT NULL
+                ORDER BY score ASC;""".format(de.event.id, round+1))
             des_in_round = [DE.query.get(id) for (id, _) in q]
             if round == 0:
                 place1 = Team.query.filter_by(

@@ -51,7 +51,7 @@ class CreateEventForm(FlaskForm):
         ('saber', 'Saber')
     ]
     weapon = SelectField('Weapon', choices=choices, validators=[NoneOf(['none'], message='Please select a Weapon.')])
-    date = DateField('Date', format='%Y-%m-%d')
+    date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
     submit = SubmitField('Create Event')
 
     def validate_date(self, date):
