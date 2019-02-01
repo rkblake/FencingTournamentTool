@@ -18,6 +18,10 @@
                 color-adjust: exact !important;
             }
         }
+        
+        .bout-order {
+            padding: 6px;
+        }
     </style>
     
 {% endblock %}
@@ -56,7 +60,44 @@
                 </tr>
             {% endfor %}
         </table>
-        <button type="submit" class="btn btn-default">Submit Pool Results</submit>
+        <button type="submit" class="btn btn-default">Submit Pool Results</button>
         </form>
     </div>
+    <hr>
+    {% if pool.num_fencers == 4 %}
+    <table frame="box">
+        <tr>
+            <td class="bout-order">1-4<br>2-3<br>1-3<br>2-4<br>3-4<br>1-2</td>
+        </tr>
+    </table>
+    {% elif pool.num_fencers == 5 %}
+    <table frame="box">
+        <tr>
+            <td class="bout-order">1-2<br>3-4<br>5-1<br>2-3<br>5-4<br>1-3<br>2-5<br>4-1<br>3-5<br>4-2</td>
+        </tr>
+    </table>
+    {% elif pool.num_fencers == 6 %}
+    <table frame="box">
+        <tr>
+            <td class="bout-order">1-2<br>4-5<br>2-3<br>5-6<br>3-1<br>6-4<br>2-5<br>1-4</td>
+            <td class="bout-order">5-3<br>1-6<br>4-2<br>3-6<br>5-1<br>3-4<br>6-2</td>
+        </tr>
+    </table>
+    {% elif pool.num_fencers == 7 %}
+    <table frame="box">
+        <tr>
+            <td class="bout-order">1-4<br>2-5<br>3-6<br>7-1<br>5-4<br>2-3<br>6-7</td>
+            <td class="bout-order">5-1<br>4-3<br>6-2<br>5-7<br>3-1<br>4-6<br>7-2</td>
+            <td class="bout-order">3-5<br>1-6<br>2-4<br>7-3<br>6-5<br>1-2<br>4-7</td>
+        </tr>
+    </table>
+    {% elif pool.num_fencers == 8 %}
+    <table frame="box">
+        <tr>
+            <td class="bout-order">2-3<br>1-5<br>7-4<br>6-8<br>1-2<br>3-4<br>5-6<br>8-7<br>4-1<br>5-2</td>
+            <td class="bout-order">8-3<br>6-7<br>4-2<br>8-1<br>7-5<br>3-6<br>2-8<br>5-4<br>6-1</td>
+            <td class="bout-order">3-7<br>4-8<br>2-6<br>3-5<br>1-7<br>4-6<br>8-5<br>7-2<br>1-3</td>
+        </tr>
+    </table>
+    {% endif %}
 {% endblock %}

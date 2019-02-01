@@ -633,6 +633,7 @@ def submit_DE(de_id):
     else:
         de.fencer1_win = True if de.fencer1_score > de.fencer2_score else False
     de.state = 2
+    db.session.commit()
     tableau = json.loads(de.event.tableau_json)
 
     des = de.event.des.filter_by(is_third=False).order_by(DE.id.asc()).all()
@@ -675,7 +676,7 @@ def submit_DE(de_id):
                 FROM de d
                 WHERE d.event_id = {} AND d.round = {}
                 AND d.team2_id IS NOT NULL
-                ORDER BY score ASC;""".format(de.event.id, round+1))
+                ORDER BY score DESC;""".format(de.event.id, round+1))
             des_in_round = [DE.query.get(id) for (id, _) in q]
             if round == 0:
                 place1 = Team.query.filter_by(
