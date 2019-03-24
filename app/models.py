@@ -19,6 +19,11 @@ class Stage(Enum):
     DES = 9
     EVENT_FINISHED = 10
 
+def stage_to_string(stage):
+    return Stage(stage).name.title().replace('_', ' ')
+
+app.jinja_env.globals.update(stage_to_string=stage_to_string)
+
 Base = declarative_base()
 
 class AccessTable(db.Model):
