@@ -1103,4 +1103,11 @@ def send_prereg(tournament_id):
         return redirect(url_for('edit_tournament', tournament_id=tournament.id))
     return render_template('send-prereg-email.html', title='Preregistration', form=form, tournament=tournament)
 
+
+@app.route('/event/<int:event_id>/de-sheet/<int:team1_id>/<int:team2_id>')
+def de_sheet(event_id, team1_id, team2_id):
+    team1 = Team.query.get_or_404(team1_id)
+    team2 = Team.query.get_or_404(team2_id)
+    return render_template('de-sheet.html', team1=team1, team2=team2)
+
 flask_profiler.init_app(app)

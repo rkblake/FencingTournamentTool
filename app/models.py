@@ -103,7 +103,7 @@ class Event(db.Model):
 
     def advance_stage(self, next_stage):
         self.stage = next_stage.value if next_stage.value == self.stage+1 else self.stage
-        
+
     def is_stage(self, stage):
         return self.stage == stage.value
 

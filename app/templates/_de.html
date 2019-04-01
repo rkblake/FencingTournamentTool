@@ -1,8 +1,9 @@
-<div class="de pool-container">
+<div class="de pool-container no-print">
         <form action="{{ url_for('submit_DE', de_id=de.id) }}" method="post">
             <p>
                 {% if de.fencer1 is not none %}{{ de.fencer1.last_name }}, {{ de.fencer1.first_name }}{% else %}{{ de.team1.name }}{% endif %} <input type="text" name="fencer1" style="width: 30px;"/> vs {% if de.fencer2 is not none %}{{ de.fencer2.last_name }}, {{ de.fencer2.first_name }}{% else %}{{ de.team2.name }}{% endif %} <input type="text" name="fencer2" style="width: 30px;"/><br>
             </p>
             <input type="submit" name="submit" value="Submit results"/>
         </form>
+        <a href="{{ url_for('de_sheet', event_id=event.id, team1_id=de.team1.id, team2_id=de.team2.id) }}">Print DE</a>
 </div>
