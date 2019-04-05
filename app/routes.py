@@ -17,6 +17,7 @@ from app.models import *
 from app.utils import generate_tournament, quicksort, Score, is_valid_pair
 from app.email import send_password_reset_email, send_prereg_email
 
+TIMEOUT = 30
 
 def is_to_of_tournament(user, tournament):
     if current_user.is_anonymous:
@@ -92,7 +93,7 @@ def personal_user(username):
 
 
 @app.route('/tournament/<int:tournament_id>')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def public_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     events = tournament.events
@@ -157,7 +158,7 @@ def create_event_default(tournament_id):
 
 
 @app.route('/event/<int:event_id>/registration')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def registration(event_id):
     event = Event.query.get_or_404(event_id)
     title = 'Registration'
@@ -219,7 +220,7 @@ def pool_results(event_id):
 
 
 @app.route('/event/<int:event_id>/pools')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def public_pools(event_id):
     event = Event.query.get_or_404(event_id)
     pools = event.pools
@@ -245,7 +246,7 @@ def public_pools(event_id):
 
 
 @app.route('/event/<int:event_id>/pool-assignment')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def pool_assignment(event_id):
     event = Event.query.get_or_404(event_id)
     public = True
@@ -261,7 +262,7 @@ def pool_assignment(event_id):
 
 
 @app.route('/event/<int:event_id>/de')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def public_de(event_id):
     event = Event.query.get_or_404(event_id)
     if(event.tableau_json == None):
@@ -274,10 +275,21 @@ def public_de(event_id):
 
 
 @app.route('/event/<int:event_id>/final')
-@cache.cached(timeout=60)
+@cache.cached(timeout=TIMEOUT)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
     teams = event.teams.filter_by(is_checked_in=True).order_by(Team.final_place.asc()).all()
+    if len(event.teams) > 12:
+        q = db.engine.execute(
+        """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
+        FROM team t JOIN pool p ON t.Pool = p.id
+        WHERE t.is_checked_in = 1 AND t.event= {}
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC
+        """.format(event_id)
+        eliminated_teams = [Team.query.get(id) for (id, _) in q]
+        for team in eliminated_teams[12:]:
+            teams.append(team)
+        print(teams)
     return render_template('final.html', event=event, teams=teams)
 
 
@@ -554,7 +566,8 @@ def generate_bracket(event_id):
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in = 1 AND t.Event = {}
-        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC LIMIT 12;""".format(event_id))
+        ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC LIMIT 12;
+        """.format(event_id))
     teams = [Team.query.get(id) for (id, _) in q]
     fencer_names = [(team.name + " (" + str(i+1) + ")") for i, team in enumerate(teams)]
     bracket = generate_tournament(teams)
