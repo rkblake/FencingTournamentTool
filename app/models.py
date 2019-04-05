@@ -19,6 +19,11 @@ class Stage(Enum):
     DES = 9
     EVENT_FINISHED = 10
 
+def stage_to_string(stage):
+    return Stage(stage).name.title().replace('_', ' ')
+
+app.jinja_env.globals.update(stage_to_string=stage_to_string)
+
 Base = declarative_base()
 
 class AccessTable(db.Model):
@@ -98,7 +103,7 @@ class Event(db.Model):
 
     def advance_stage(self, next_stage):
         self.stage = next_stage.value if next_stage.value == self.stage+1 else self.stage
-        
+
     def is_stage(self, stage):
         return self.stage == stage.value
 

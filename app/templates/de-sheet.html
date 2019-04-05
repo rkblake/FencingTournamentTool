@@ -1,19 +1,98 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='de-sheet.css') }}">
+    <style>
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        function change(name, value) {
+            var names = document.getElementsByClassName(name);
+            var i;
+            for(i = 0; i < names.length; i++) {
+                names[i].innerHTML = value;
+            }
+        }
+    </script>
+    {{ super() }}
+{% endblock %}
+
+{% block app_content %}
+<div class="no-print">
+<h3>{{ team1.name }}</h3>
+<p>A Fencer</p>
+<select name="team1_a" onchange="change(this.name, this.value)">
+    {% for fencer in team1.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<p>B Fencer</p>
+<select name="team1_b" onchange="change(this.name, this.value)">
+    {% for fencer in team1.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<p>C Fencer</p>
+<select name="team1_c" onchange="change(this.name, this.value)">
+    {% for fencer in team1.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<p>Alternate Fencer</p>
+<select name="team1_d" onchange="change(this.name, this.value)">
+    {% for fencer in team1.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<h3>{{ team2.name }}</h3>
+<p>A Fencer</p>
+<select name="team2_a" onchange="change(this.name, this.value)">
+    {% for fencer in team2.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<p>B Fencer</p>
+<select name="team2_b" onchange="change(this.name, this.value)">
+    {% for fencer in team2.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+<p>C Fencer</p>
+<select name="team2_c" onchange="change(this.name, this.value)">
+    {% for fencer in team2.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+
+<p>Alternate Fencer</p>
+<select name="team2_d" onchange="change(this.name, this.value)">
+    {% for fencer in team2.fencers %}
+        <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
+    {% endfor %}
+</select>
+</div>
+{% for i in range(3) %}
+<hr>
 <table border="1" class="de-sheet">
   <tr>
-    <td colspan="18" data-label="Team 1">UTD Epee A</td>
-    <td colspan="18" data-label="Referee">Jim Basler</td>
+      <td colspan="18" data-label="Team 1">{{ team1.name }}</td>
+    <td colspan="18" data-label="Referee"></td>
   </tr>
   <tr>
-    <td colspan="9" data-label="A">Connor</td>
-    <td colspan="9" data-label="B">Spence</td>
-    <td colspan="9" data-label="C">Ben</td>
-    <td colspan="9" data-label="D">Adam</td>
+    <td class="team1_a" colspan="9" data-label="A">{{ team1.fencers[0].first_name }} {{ team1.fencers[0].last_name }}</td>
+    <td class="team1_b" colspan="9" data-label="B">{{ team1.fencers[1].first_name }} {{ team1.fencers[1].last_name }}</td>
+    <td class="team1_c" colspan="9" data-label="C">{{ team1.fencers[2].first_name }} {{ team1.fencers[2].last_name }}</td>
+    <td class="team1_d" colspan="9" data-label="D">{{ team1.fencers[3].first_name }} {{ team1.fencers[3].last_name }}</td>
   </tr>
   <tr>
-    <td colspan="4" data-label="A">4</td>
-    <td colspan="4" data-label="B">2</td>
-    <td colspan="4" data-label="C">v3</td>
-    <td colspan="4" data-label="A">5</td>
+    <td colspan="4" data-label="A"></td>
+    <td colspan="4" data-label="B"></td>
+    <td colspan="4" data-label="C"></td>
+    <td colspan="4" data-label="A"></td>
     <td colspan="4" data-label="B"></td>
     <td colspan="4" data-label="C"></td>
     <td colspan="4" data-label="A"></td>
@@ -21,10 +100,10 @@
     <td colspan="4" data-label="C"></td>
   </tr>
   <tr>
-    <td colspan="4" data-label="B">3</td>
-    <td colspan="4" data-label="C">4</td>
-    <td colspan="4" data-label="A">d3</td>
-    <td colspan="4" data-label="C">4</td>
+    <td colspan="4" data-label="B"></td>
+    <td colspan="4" data-label="C"></td>
+    <td colspan="4" data-label="A"></td>
+    <td colspan="4" data-label="C"></td>
     <td colspan="4" data-label="A"></td>
     <td colspan="4" data-label="B"></td>
     <td colspan="4" data-label="A"></td>
@@ -32,13 +111,15 @@
     <td colspan="4" data-label="C"></td>
   </tr>
   <tr>
-    <td colspan="9" data-label="A">Jost</td>
-    <td colspan="9" data-label="B">Chris</td>
-    <td colspan="9" data-label="C">Julia</td>
-    <td colspan="9" data-label="D"></td>
+    <td class="team2_a" colspan="9" data-label="A">{{ team2.fencers[0].first_name }} {{ team2.fencers[0].last_name }}</td>
+    <td class="team2_b" colspan="9" data-label="B">{{ team2.fencers[1].first_name }} {{ team2.fencers[1].last_name }}</td>
+    <td class="team2_c" colspan="9" data-label="C">{{ team2.fencers[2].first_name }} {{ team2.fencers[2].last_name }}</td>
+    <td class="team2_d" colspan="9" data-label="D">{{ team2.fencers[3].first_name }} {{ team2.fencers[3].last_name }}</td>
   </tr>
   <tr>
-    <td colspan="18" data-label="Team 2">UTD Epee B</td>
-    <td colspan="18" data-label="Strip">3</td>
+    <td colspan="18" data-label="Team 2">{{ team2.name }}</td>
+    <td colspan="18" data-label="Strip"></td>
   </tr>
 </table>
+{% endfor %}
+{% endblock %}
