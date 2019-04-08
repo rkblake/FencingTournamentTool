@@ -17,7 +17,7 @@ from app.models import *
 from app.utils import generate_tournament, quicksort, Score, is_valid_pair
 from app.email import send_password_reset_email, send_prereg_email
 
-TIMEOUT = 30
+TIMEOUT = 30  # seconds
 
 def is_to_of_tournament(user, tournament):
     if current_user.is_anonymous:
