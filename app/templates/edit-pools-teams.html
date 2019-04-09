@@ -19,7 +19,7 @@
 			<br>
         {% else %}
         <p>
-            Pool {{ pool.poolNum }} {{ pool.pool_letter }} <span style="color: green;">Complete</span>
+            Pool {{ pool.poolNum }} {{ pool.pool_letter }} <span style="color: green;">Complete</span> <a href="{{ url_for('delete_pool', event_id=event.id, pool_id=pool.id) }}"><span style="color:red;">Delete</span></a>
         </p>
         {% endif %}
     {% endfor %}

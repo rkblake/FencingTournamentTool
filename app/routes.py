@@ -285,7 +285,7 @@ def public_final(event_id):
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in = 1 AND t.event= {}
         ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC
-        """.format(event_id)
+        """.format(event_id))
         eliminated_teams = [Team.query.get(id) for (id, _) in q]
         for team in eliminated_teams[12:]:
             teams.append(team)
@@ -1123,4 +1123,19 @@ def de_sheet(event_id, team1_id, team2_id):
     team2 = Team.query.get_or_404(team2_id)
     return render_template('de-sheet.html', team1=team1, team2=team2)
 
-flask_profiler.init_app(app)
+
+@app.route('/event/<int:event_id>/pool/<int:pool_id>/delete-pool')
+@login_required
+def delete_pool(event_id, pool_id):
+    event = Event.query.get_or_404(event_id)
+    if not is_to_of_tournament(current_user, tournament):
+        flash(' You do not have permission to access this tournament.')
+        return redirect(url_for('index'))
+    db.session.query(Result).filter(Result.pool_id == pool_id).delete(False)
+    pool = Pool.query.get_or_404(pool_id)
+    pool.state = 0
+    db.session.commit()
+    return redirect(url_for('edit_pools_teams', event_id=event_id))
+
+
+#flask_profiler.init_app(app)
