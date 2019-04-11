@@ -126,6 +126,7 @@ class Team(db.Model):
     touches_scored = db.Column(db.Integer, default=0)
     touches_recieved = db.Column(db.Integer, default=0)
     indicator = db.Column(db.Integer, default=0)
+    de_indicator = db.Column(db.Integer, default=0)
     round_eliminated_in = db.Column(db.Integer, default=None, nullable=True)
     final_place = db.Column(db.Integer, default=None, nullable=True)
     event_id = db.Column('Event', db.ForeignKey('event.id'))

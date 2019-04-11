@@ -9,12 +9,10 @@
             <th>Team</th>
         </tr>
         {% for team in teams %}
-            {% if team.final_place != None %}
-                <tr>
-                    <td>{{ team.final_place }}</td>
-                    <td>{{ team.name }}</td>
-                </tr>
-            {% endif %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ team.name }}</td>
+            </tr>
         {% endfor %}
     </table>
 {% endblock %}

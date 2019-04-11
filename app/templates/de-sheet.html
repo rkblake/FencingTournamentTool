@@ -26,24 +26,28 @@
 <h3>{{ team1.name }}</h3>
 <p>A Fencer</p>
 <select name="team1_a" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team1.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
 </select>
 <p>B Fencer</p>
 <select name="team1_b" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team1.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
 </select>
 <p>C Fencer</p>
 <select name="team1_c" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team1.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
 </select>
 <p>Alternate Fencer</p>
 <select name="team1_d" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team1.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
@@ -51,18 +55,21 @@
 <h3>{{ team2.name }}</h3>
 <p>A Fencer</p>
 <select name="team2_a" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team2.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
 </select>
 <p>B Fencer</p>
 <select name="team2_b" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team2.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
 </select>
 <p>C Fencer</p>
 <select name="team2_c" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team2.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}
@@ -70,6 +77,7 @@
 
 <p>Alternate Fencer</p>
 <select name="team2_d" onchange="change(this.name, this.value)">
+    <option selected="selected">Select a fencer</option>
     {% for fencer in team2.fencers %}
         <option value="{{ fencer.first_name }} {{ fencer.last_name }}">{{ fencer.first_name }} {{ fencer.last_name }}</option>
     {% endfor %}

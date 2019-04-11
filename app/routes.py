@@ -278,18 +278,48 @@ def public_de(event_id):
 @cache.cached(timeout=TIMEOUT)
 def public_final(event_id):
     event = Event.query.get_or_404(event_id)
-    teams = event.teams.filter_by(is_checked_in=True).order_by(Team.final_place.asc()).all()
-    if len(event.teams) > 12:
+    #teams = event.teams.filter_by(is_checked_in=True).order_by(Team.final_place.asc()).all()
+    teams = Team.query.filter(Team.event_id==event_id,Team.is_checked_in==True,Team.final_place.isnot(None)).order_by(Team.final_place.asc()).all()
+    if event.teams.count() > 12:
         q = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
         FROM team t JOIN pool p ON t.Pool = p.id
         WHERE t.is_checked_in = 1 AND t.event= {}
         ORDER BY winPercent DESC, t.indicator DESC, t.touches_scored DESC
         """.format(event_id))
-        eliminated_teams = [Team.query.get(id) for (id, _) in q]
-        for team in eliminated_teams[12:]:
+        pool_teams = [[Team.query.get(id), j, ''] for (id, j) in q]
+        for team in pool_teams[12:]:
             teams.append(team)
-        print(teams)
+        place = 0
+        places = [[] for _ in range(len(teams))]
+        for team in teams[:12]:
+            if not places[place]:
+                places[place].append(team)
+            elif team[0].de_indicator == places[place][0][0].de_indicator:
+                places[place].append(team)
+            else:
+                place += 1
+                places[place].append(team)
+        place = 13
+        for team in teams[12:]:
+            if not places[place]:
+                places[place].append(team)
+            elif (team[0].indicator == places[place][0][0].indicator
+                    and team[0].touches_scored == places[place][0][0].touches_scored
+                    and team[1] == places[place][0][1]):
+                places[place].append(team)
+            else:
+                place += 1
+                places[place].append(team)
+        place = 1
+        for row in list(filter(lambda x: x, places)):
+            if len(row) == 1:
+                row[0][2] = str(place)
+                place += 1
+            else:
+                for team in row:
+                    team[2] = str(place) + 'T'
+                place += len(row)
     return render_template('final.html', event=event, teams=teams)
 
 
@@ -431,6 +461,7 @@ def edit_pool(event_id, pool_id):
                 pool_id=pool_id, num_in_pool=key[1]).first()
             result = Result(
                 pool_id=pool.id,
+                event_id=event_id,
                 fencer=fencer.id,
                 team=fencer.team,
                 fencer_score=score1.touches,
@@ -690,15 +721,16 @@ def submit_DE(de_id):
                 WHERE d.event_id = {} AND d.round = {}
                 AND d.team2_id IS NOT NULL
                 ORDER BY score DESC;""".format(de.event.id, round+1))
-            des_in_round = [DE.query.get(id) for (id, _) in q]
+            des_in_round = [[DE.query.get(id), j] for (id, j) in q]
             if round == 0:
                 place1 = Team.query.filter_by(
                     event_id=de.event.id, is_checked_in=True).count()
             else:
                 place1 = int(len(tableau['teams'])/(2**round-1))
             for i, val in enumerate(des_in_round):
-                loser_team = val.team2 if val.fencer1_win else val.team1
+                loser_team = val[0].team2 if val[0].fencer1_win else val[0].team1
                 loser_team.final_place = place1 - i
+                loser_team.de_indicator = val[1]
     elif not de.is_third and des.index(de) in [1, 2]:  # semifinal
         third = event.des.filter_by(is_third=True).first()
         if (des.index(de) + 1) % 2 == 0:
@@ -1128,14 +1160,14 @@ def de_sheet(event_id, team1_id, team2_id):
 @login_required
 def delete_pool(event_id, pool_id):
     event = Event.query.get_or_404(event_id)
-    if not is_to_of_tournament(current_user, tournament):
+    if not is_to_of_tournament(current_user, event.tournament):
         flash(' You do not have permission to access this tournament.')
         return redirect(url_for('index'))
     db.session.query(Result).filter(Result.pool_id == pool_id).delete(False)
     pool = Pool.query.get_or_404(pool_id)
     pool.state = 0
     db.session.commit()
-    return redirect(url_for('edit_pools_teams', event_id=event_id))
+    return redirect(url_for('edit_pools', event_id=event_id))
 
 
 #flask_profiler.init_app(app)
