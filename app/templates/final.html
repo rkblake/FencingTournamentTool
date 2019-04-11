@@ -11,7 +11,7 @@
         {% for team in teams %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ team.name }}</td>
+                <td>{{ team[0].name }}</td>
             </tr>
         {% endfor %}
     </table>

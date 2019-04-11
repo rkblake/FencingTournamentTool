@@ -280,6 +280,8 @@ def public_final(event_id):
     event = Event.query.get_or_404(event_id)
     #teams = event.teams.filter_by(is_checked_in=True).order_by(Team.final_place.asc()).all()
     teams = Team.query.filter(Team.event_id==event_id,Team.is_checked_in==True,Team.final_place.isnot(None)).order_by(Team.final_place.asc()).all()
+    teams = [[team, i, ''] for (i, team) in enumerate(teams)]
+    print("DE Teams: ", teams)
     if event.teams.count() > 12:
         q = db.engine.execute(
         """SELECT t.id, (t.victories*1.0 / (p.num_fencers - 1)) as winPercent
@@ -290,6 +292,7 @@ def public_final(event_id):
         pool_teams = [[Team.query.get(id), j, ''] for (id, j) in q]
         for team in pool_teams[12:]:
             teams.append(team)
+        print("All teams: ", teams)
         place = 0
         places = [[] for _ in range(len(teams))]
         for team in teams[:12]:
@@ -300,7 +303,7 @@ def public_final(event_id):
             else:
                 place += 1
                 places[place].append(team)
-        place = 13
+        place = 12
         for team in teams[12:]:
             if not places[place]:
                 places[place].append(team)
