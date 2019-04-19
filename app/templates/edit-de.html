@@ -29,7 +29,7 @@
 
 {% block app_content %}
 <h2>DEs for {{ event.name }}</h2>
-<a class="btn btn-primary" onclick="alert(Math.floor(Math.random() * 2) == 0 ? 'Heads' : 'Tails')">Flip Coin</a>
+<a class="btn btn-primary no-print" onclick="alert(Math.floor(Math.random() * 2) == 0 ? 'Heads' : 'Tails')">Flip Coin</a>
 {% for de in des %}
     {% if de.state < 2 %}
         {% include '_de.html' %}
